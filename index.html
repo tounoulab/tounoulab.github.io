@@ -315,29 +315,39 @@ tr:hover td{background:#fafafa;}
             <div style="font-size:11px;color:#aaa;margin-top:3px;">원 (이번 달 누계)</div>
           </div>
         </div>
-        <!-- 귀책별/처리유형 4분할 (금일 2개 + 이번주 2개) -->
+        <!-- 귀책별/처리유형 (금일 + 이번주, 각 카드 안에서 좌우 배치) -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
           <!-- 금일 -->
           <div class="card" style="margin-bottom:0;">
             <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.05em;margin-bottom:14px;">금일</div>
-            <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">귀책별 현황</div>
-            <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-today"></canvas></div>
-            <div id="h-liability-today-list" class="chart-legend" style="margin-top:8px;"></div>
-            <div style="height:1px;background:#f5f5f3;margin:14px 0;"></div>
-            <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">처리 유형</div>
-            <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-type-today"></canvas></div>
-            <div id="h-type-today-list" class="chart-legend" style="margin-top:8px;"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">귀책별 현황</div>
+                <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-today"></canvas></div>
+                <div id="h-liability-today-list" class="chart-legend" style="margin-top:8px;"></div>
+              </div>
+              <div>
+                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">처리 유형</div>
+                <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-type-today"></canvas></div>
+                <div id="h-type-today-list" class="chart-legend" style="margin-top:8px;"></div>
+              </div>
+            </div>
           </div>
           <!-- 이번 주 -->
           <div class="card" style="margin-bottom:0;">
             <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.05em;margin-bottom:14px;">이번 주</div>
-            <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">귀책별 현황</div>
-            <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-week"></canvas></div>
-            <div id="h-liability-week-list" class="chart-legend" style="margin-top:8px;"></div>
-            <div style="height:1px;background:#f5f5f3;margin:14px 0;"></div>
-            <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">처리 유형</div>
-            <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-type-week"></canvas></div>
-            <div id="h-type-week-list" class="chart-legend" style="margin-top:8px;"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">귀책별 현황</div>
+                <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-week"></canvas></div>
+                <div id="h-liability-week-list" class="chart-legend" style="margin-top:8px;"></div>
+              </div>
+              <div>
+                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">처리 유형</div>
+                <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-type-week"></canvas></div>
+                <div id="h-type-week-list" class="chart-legend" style="margin-top:8px;"></div>
+              </div>
+            </div>
           </div>
         </div>
         <!-- 주간 클레임 추이 -->
