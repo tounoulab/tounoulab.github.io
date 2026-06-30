@@ -304,43 +304,39 @@ tr:hover td{background:#fafafa;}
             <div style="font-size:11px;color:#aaa;margin-top:3px;">일 (영업일 기준)</div>
           </div>
           <div class="sub-card">
-            <div class="sub-card-title">상품 비용 합계</div>
+            <div class="sub-card-title">VOC 상품 비용 합계</div>
             <div style="font-size:22px;font-weight:700;color:#1a1a1a;" id="kpi-vocamt">-</div>
             <div style="font-size:11px;color:#aaa;margin-top:3px;">원 (이번 달 누계)</div>
           </div>
           <div class="sub-card">
-            <div class="sub-card-title">회수+재출고 비용</div>
+            <div class="sub-card-title">VOC 운임</div>
             <div style="font-size:22px;font-weight:700;color:#1a1a1a;" id="kpi-csamt">-</div>
             <div style="font-size:11px;color:#aaa;margin-top:3px;">원 (이번 달 누계)</div>
           </div>
         </div>
-        <!-- 귀책별/처리유형 (2열 + 금일/주 토글) -->
-        <div class="sub-grid" style="grid-template-columns:1fr 1fr!important;margin-bottom:16px;">
-          <div class="sub-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-              <div class="sub-card-title" style="margin-bottom:0;" id="lbl-liability">귀책별 현황 (이번 주)</div>
-              <div style="display:flex;gap:4px;">
-                <button onclick="setChartMode('week')" id="btn-lib-week" style="font-size:11px;padding:2px 9px;border-radius:5px;border:none;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;">이번 주</button>
-                <button onclick="setChartMode('today')" id="btn-lib-today" style="font-size:11px;padding:2px 9px;border-radius:5px;border:1px solid #e0e0de;background:#fff;color:#555;cursor:pointer;font-family:inherit;">금일</button>
-              </div>
-            </div>
-            <div style="position:relative;height:170px;display:flex;align-items:center;justify-content:center;">
-              <canvas id="chart-liability"></canvas>
-            </div>
-            <div id="h-liability-list" class="chart-legend"></div>
+        <!-- 귀책별/처리유형 4분할 (금일 2개 + 이번주 2개) -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <!-- 금일 -->
+          <div class="card" style="margin-bottom:0;">
+            <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.05em;margin-bottom:14px;">금일</div>
+            <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">귀책별 현황</div>
+            <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-today"></canvas></div>
+            <div id="h-liability-today-list" class="chart-legend" style="margin-top:8px;"></div>
+            <div style="height:1px;background:#f5f5f3;margin:14px 0;"></div>
+            <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">처리 유형</div>
+            <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-type-today"></canvas></div>
+            <div id="h-type-today-list" class="chart-legend" style="margin-top:8px;"></div>
           </div>
-          <div class="sub-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-              <div class="sub-card-title" style="margin-bottom:0;" id="lbl-type">처리 유형 (이번 주)</div>
-              <div style="display:flex;gap:4px;">
-                <button onclick="setChartMode('week')" id="btn-type-week" style="font-size:11px;padding:2px 9px;border-radius:5px;border:none;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;">이번 주</button>
-                <button onclick="setChartMode('today')" id="btn-type-today" style="font-size:11px;padding:2px 9px;border-radius:5px;border:1px solid #e0e0de;background:#fff;color:#555;cursor:pointer;font-family:inherit;">금일</button>
-              </div>
-            </div>
-            <div style="position:relative;height:170px;display:flex;align-items:center;justify-content:center;">
-              <canvas id="chart-type"></canvas>
-            </div>
-            <div id="h-type-list" class="chart-legend"></div>
+          <!-- 이번 주 -->
+          <div class="card" style="margin-bottom:0;">
+            <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.05em;margin-bottom:14px;">이번 주</div>
+            <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">귀책별 현황</div>
+            <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-week"></canvas></div>
+            <div id="h-liability-week-list" class="chart-legend" style="margin-top:8px;"></div>
+            <div style="height:1px;background:#f5f5f3;margin:14px 0;"></div>
+            <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">처리 유형</div>
+            <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-type-week"></canvas></div>
+            <div id="h-type-week-list" class="chart-legend" style="margin-top:8px;"></div>
           </div>
         </div>
         <!-- 주간 클레임 추이 -->
@@ -803,7 +799,7 @@ function switchPage(name){
   if(name==='home')renderHomeDashboard();
   if(name==='voc'){renderVocStats();renderVocCharts();_restoreScroll('voc');}
   if(name==='return'){renderReturnStats();renderReturnTable();_restoreScroll('return');}
-  if(name==='claim'){renderClaimTable();_restoreScroll('claim');}
+  if(name==='claim'){renderClaimTable(true);_restoreScroll('claim');}
 }
 // 새로고침 전 스크롤 저장
 window.addEventListener('beforeunload',()=>{
@@ -832,17 +828,18 @@ async function _fsBulkSave(col,arr){
 const saveClaims=arr=>_fsBulkSave('claims',arr);
 const saveReturns=arr=>_fsBulkSave('returns',arr);
 
+function _activePage(){return localStorage.getItem('tuunu_page')||'home';}
 function setupFirebaseListeners(){
   db.collection('claims').onSnapshot(snap=>{
     _claimsData=snap.docs.map(d=>d.data()).sort((a,b)=>b.id-a.id);
-    renderClaimTable();
-    renderHomeDashboard();
+    if(_activePage()==='claim')renderClaimTable(true);
+    if(_activePage()==='home')renderHomeDashboard();
+    if(_activePage()==='voc'){renderVocStats();renderVocCharts();}
   },err=>console.error('claims listener:',err));
   db.collection('returns').onSnapshot(snap=>{
     _returnsData=snap.docs.map(d=>d.data()).sort((a,b)=>b.id-a.id);
-    renderReturnStats();
-    renderReturnTable();
-    renderHomeDashboard();
+    if(_activePage()==='return'){renderReturnStats();renderReturnTable();}
+    if(_activePage()==='home')renderHomeDashboard();
   },err=>console.error('returns listener:',err));
   db.collection('notices').onSnapshot(snap=>{
     _noticesData=snap.docs.map(d=>d.data()).sort((a,b)=>b.id-a.id);
@@ -1040,23 +1037,34 @@ function renderHomeDashboard(){
       :claims.filter(r=>{const v=normDate(r.date);return v>=ws&&v<=we;});
   }
   setTxt('side-today-done',countUniq(claims.filter(r=>normDate(r.donedate)===t),'donedate','1900','9999')+'건');
-  const uniqChart=[];const seenChart=new Set();
-  chartClaims.forEach(r=>{const k=r.orderno||String(r.id);if(!seenChart.has(k)){seenChart.add(k);uniqChart.push(r);}});
-  renderDonutChart('chart-liability','h-liability-list',countsByField(uniqChart,'liability'));
-  renderDonutChart('chart-type','h-type-list',countsByField(uniqChart,'type'));
+  // 4개 차트: 금일 2개 + 이번주 2개
+  const dedup=arr=>{const seen=new Set(),res=[];arr.forEach(r=>{const k=r.orderno||String(r.id);if(!seen.has(k)){seen.add(k);res.push(r);}});return res;};
+  const todayC=dedup(claims.filter(r=>normDate(r.date)===t));
+  const weekC=dedup(claims.filter(r=>{const v=normDate(r.date);return v>=ws&&v<=we;}));
+  renderDonutChart('chart-liability-today','h-liability-today-list',countsByField(todayC,'liability'));
+  renderDonutChart('chart-type-today','h-type-today-list',countsByField(todayC,'type'));
+  renderDonutChart('chart-liability-week','h-liability-week-list',countsByField(weekC,'liability'));
+  renderDonutChart('chart-type-week','h-type-week-list',countsByField(weekC,'type'));
   renderWeeklyTrendChart(claims);
   renderSideReturnList(returns.slice(0,5));
   const monthClaims=claims.filter(r=>{const v=normDate(r.date);return v>=ms&&v<=me;});
   const completedMonth=monthClaims.filter(r=>r.donedate&&r.indate);
   const ltArr=completedMonth.map(r=>calcBusinessDays(r.indate,r.donedate)).filter(v=>v!==null&&v>=0);
   const avgLt=ltArr.length?(ltArr.reduce((a,b)=>a+b,0)/ltArr.length).toFixed(2):'-';
-  const sumCostP=monthClaims.reduce((s,r)=>s+(parseFloat(r.costP)||0),0);
-  const sumCostRS=monthClaims.reduce((s,r)=>s+(parseFloat(r.costR)||0)+(parseFloat(r.costS)||0),0);
+  const n=v=>parseFloat(String(v||'0').replace(/,/g,''))||0;
+  const sumCostP=monthClaims.reduce((s,r)=>s+n(r.costP),0);
+  const sumCostRS=monthClaims.reduce((s,r)=>s+n(r.costR)+n(r.costS),0);
   setTxt('kpi-leadtime',avgLt);
   setTxt('kpi-vocamt',sumCostP>0?sumCostP.toLocaleString():'-');
   setTxt('kpi-csamt',sumCostRS>0?sumCostRS.toLocaleString():'-');
-  renderSLATable(claims);
-  renderLeadtimeTable(claims);
+  // SLA/리드타임 테이블은 무거우므로 홈 탭 활성 시에만 + 디바운스
+  clearTimeout(window._heavyTimer);
+  window._heavyTimer=setTimeout(()=>{
+    if(document.getElementById('page-home')?.classList.contains('active')){
+      renderSLATable(claims);
+      renderLeadtimeTable(claims);
+    }
+  },400);
 }
 function renderHomeClaimTable(claims){
   const tbody=document.getElementById('home-claim-tbody'),empty=document.getElementById('home-claim-empty');
@@ -1127,13 +1135,18 @@ const KR_HOLIDAYS=new Set([
   '2026-09-24','2026-09-25','2026-09-26',
   '2026-10-03','2026-10-05','2026-10-09','2026-12-25'
 ]);
+const _bdCache={};
 function calcBusinessDays(start,end){
   if(!start||!end)return null;
-  const s=new Date(start),e=new Date(end);
-  if(e<s)return 0;
+  const ns=normDate(start),ne=normDate(end);
+  if(!ns||!ne)return null;
+  const key=ns+'|'+ne;
+  if(_bdCache[key]!==undefined)return _bdCache[key];
+  const s=new Date(ns),e=new Date(ne);
+  if(e<s)return(_bdCache[key]=0);
   let count=0;const cur=new Date(s);cur.setDate(cur.getDate()+1);
   while(cur<=e){const dow=cur.getDay(),ds=cur.toISOString().slice(0,10);if(dow!==0&&dow!==6&&!KR_HOLIDAYS.has(ds))count++;cur.setDate(cur.getDate()+1);}
-  return count;
+  return(_bdCache[key]=count);
 }
 function calcSLA(days){if(days===null)return{text:'-',color:'#bbb'};return days<=4?{text:'준수',color:'#2e7d32'}:{text:'초과',color:'#c62828'};}
 let _editClaimId=null;
@@ -1360,7 +1373,10 @@ function getFilteredClaims(){
   return claims;
 }
 
-function renderClaimTable(){
+let _claimPage=1;
+const CLAIM_PAGE_SIZE=200;
+function renderClaimTable(resetPage){
+  if(resetPage)_claimPage=1;
   const tbody=document.getElementById('claim-tbody'),empty=document.getElementById('claim-empty');
   const allClaims=loadClaims(),claims=getFilteredClaims();
   const badge=document.getElementById('claim-count-badge');
@@ -1370,9 +1386,11 @@ function renderClaimTable(){
   if(badge)badge.textContent=hasFilter||_groupByOrder
     ?`${filtUniq}건 / 전체 ${uniqCnt}건`
     :`총 ${uniqCnt}건`;
-  if(!claims.length){tbody.innerHTML='';if(empty)empty.style.display='';return;}
+  if(!claims.length){tbody.innerHTML='';if(empty)empty.style.display='';_updateLoadMore(0,0);return;}
   if(empty)empty.style.display='none';
-  tbody.innerHTML=claims.map((r,i)=>{
+  const pageEnd=_claimPage*CLAIM_PAGE_SIZE;
+  const visible=claims.slice(0,pageEnd);
+  tbody.innerHTML=visible.map((r,i)=>{
     const bdays=calcBusinessDays(r.indate,r.donedate);
     const sla=calcSLA(bdays);
     const bg=i%2===0?'#fff':'#fafaf8';
@@ -1395,24 +1413,19 @@ function renderClaimTable(){
     return`<tr style="background:${bg};">${cells}</tr>`;
   }).join('');
   initColResize();
-  requestAnimationFrame(()=>{
-    const tbl=document.getElementById('claim-sheet');if(!tbl)return;
-    const freezeCount=11;
-    tbl.querySelectorAll('tr').forEach(row=>{
-      const cells=row.querySelectorAll('th,td');
-      let left=0;
-      cells.forEach((cell,i)=>{
-        if(i<freezeCount){
-          cell.style.position='sticky';
-          cell.style.left=left+'px';
-          cell.style.zIndex=cell.tagName==='TH'?'5':'2';
-          if(cell.tagName==='TH')cell.style.background='#f6f6f4';
-          else if(!cell.style.background||cell.style.background==='inherit')cell.style.background='#fff';
-          left+=cell.offsetWidth||90;
-        }
-      });
-    });
-  });
+  _updateLoadMore(claims.length, pageEnd);
+}
+function _updateLoadMore(total,shown){
+  let btn=document.getElementById('claim-load-more');
+  if(!btn){
+    btn=document.createElement('div');btn.id='claim-load-more';
+    btn.style.cssText='text-align:center;padding:12px;';
+    const wrap=document.getElementById('claim-tbody')?.closest('.table-wrap');
+    if(wrap)wrap.after(btn);
+  }
+  if(shown>=total){btn.innerHTML='';return;}
+  const remaining=total-shown;
+  btn.innerHTML=`<button onclick="_claimPage++;renderClaimTable();" style="padding:8px 24px;border:1px solid #e0e0de;border-radius:8px;background:#fff;font-size:13px;cursor:pointer;font-family:inherit;color:#555;">더 보기 (${remaining}건 남음)</button>`;
 }
 // ===== 반품 CRUD =====
 function addReturn(){
