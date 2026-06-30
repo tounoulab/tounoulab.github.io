@@ -165,6 +165,7 @@ tr:hover td{background:#fafafa;}
 #claim-sheet td.td-left{text-align:left;}
 #claim-sheet td[onclick]{cursor:pointer;}
 #claim-sheet td[onclick]:hover{background:rgba(26,115,232,0.06) !important;}
+.tdc{border:1px solid #e8e8e6;padding:7px 10px;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;}
 .col-rz{position:absolute;right:0;top:0;height:100%;width:6px;cursor:col-resize;z-index:2;}
 .col-rz:hover,.col-rz.dragging{background:rgba(26,115,232,0.35);}
 /* ===== 반응형 ===== */
@@ -830,11 +831,15 @@ const saveReturns=arr=>_fsBulkSave('returns',arr);
 
 function _activePage(){return localStorage.getItem('tuunu_page')||'home';}
 function setupFirebaseListeners(){
+  let _claimSnapTimer=null;
   db.collection('claims').onSnapshot(snap=>{
     _claimsData=snap.docs.map(d=>d.data()).sort((a,b)=>b.id-a.id);
-    if(_activePage()==='claim')renderClaimTable(true);
-    if(_activePage()==='home')renderHomeDashboard();
-    if(_activePage()==='voc'){renderVocStats();renderVocCharts();}
+    clearTimeout(_claimSnapTimer);
+    _claimSnapTimer=setTimeout(()=>{
+      if(_activePage()==='claim')renderClaimTable(true);
+      if(_activePage()==='home')renderHomeDashboard();
+      if(_activePage()==='voc'){renderVocStats();renderVocCharts();}
+    },250);
   },err=>console.error('claims listener:',err));
   db.collection('returns').onSnapshot(snap=>{
     _returnsData=snap.docs.map(d=>d.data()).sort((a,b)=>b.id-a.id);
@@ -1258,35 +1263,44 @@ function editCell(td,claimId,field,curVal){
   if(type==='select')el.addEventListener('change',()=>el.blur());
 }
 
+let _colResizeReady=false;
 function initColResize(){
   const table=document.getElementById('claim-sheet');if(!table)return;
-  table.querySelectorAll('.col-rz,.th-filter-btn').forEach(h=>h.remove());
-  table.querySelectorAll('th').forEach(th=>{
-    // 필터 버튼
-    const col=th.dataset.col;
-    if(col&&col!=='_del'&&col!=='_lead'){
-      const fb=document.createElement('button');
-      fb.className='th-filter-btn'+(claimFilters[col]?' active':'');
-      fb.title='필터';
-      fb.textContent=claimFilters[col]?'▼':'⌄';
-      fb.addEventListener('click',e=>{e.stopPropagation();openColFilter(col,fb);});
-      th.appendChild(fb);
-    }
-    // 리사이즈 핸들
-    const h=document.createElement('div');h.className='col-rz';
-    h.addEventListener('mousedown',e=>{
-      const sx=e.clientX,sw=th.offsetWidth;
-      h.classList.add('dragging');document.body.style.cursor='col-resize';
-      const mv=e2=>{const w=Math.max(50,sw+(e2.clientX-sx));th.style.minWidth=w+'px';th.style.maxWidth=w+'px';};
-      const up=()=>{h.classList.remove('dragging');document.body.style.cursor='';document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};
-      document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
-      e.preventDefault();e.stopPropagation();
+  if(!_colResizeReady){
+    _colResizeReady=true;
+    table.querySelectorAll('th').forEach(th=>{
+      // 필터 버튼
+      const col=th.dataset.col;
+      if(col&&col!=='_del'&&col!=='_lead'){
+        const fb=document.createElement('button');
+        fb.className='th-filter-btn'+(claimFilters[col]?' active':'');
+        fb.title='필터';
+        fb.textContent=claimFilters[col]?'▼':'⌄';
+        fb.addEventListener('click',e=>{e.stopPropagation();openColFilter(col,fb);});
+        th.appendChild(fb);
+      }
+      // 리사이즈 핸들
+      const h=document.createElement('div');h.className='col-rz';
+      h.addEventListener('mousedown',e=>{
+        const sx=e.clientX,sw=th.offsetWidth;
+        h.classList.add('dragging');document.body.style.cursor='col-resize';
+        const mv=e2=>{const w=Math.max(50,sw+(e2.clientX-sx));th.style.minWidth=w+'px';th.style.maxWidth=w+'px';};
+        const up=()=>{h.classList.remove('dragging');document.body.style.cursor='';document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};
+        document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+        e.preventDefault();e.stopPropagation();
+      });
+      th.appendChild(h);
     });
-    th.appendChild(h);
-  });
+  } else {
+    // 필터 버튼 상태만 업데이트 (DOM 재생성 없이)
+    table.querySelectorAll('.th-filter-btn').forEach(fb=>{
+      const col=fb.closest('th')?.dataset.col;
+      if(col){fb.className='th-filter-btn'+(claimFilters[col]?' active':'');fb.textContent=claimFilters[col]?'▼':'⌄';}
+    });
+  }
 }
 
-const TD='border:1px solid #e8e8e6;padding:7px 10px;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;';
+// TD style moved to CSS class .tdc
 
 // ===== 컬럼 헤더 필터 (구글시트 스타일) =====
 let claimFilters={};
@@ -1374,10 +1388,16 @@ function getFilteredClaims(){
 }
 
 let _claimPage=1;
-const CLAIM_PAGE_SIZE=200;
+const CLAIM_PAGE_SIZE=100;
+let _claimRenderTimer=null;
 function renderClaimTable(resetPage){
   if(resetPage)_claimPage=1;
+  clearTimeout(_claimRenderTimer);
+  _claimRenderTimer=setTimeout(_doRenderClaimTable,50);
+}
+function _doRenderClaimTable(){
   const tbody=document.getElementById('claim-tbody'),empty=document.getElementById('claim-empty');
+  if(!tbody)return;
   const allClaims=loadClaims(),claims=getFilteredClaims();
   const badge=document.getElementById('claim-count-badge');
   const hasFilter=Object.values(claimFilters).some(v=>v);
@@ -1386,7 +1406,7 @@ function renderClaimTable(resetPage){
   if(badge)badge.textContent=hasFilter||_groupByOrder
     ?`${filtUniq}건 / 전체 ${uniqCnt}건`
     :`총 ${uniqCnt}건`;
-  if(!claims.length){tbody.innerHTML='';if(empty)empty.style.display='';_updateLoadMore(0,0);return;}
+  if(!claims.length){tbody.innerHTML='';if(empty)empty.style.display='';_updateLoadMore(0,0);initColResize();return;}
   if(empty)empty.style.display='none';
   const pageEnd=_claimPage*CLAIM_PAGE_SIZE;
   const visible=claims.slice(0,pageEnd);
@@ -1394,22 +1414,21 @@ function renderClaimTable(resetPage){
     const bdays=calcBusinessDays(r.indate,r.donedate);
     const sla=calcSLA(bdays);
     const bg=i%2===0?'#fff':'#fafaf8';
-    let cells=``;
+    let cells='';
     CF_ORDER.forEach(key=>{
       const f=CF[key],val=r[key]||'';
       const isLeft=f.align==='left';
       let disp=val||'-';
-      // 주문별 보기 시 주문번호 옆에 건수 뱃지
       if(key==='orderno'&&r._grpCnt>1)disp+=` <span style="background:#1a73e8;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;">${r._grpCnt}건</span>`;
-      cells+=`<td class="${isLeft?'td-left':''}" style="${TD}" title="${val||'-'}" data-id="${r.id}" data-field="${key}" data-val="${val.replace(/"/g,'&quot;')}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)">${disp}</td>`;
+      cells+=`<td class="tdc${isLeft?' td-left':''}" title="${val||'-'}" data-id="${r.id}" data-field="${key}" data-val="${val.replace(/"/g,'&quot;')}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)">${disp}</td>`;
     });
-    cells+=`<td style="${TD}">${bdays!==null?bdays:'-'}</td>`;
-    cells+=`<td style="${TD}font-weight:600;color:${sla.color};">${sla.text}</td>`;
+    cells+=`<td class="tdc">${bdays!==null?bdays:'-'}</td>`;
+    cells+=`<td class="tdc" style="font-weight:600;color:${sla.color};">${sla.text}</td>`;
     ['costP','costR','costS'].forEach(key=>{
       const val=r[key]||'';const disp=val?Number(val).toLocaleString():'-';
-      cells+=`<td style="${TD}" data-id="${r.id}" data-field="${key}" data-val="${val}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)">${disp}</td>`;
+      cells+=`<td class="tdc" data-id="${r.id}" data-field="${key}" data-val="${val}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)">${disp}</td>`;
     });
-    cells+=`<td style="${TD}"><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
+    cells+=`<td class="tdc"><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
     return`<tr style="background:${bg};">${cells}</tr>`;
   }).join('');
   initColResize();
