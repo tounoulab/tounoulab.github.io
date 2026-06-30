@@ -1723,7 +1723,10 @@ function _vsInit(){
 }
 function _vsOnScroll(){
   if(_vsRafId)cancelAnimationFrame(_vsRafId);
-  _vsRafId=requestAnimationFrame(_vsRender);
+  _vsRafId=requestAnimationFrame(()=>{
+    _vsRender();
+    if(_vsWrap)localStorage.setItem('sc_claim',String(_vsWrap.scrollTop));
+  });
 }
 function _vsRender(){
   const wrap=_vsWrap,tbody=document.getElementById('claim-tbody');
@@ -1798,6 +1801,12 @@ function _doRenderClaimTable(){
   _vsInit();
   _vsRender();
   initColResize();
+  // 스크롤 위치 복원 (새로고침 후 마지막 위치로)
+  const wrap=document.getElementById('claim-scroll-wrap');
+  if(wrap){
+    const saved=parseInt(localStorage.getItem('sc_claim')||'0');
+    if(saved>0)requestAnimationFrame(()=>{wrap.scrollTop=saved;});
+  }
 }
 function _updateLoadMore(){}
 // ===== 반품 CRUD =====
@@ -1996,8 +2005,8 @@ function importClaimsXLSX(input){
       const rows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:true});
       if(!rows.length){alert('데이터가 없습니다.');input.value='';return;}
 
-      // 헤더 정규화: 모든 공백·특수문자 제거 + 소문자
-      const _norm=s=>String(s).toLowerCase().trim().replace(/\s+/g,'').replace(/[·\-_()\[\]]/g,'');
+      // 헤더 정규화: NFC + 모든 공백·특수문자 제거 + 소문자
+      const _norm=s=>String(s).normalize('NFC').toLowerCase().trim().replace(/\s+/g,'').replace(/[·\-_()\[\]/]/g,'');
 
       const HM_RAW={
         '발생 월':'month','발생월':'month','월':'month',
@@ -2036,15 +2045,22 @@ function importClaimsXLSX(input){
       const mappedHeaders=allHeaders.filter(h=>HM[_norm(h)]);
       const unmapped=allHeaders.filter(h=>!HM[_norm(h)]);
 
-      // 이슈별분류 매핑 여부 확인
+      // 이슈별분류 매핑 여부 + 실제 컬럼명 확인
       const issueMapped=mappedHeaders.some(h=>HM[_norm(h)]==='issue');
+      const issueHeader=allHeaders.find(h=>HM[_norm(h)]==='issue');
+      // 이슈 샘플 값 (첫 5개)
+      const issueSamples=issueHeader
+        ?rows.slice(0,5).map(r=>String(r[issueHeader]||'')).filter(Boolean)
+        :[];
 
-      // 헤더 매핑 결과 항상 표시 (디버그용)
+      // 헤더 매핑 결과 항상 표시
       const headerReport=
         '📋 엑셀 컬럼 인식 결과\n\n'+
         '✅ 매핑됨 ('+mappedHeaders.length+'개):\n'+mappedHeaders.join(', ')+'\n\n'+
         (unmapped.length?'❌ 매핑 안됨 ('+unmapped.length+'개):\n'+unmapped.join(', ')+'\n\n':'')+
-        (!issueMapped?'⚠️ [이슈별 분류] 컬럼을 찾지 못했습니다.\n엑셀의 실제 컬럼명을 확인해주세요.\n\n':'')+
+        (issueMapped
+          ?'✅ 이슈별 분류 컬럼: "'+issueHeader+'" → 샘플: '+issueSamples.join(' / ')+'\n\n'
+          :'⚠️ [이슈별 분류] 컬럼을 찾지 못했습니다.\n엑셀 실제 헤더명: '+allHeaders.filter(h=>h.includes('이슈')||h.includes('분류')).join(', ')+'\n\n')+
         '계속 가져오시겠습니까?\n(기존 데이터는 엑셀 데이터로 전체 교체됩니다)';
       if(!confirm(headerReport)){input.value='';return;}
 
