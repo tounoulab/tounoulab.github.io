@@ -201,7 +201,8 @@ tr:hover td{background:#fafafa;}
 #claim-sheet td.td-left{text-align:left;}
 #claim-sheet td[onclick]{cursor:pointer;}
 #claim-sheet td[onclick]:hover{background:rgba(26,115,232,0.06) !important;}
-.tdc{border:1px solid #e8e8e6;padding:7px 10px;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;}
+.tdc{border:1px solid #e8e8e6;padding:7px 10px;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
+.td-left{text-align:left !important;}
 .col-rz{position:absolute;right:0;top:0;height:100%;width:6px;cursor:col-resize;z-index:2;}
 .col-rz:hover,.col-rz.dragging{background:rgba(26,115,232,0.35);}
 /* ===== 반응형 ===== */
@@ -893,11 +894,20 @@ function _fsSet(col,id,data){return db.collection(col).doc(String(id)).set(data)
 function _fsUpdate(col,id,data){return db.collection(col).doc(String(id)).update(data);}
 function _fsDelete(col,id){return db.collection(col).doc(String(id)).delete();}
 async function _fsBulkSave(col,arr){
+  // Firestore 배치 한도 499 — 청크로 나눠서 처리
   const snap=await db.collection(col).get();
-  const b=db.batch();
-  snap.docs.forEach(d=>b.delete(d.ref));
-  arr.forEach(item=>b.set(db.collection(col).doc(String(item.id)),item));
-  return b.commit();
+  // 기존 문서 삭제
+  for(let i=0;i<snap.docs.length;i+=499){
+    const b=db.batch();
+    snap.docs.slice(i,i+499).forEach(d=>b.delete(d.ref));
+    await b.commit();
+  }
+  // 새 데이터 저장
+  for(let i=0;i<arr.length;i+=499){
+    const b=db.batch();
+    arr.slice(i,i+499).forEach(item=>b.set(db.collection(col).doc(String(item.id)),item));
+    await b.commit();
+  }
 }
 const saveClaims=arr=>_fsBulkSave('claims',arr);
 const saveReturns=arr=>_fsBulkSave('returns',arr);
@@ -905,8 +915,17 @@ const saveReturns=arr=>_fsBulkSave('returns',arr);
 function _activePage(){return localStorage.getItem('tuunu_page')||'home';}
 function setupFirebaseListeners(){
   let _claimSnapTimer=null;
+  const _DATE_FIELDS=['date','indate','donedate','shipdate'];
+  const _normClaimDates=r=>{
+    _DATE_FIELDS.forEach(f=>{
+      if(!r[f])return;
+      const iso=_xlsxDateToISO(String(r[f]));
+      if(iso&&/^\d{4}-\d{2}-\d{2}$/.test(iso))r[f]=iso;
+    });
+    return r;
+  };
   db.collection('claims').onSnapshot(snap=>{
-    _claimsData=snap.docs.map(d=>d.data()).sort((a,b)=>{
+    _claimsData=snap.docs.map(d=>_normClaimDates({...d.data()})).sort((a,b)=>{
       const ka=(normDate(a.date)||normDate(a.indate)||'');
       const kb=(normDate(b.date)||normDate(b.indate)||'');
       if(ka&&kb&&ka!==kb)return ka.localeCompare(kb);
@@ -1317,7 +1336,7 @@ const CF={
   costP:{type:'number'},costR:{type:'number'},costS:{type:'number'},
   leadtime:{type:'number'},vocAmt:{type:'number'},csAmt:{type:'number'}
 };
-const CF_ORDER=['month','date','indate','shipdate','donedate','channel','platform','orderno','buyer','product','option','category','issue','liability','type','nature','_img','reason','returnYn','reshipYn','accident','status'];
+const CF_ORDER=['month','date','indate','shipdate','donedate','channel','platform','orderno','buyer','product','option','category','issue','liability','type','nature','_img','reason','returnYn','reshipYn','accident','status','costP','costR','costS'];
 
 function editCell(td,claimId,field,curVal){
   if(td.querySelector('input,select,textarea'))return;
@@ -1734,9 +1753,7 @@ function _buildClaimRow(r,i){
       return;
     }
     const f=CF[key];if(!f)return;
-    let raw=r[key]||'';
-    if(_XLSX_DATE_FIELDS&&_XLSX_DATE_FIELDS.has(key)&&raw){raw=_xlsxDateToISO(raw)||raw;}
-    const val=raw;
+    const val=r[key]||'';
     const isLeft=f.align==='left';
     let disp=val||'-';
     if(key==='orderno'&&r._grpCnt>1)disp+=` <span style="background:#1a73e8;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;">${r._grpCnt}건</span>`;
@@ -1999,26 +2016,38 @@ function importClaimsXLSX(input){
       // 정규화된 맵
       const HM={};
       Object.entries(HM_RAW).forEach(([k,v])=>{HM[_norm(k)]=v;});
+      // 인식 안된 헤더 확인
+      const allHeaders=rows.length?Object.keys(rows[0]).map(_norm):[];
+      const unmapped=allHeaders.filter(h=>!HM[h]);
+      if(unmapped.length)console.warn('[XLSX import] 매핑 안된 헤더:', unmapped);
+
       const newClaims=[];
+      const ts=Date.now();
       rows.forEach((row,i)=>{
-        const rec={id:Date.now()+i};
+        const rec={id:ts+i};
         Object.entries(row).forEach(([h,v])=>{
           const field=HM[_norm(h)];
           if(!field)return;
-          // raw:false라서 v는 이미 문자열이나 날짜 포맷된 값
           const sv=String(v||'').trim();
-          rec[field]=_XLSX_DATE_FIELDS.has(field)?_xlsxDateToISO(sv):sv;
+          rec[field]=_XLSX_DATE_FIELDS.has(field)?(_xlsxDateToISO(sv)||sv):sv;
         });
-        // 날짜 필드 추가 안전장치
-        _XLSX_DATE_FIELDS.forEach(f=>{if(rec[f])rec[f]=_xlsxDateToISO(rec[f]);});
+        // 날짜 추가 안전장치
+        _XLSX_DATE_FIELDS.forEach(f=>{if(rec[f]){const iso=_xlsxDateToISO(rec[f]);if(iso)rec[f]=iso;}});
         if(!rec.option)rec.option='[옵션 지정 불가]';
         ['costP','costR','costS'].forEach(f=>{if(rec[f])rec[f]=String(rec[f]).replace(/[,원\s]/g,'');});
         if(Object.keys(rec).length>1)newClaims.push(rec);
       });
-      if(!newClaims.length){alert('가져올 데이터가 없습니다.');input.value='';return;}
-      const existing=loadClaims();
+      if(!newClaims.length){
+        alert('가져올 데이터가 없습니다.\n\n인식된 헤더: '+allHeaders.slice(0,5).join(', ')+'\n매핑 안된 헤더: '+unmapped.slice(0,5).join(', '));
+        input.value='';return;
+      }
+      // 기존 데이터 중 이번 가져오기와 중복 없는 것만 유지 (orderno 기준)
+      const newOrderNos=new Set(newClaims.map(r=>r.orderno).filter(Boolean));
+      const existing=loadClaims().filter(r=>r.orderno&&!newOrderNos.has(r.orderno));
       const merged=[...newClaims,...existing];
-      saveClaims(merged).then(()=>alert('✅ '+newClaims.length+'건을 가져왔습니다.')).catch(err=>alert('오류: '+err));
+      saveClaims(merged)
+        .then(()=>alert(`✅ ${newClaims.length}건 가져오기 완료\n총 ${merged.length}건 저장됨`))
+        .catch(err=>alert('저장 오류: '+err));
     }catch(err){alert('파일 읽기 오류: '+err);}
     input.value='';
   };
