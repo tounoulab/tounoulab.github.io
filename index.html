@@ -1,0 +1,2692 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOUNOU LAB</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='36' y='10' width='14' height='80' rx='7' fill='black'/%3E%3Crect x='36' y='10' width='14' height='80' rx='7' fill='black' transform='rotate(90 43 50)'/%3E%3Crect x='36' y='10' width='14' height='80' rx='7' fill='black' transform='rotate(135 43 50)'/%3E%3Crect x='36' y='50' width='14' height='42' rx='7' fill='black' transform='rotate(45 43 50)'/%3E%3Ccircle cx='73' cy='18' r='11' fill='black'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic Neo',sans-serif;background:#f2f3f5;color:#1a1a1a;min-height:100vh;}
+/* Login */
+#login-screen{position:fixed;inset:0;background:#f2f3f5;z-index:99999;display:flex;align-items:center;justify-content:center;}
+#login-screen.hidden{display:none;}
+.login-box{background:#fff;border-radius:20px;border:1px solid #e8e8e6;padding:44px 40px 40px;width:360px;box-shadow:0 8px 40px rgba(0,0,0,0.08);}
+.login-logo{text-align:center;margin-bottom:32px;}
+.login-logo img{width:44px;height:44px;object-fit:contain;margin-bottom:10px;}
+.login-logo-title{font-size:22px;font-weight:800;letter-spacing:0.04em;color:#1a1a1a;}
+.login-logo-sub{font-size:12px;color:#aaa;margin-top:3px;}
+.login-field{margin-bottom:14px;}
+.login-field label{display:block;font-size:12px;color:#555;margin-bottom:5px;font-weight:500;}
+.login-field input{width:100%;padding:11px 14px;border:1.5px solid #e0e0de;border-radius:9px;font-size:14px;outline:none;transition:border 0.15s;}
+.login-field input:focus{border-color:#1a1a1a;}
+#login-err{display:none;color:#dc2626;font-size:12px;margin-bottom:14px;text-align:center;}
+.login-btn{width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:opacity 0.15s;}
+.login-btn:hover{opacity:0.82;}
+/* Settings modal */
+#settings-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:9998;align-items:center;justify-content:center;}
+#settings-modal.open{display:flex;}
+.settings-box{background:#fff;border-radius:16px;padding:32px 30px 28px;width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.14);}
+.settings-box h3{font-size:16px;font-weight:700;margin-bottom:22px;}
+.settings-field{margin-bottom:13px;}
+.settings-field label{display:block;font-size:12px;color:#555;margin-bottom:5px;font-weight:500;}
+.settings-field input{width:100%;padding:10px 13px;border:1.5px solid #e0e0de;border-radius:8px;font-size:13px;outline:none;}
+.settings-field input:focus{border-color:#1a1a1a;}
+#settings-msg{font-size:12px;margin-top:12px;text-align:center;min-height:16px;}
+.gnb-auth-btn{font-size:12px;padding:5px 13px;border-radius:7px;border:1.5px solid #e0e0de;background:#fff;cursor:pointer;color:#555;font-weight:500;transition:background 0.12s;}
+.gnb-auth-btn:hover{background:#f2f3f5;}
+/* GNB */
+.gnb{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #e8e8e6;}
+.gnb-inner{max-width:100%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 24px;}
+.gnb-left{display:flex;align-items:center;}
+.gnb-logo{width:32px;height:32px;object-fit:contain;margin-right:8px;}
+.gnb-brand{font-size:18px;font-weight:800;letter-spacing:0.05em;margin-right:28px;white-space:nowrap;}
+.gnb-nav{display:flex;gap:4px;}
+.gnb-nav-item{padding:7px 16px;border-radius:20px;font-size:15px;color:#555;cursor:pointer;font-weight:500;user-select:none;white-space:nowrap;transition:all 0.1s;}
+.gnb-nav-item:hover{background:#f5f5f3;color:#1a1a1a;}
+.gnb-nav-item.active{background:#1a1a1a;color:#fff;}
+.gnb-right{font-size:14px;color:#aaa;white-space:nowrap;}
+/* 도넛 차트 범례 */
+.chart-legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;}
+.chart-legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#555;}
+.chart-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+/* Pages */
+.page{display:none;}
+.page.active{display:block;}
+.page-inner{max-width:100%;margin:0;padding:24px;}
+/* Home layout */
+.home-layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;}
+/* Status section */
+.status-section{background:#fff;border-radius:12px;border:1px solid #e8e8e6;overflow:hidden;margin-bottom:16px;}
+.status-hd{padding:18px 24px 0;font-size:15px;font-weight:700;}
+.status-row{display:flex;border-top:1px solid #f0f0ee;margin-top:14px;}
+.status-item{flex:1;padding:18px 4px;text-align:center;border-right:1px solid #f0f0ee;}
+.status-item:last-child{border-right:none;}
+.status-item-label{font-size:11px;color:#999;margin-bottom:6px;}
+.status-item-value{font-size:26px;font-weight:700;color:#1a1a1a;}
+/* Sub grid */
+.sub-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.sub-card{background:#fff;border-radius:12px;border:1px solid #e8e8e6;padding:16px 20px;}
+.sub-card-title{font-size:12px;font-weight:600;color:#999;margin-bottom:12px;letter-spacing:0.03em;}
+.sub-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f8f8f6;}
+.sub-row:last-child{border-bottom:none;}
+.sub-row-label{font-size:13px;color:#555;}
+.sub-row-value{font-size:14px;font-weight:700;color:#1a1a1a;}
+/* Cards */
+.card{background:#fff;border-radius:12px;border:1px solid #e8e8e6;padding:20px 24px;margin-bottom:16px;}
+.card-title{font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:16px;}
+/* Sidebar */
+.side-card{background:#fff;border-radius:12px;border:1px solid #e8e8e6;padding:16px 20px;margin-bottom:12px;}
+.side-card-title{font-size:13px;font-weight:700;margin-bottom:12px;}
+/* Form */
+label{display:block;font-size:13px;color:#666;margin-bottom:5px;}
+select,input[type="text"],input[type="date"],input[type="number"],textarea{width:100%;padding:9px 11px;border:1px solid #e0e0de;border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;appearance:none;-webkit-appearance:none;outline:none;font-family:inherit;transition:border-color 0.15s;}
+select:focus,input:focus,textarea:focus{border-color:#aaa;}
+textarea{resize:vertical;min-height:60px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.form-row{margin-bottom:12px;}
+.section-label{font-size:11px;font-weight:600;color:#bbb;letter-spacing:0.06em;margin-bottom:10px;}
+.divider{height:1px;background:#f0f0ee;margin:16px 0;}
+/* Chips */
+.issue-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{padding:5px 12px;border-radius:20px;font-size:13px;cursor:pointer;border:1px solid #e0e0de;background:#f8f8f6;color:#555;transition:all 0.12s;user-select:none;}
+.chip:hover{border-color:#bbb;background:#f0f0ee;}
+.chip.selected{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
+/* Conditional */
+.conditional-row{margin-top:12px;display:none;}
+.conditional-row.visible{display:block;}
+/* Buttons */
+.btn-primary{width:100%;padding:12px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity 0.15s;}
+.btn-primary:hover{opacity:0.85;}
+.btn-outline{width:100%;padding:10px;background:#fff;color:#1a1a1a;border:1.5px solid #1a1a1a;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;}
+.btn-outline:hover{background:#f5f5f3;}
+.btn-generate{width:100%;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;}
+.btn-generate:hover{opacity:0.85;}
+.btn-secondary{padding:7px 14px;border:1px solid #e0e0de;border-radius:8px;background:#fff;font-size:13px;cursor:pointer;font-family:inherit;}
+.btn-secondary:hover{background:#f5f5f3;}
+.btn-danger{padding:4px 10px;border:1px solid #fecaca;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;color:#dc2626;}
+.btn-copy{padding:7px 16px;border:1px solid #e0e0de;border-radius:8px;background:#fff;font-size:13px;cursor:pointer;}
+/* Table */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:580px;}
+th{background:#f8f8f6;padding:9px 12px;text-align:left;font-weight:600;color:#888;border-bottom:1px solid #e8e8e6;white-space:nowrap;font-size:12px;}
+td{padding:9px 12px;border-bottom:1px solid #f5f5f3;color:#333;vertical-align:middle;}
+tr:hover td{background:#fafafa;}
+.empty-msg{text-align:center;color:#bbb;font-size:13px;padding:32px 0;}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;}
+.badge-처리중{background:#fef3c7;color:#d97706;}
+.badge-완료{background:#d1fae5;color:#059669;}
+.badge-대기{background:#fee2e2;color:#dc2626;}
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.stat-card{background:#fff;border-radius:10px;border:1px solid #e8e8e6;padding:16px;text-align:center;}
+.stat-label{font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.05em;margin-bottom:6px;}
+.stat-value{font-size:26px;font-weight:700;color:#1a1a1a;}
+.stat-compare{font-size:12px;margin-top:4px;}
+.stat-compare.up{color:#dc2626;}
+.stat-compare.down{color:#2563eb;}
+.stat-compare.same{color:#aaa;}
+/* Msg result */
+#resultCard{display:none;}
+.result-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.sms-badge{font-size:12px;font-weight:600;padding:4px 10px;border-radius:6px;background:#f0f0ee;color:#555;}
+.sms-badge.lms{background:#fff3e0;color:#e65c00;}
+.output-box{background:#f8f8f6;border:1px solid #e8e8e6;border-radius:10px;padding:16px 18px;font-size:14px;line-height:1.9;white-space:pre-wrap;word-break:break-word;color:#1a1a1a;}
+.byte-info{font-size:12px;color:#aaa;margin-top:8px;text-align:right;}
+/* VOC bars */
+.voc-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.voc-label{font-size:13px;color:#555;width:160px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.voc-bar-wrap{flex:1;height:8px;background:#f0f0ee;border-radius:4px;}
+.voc-bar{height:100%;background:#1a1a1a;border-radius:4px;}
+.voc-count{font-size:12px;color:#888;width:28px;text-align:right;flex-shrink:0;}
+/* ===== searchable dropdown ===== */
+.sd-wrap{position:relative;}
+.sd-input{width:100%;padding:8px 28px 8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;cursor:text;}
+.sd-input:focus{outline:none;border-color:#1a1a1a;}
+.sd-list{display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:8px;z-index:600;max-height:220px;overflow-y:auto;box-shadow:0 6px 20px rgba(0,0,0,0.12);}
+.sd-list.open{display:block;}
+.sd-group{padding:6px 10px 3px;font-size:11px;color:#aaa;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:#fafafa;border-bottom:1px solid #f0f0ee;position:sticky;top:0;}
+.sd-item{padding:8px 12px;font-size:13px;cursor:pointer;color:#222;}
+.sd-item:hover,.sd-item.focused{background:#f0f4ff;color:#1a1a1a;}
+.sd-empty{padding:10px 12px;font-size:12px;color:#aaa;}
+/* claim sheet inline edit */
+#claim-sheet th{text-align:center !important;padding:8px 28px 8px 10px !important;position:sticky;top:0;z-index:3;background:#f6f6f4;user-select:none;white-space:nowrap;}
+.th-filter-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:4px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;padding:0;z-index:4;}
+.th-filter-btn:hover{background:#e8e8e6;color:#555;}
+.th-filter-btn.active{background:#1a73e8;color:#fff;}
+#cfp{display:none;position:fixed;background:#fff;border:1px solid #e0e0de;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,0.18);z-index:9999;width:240px;}
+#cfp-q{width:100%;padding:7px 10px;border:1px solid #e0e0de;border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;}
+#cfp-list{max-height:240px;overflow-y:auto;}
+.cfp-item{padding:7px 12px;font-size:13px;cursor:pointer;border-radius:6px;display:flex;align-items:center;gap:6px;}
+.cfp-item:hover{background:#f0f4ff;}
+.cfp-item.sel{background:#1a73e8;color:#fff;}
+#claim-sheet td{text-align:center;vertical-align:middle;}
+#claim-sheet td.td-left{text-align:left;}
+#claim-sheet td[onclick]{cursor:pointer;}
+#claim-sheet td[onclick]:hover{background:rgba(26,115,232,0.06) !important;}
+.col-rz{position:absolute;right:0;top:0;height:100%;width:6px;cursor:col-resize;z-index:2;}
+.col-rz:hover,.col-rz.dragging{background:rgba(26,115,232,0.35);}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="logo.png.png" alt="logo" onerror="this.style.display='none'">
+      <div class="login-logo-title">TOUNOU LAB</div>
+      <div class="login-logo-sub">클레임 관리 시스템</div>
+    </div>
+    <div class="login-field">
+      <label>아이디</label>
+      <input type="text" id="login-id" placeholder="아이디 입력" onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()">
+    </div>
+    <div class="login-field">
+      <label>비밀번호</label>
+      <input type="password" id="login-pw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')submitLogin()">
+    </div>
+    <div id="login-err">아이디 또는 비밀번호가 올바르지 않습니다.</div>
+    <button class="login-btn" onclick="submitLogin()">로그인</button>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settings-modal">
+  <div class="settings-box">
+    <h3>🔒 비밀번호 변경</h3>
+    <div id="settings-user-info" style="background:#f6f6f4;border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:13px;color:#555;"></div>
+    <div class="settings-field">
+      <label>현재 비밀번호</label>
+      <input type="password" id="s-pw-cur" placeholder="현재 비밀번호">
+    </div>
+    <div class="settings-field">
+      <label>새 비밀번호</label>
+      <input type="password" id="s-pw-new" placeholder="변경할 비밀번호">
+    </div>
+    <div class="settings-field">
+      <label>새 비밀번호 확인</label>
+      <input type="password" id="s-pw-new2" placeholder="새 비밀번호 재입력">
+    </div>
+    <div id="settings-msg" style="color:#dc2626;"></div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button onclick="saveSettings()" style="flex:1;padding:11px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">저장</button>
+      <button onclick="closeSettings()" style="flex:1;padding:11px;background:#f2f3f5;color:#555;border:1.5px solid #e0e0de;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- GNB -->
+<nav class="gnb">
+  <div class="gnb-inner">
+    <div class="gnb-left">
+      <img src="logo.png.png" class="gnb-logo" alt="logo" onclick="switchPage('home')" style="cursor:pointer;">
+      <span class="gnb-brand" onclick="switchPage('home')" style="cursor:pointer;">TOUNOU LAB</span>
+      <div class="gnb-nav">
+        <div class="gnb-nav-item" data-page="claim" onclick="switchPage('claim')">📋 클레임 현황</div>
+        <div class="gnb-nav-item" data-page="voc" onclick="switchPage('voc')">📊 VOC 통계</div>
+        <div class="gnb-nav-item" data-page="return" onclick="switchPage('return')">📦 반품 입고</div>
+        <div class="gnb-nav-item" data-page="msg" onclick="switchPage('msg')">✉ 문자 안내</div>
+      </div>
+    </div>
+    <div class="gnb-right" style="display:flex;align-items:center;gap:8px;">
+      <span id="gnb-date"></span>
+      <span id="gnb-username" style="font-size:13px;font-weight:600;color:#1a1a1a;padding:4px 10px;background:#f2f3f5;border-radius:7px;display:none;"></span>
+      <button class="gnb-auth-btn" onclick="openSettings()" title="비밀번호 변경">⚙</button>
+      <button class="gnb-auth-btn" onclick="doLogout()">로그아웃</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== PAGE: HOME (대시보드) ===== -->
+<div id="page-home" class="page active">
+  <div class="page-inner">
+    <div class="home-layout">
+      <!-- 메인 컬럼 -->
+      <div>
+        <!-- 클레임 처리 현황 -->
+        <div class="status-section">
+          <div class="status-hd" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <span>클레임 처리 현황</span>
+            <div style="display:flex;align-items:center;gap:5px;margin-left:auto;white-space:nowrap;">
+              <label style="font-size:11px;color:#aaa;">기간</label>
+              <input type="date" id="h-filter-from" style="font-size:11px;padding:3px 6px;border:1px solid #ddd;border-radius:6px;color:#333;background:#fff;cursor:pointer;height:26px;width:130px;" onkeydown="if(event.key==='Enter')applyDateFilter()"/>
+              <span style="font-size:11px;color:#aaa;">~</span>
+              <input type="date" id="h-filter-to" style="font-size:11px;padding:3px 6px;border:1px solid #ddd;border-radius:6px;color:#333;background:#fff;cursor:pointer;height:26px;width:130px;" onkeydown="if(event.key==='Enter')applyDateFilter()"/>
+              <button onclick="applyDateFilter()" style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:#1a1a1a;color:#fff;cursor:pointer;height:26px;font-weight:600;font-family:inherit;">검색</button>
+              <button onclick="clearDateFilter()" style="font-size:11px;padding:3px 8px;border:1px solid #ddd;border-radius:6px;background:#f5f5f3;color:#666;cursor:pointer;height:26px;font-family:inherit;">초기화</button>
+            </div>
+          </div>
+          <div class="status-row">
+            <div class="status-item"><div class="status-item-label">금일 접수</div><div class="status-item-value" id="h-today">-</div></div>
+            <div class="status-item"><div class="status-item-label">완료</div><div class="status-item-value" id="h-done">-</div></div>
+            <div class="status-item"><div class="status-item-label">이번 주</div><div class="status-item-value" id="h-week">-</div></div>
+            <div class="status-item" style="border-right:none;"><div class="status-item-label">이번 달</div><div class="status-item-value" id="h-month">-</div></div>
+          </div>
+          <div id="h-filter-badge" style="display:none;padding:6px 18px 10px;font-size:12px;color:#1a73e8;font-weight:500;"></div>
+        </div>
+        <!-- 서브 그리드 -->
+        <div class="sub-grid">
+          <div class="sub-card">
+            <div class="sub-card-title">귀책별 현황 (이번 주)</div>
+            <div style="position:relative;height:170px;display:flex;align-items:center;justify-content:center;">
+              <canvas id="chart-liability"></canvas>
+            </div>
+            <div id="h-liability-list" class="chart-legend"></div>
+          </div>
+          <div class="sub-card">
+            <div class="sub-card-title">처리 유형 (이번 주)</div>
+            <div style="position:relative;height:170px;display:flex;align-items:center;justify-content:center;">
+              <canvas id="chart-type"></canvas>
+            </div>
+            <div id="h-type-list" class="chart-legend"></div>
+          </div>
+          <div class="sub-card">
+            <div class="sub-card-title">반품 입고 현황</div>
+            <div class="sub-row"><span class="sub-row-label">금일 입고</span><span class="sub-row-value" id="h-ret-today">-</span></div>
+            <div class="sub-row"><span class="sub-row-label">이번 주</span><span class="sub-row-value" id="h-ret-week">-</span></div>
+            <div class="sub-row"><span class="sub-row-label">이번 달</span><span class="sub-row-value" id="h-ret-month">-</span></div>
+          </div>
+        </div>
+        <!-- 주간 클레임 추이 -->
+        <div class="card" style="margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <span class="card-title" style="margin-bottom:0;">이번 주 클레임 접수 추이</span>
+            <span id="weekly-total-badge" style="font-size:12px;color:#888;"></span>
+          </div>
+          <div style="position:relative;height:160px;">
+            <canvas id="chart-weekly"></canvas>
+          </div>
+        </div>
+        <!-- 최근 클레임 -->
+        <div class="card">
+          <div style="margin-bottom:16px;">
+            <span class="card-title">최근 클레임</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>작성일</th><th>플랫폼</th><th>주문번호</th><th>주문자</th><th>상품명</th><th>이슈분류</th><th>귀책</th><th>처리유형</th><th>상태</th><th></th></tr></thead>
+              <tbody id="home-claim-tbody"></tbody>
+            </table>
+            <div class="empty-msg" id="home-claim-empty">등록된 클레임이 없습니다</div>
+          </div>
+        </div>
+      </div>
+      <!-- 사이드바 -->
+      <div>
+        <div class="side-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <span class="side-card-title" style="margin-bottom:0;">공지 사항</span>
+            <button onclick="toggleNoticeForm()" id="btn-notice-add" style="font-size:11px;padding:3px 8px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;">+ 등록</button>
+          </div>
+          <div id="notice-form" style="display:none;margin-bottom:10px;">
+            <textarea id="notice-input" placeholder="공지 내용을 입력하세요." style="width:100%;padding:8px 10px;border:1px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;resize:vertical;min-height:64px;box-sizing:border-box;outline:none;"></textarea>
+            <div style="display:flex;gap:6px;margin-top:5px;">
+              <button onclick="addNotice()" style="flex:1;padding:5px;font-size:12px;border:none;border-radius:6px;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;">등록</button>
+              <button onclick="toggleNoticeForm()" style="flex:1;padding:5px;font-size:12px;border:1px solid #ddd;border-radius:6px;background:#f5f5f3;color:#666;cursor:pointer;font-family:inherit;">취소</button>
+            </div>
+          </div>
+          <div id="notice-list" style="font-size:13px;color:#555;"></div>
+        </div>
+        <div class="side-card">
+          <div class="side-card-title">오늘의 현황</div>
+          <div class="sub-row"><span class="sub-row-label">클레임 인입</span><span class="sub-row-value" id="side-today-claim">-</span></div>
+          <div class="sub-row"><span class="sub-row-label">반품 입고</span><span class="sub-row-value" id="side-today-return">-</span></div>
+          <div class="sub-row"><span class="sub-row-label">처리 완료</span><span class="sub-row-value" id="side-today-done">-</span></div>
+        </div>
+        <div class="side-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <span class="side-card-title" style="margin-bottom:0;">최근 반품 입고</span>
+            <button class="btn-secondary" style="font-size:12px;padding:4px 10px;" onclick="switchPage('return')">전체보기</button>
+          </div>
+          <div id="side-return-list"><div class="empty-msg" style="padding:12px 0;font-size:13px;">입고 내역 없음</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: 문자 안내 ===== -->
+<div id="page-msg" class="page">
+<div style="max-width:680px;margin:0 auto;padding:24px;">
+
+  <div class="card">
+    <div class="card-title">이슈 유형 선택</div>
+    <div style="font-size:11px; font-weight:600; color:#bbb; letter-spacing:0.06em; margin-bottom:10px;">아웃바운드</div>
+    <div class="issue-chips" id="chips-아웃바운드" style="margin-bottom:4px;"></div>
+    <div class="divider"></div>
+    <div style="font-size:11px; font-weight:600; color:#bbb; letter-spacing:0.06em; margin-bottom:10px;">클레임</div>
+    <div class="issue-chips" id="chips-클레임" style="margin-bottom:4px;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">상세 정보</div>
+    <div style="margin-bottom:12px;">
+      <label>상품명</label>
+      <input type="text" id="product" placeholder="예: 코튼 베개커버 2p" />
+    </div>
+    <div class="conditional-row" id="rowClaimMain" style="margin-bottom:12px;">
+      <label>처리 유형</label>
+      <select id="claimMain" onchange="onMainTypeChange()">
+        <option value="">선택</option>
+      </select>
+    </div>
+    <!-- 누락 발송처 확인 여부 -->
+    <div class="conditional-row" id="rowShipCheck" style="margin-bottom:12px;">
+      <label>발송처 확인 여부</label>
+      <select id="shipCheck" onchange="onClaimTypeChange()">
+        <option value="발송확인">발송 확인 완료</option>
+        <option value="누락확인">누락 확인 완료</option>
+      </select>
+    </div>
+    <!-- 파손/훼손, 불량 주장 사진 첨부 여부 -->
+    <div class="conditional-row" id="rowPhotoAttached" style="margin-bottom:12px;">
+      <label>사진 첨부 여부</label>
+      <select id="photoAttached" onchange="onPhotoAttachedChange()">
+        <option value="미첨부">미첨부</option>
+        <option value="첨부">첨부</option>
+      </select>
+    </div>
+    <!-- 불량 주장 판단 여부 -->
+    <div class="conditional-row" id="rowDefectJudge" style="margin-bottom:12px;">
+      <label>불량 판단 여부</label>
+      <select id="defectJudge" onchange="onDefectJudgeChange()">
+        <option value="불량확인">불량 확인 완료</option>
+        <option value="판단불가">불량 판단 불가</option>
+      </select>
+    </div>
+    <div class="conditional-row" id="rowSubType" style="margin-bottom:12px;">
+      <label>세부 유형</label>
+      <select id="claimType" onchange="onClaimTypeChange()">
+        <option value="">선택</option>
+      </select>
+    </div>
+    <div class="conditional-row visible" id="rowAbsence" style="margin-bottom:12px;">
+      <label>부재 여부</label>
+      <select id="absence" onchange="onAbsenceChange()">
+        <option value="1차">1차 부재</option>
+        <option value="2차">2차 부재</option>
+      </select>
+    </div>
+    <!-- 출고 일정 안내 시 출고 예정 기간 입력 -->
+    <div class="conditional-row" id="rowShipDate" style="margin-bottom:12px;">
+      <label>출고 예정 기간</label>
+      <input type="text" id="shipDate" placeholder="예: 6/18~6/22" />
+    </div>
+    <!-- 상품 수령 확인 1차 부재 시 OB 예정 시간 -->
+    <div class="conditional-row" id="rowObTime" style="margin-bottom:12px;">
+      <label>OB 예정 시간</label>
+      <input type="text" id="obTime" placeholder="예: 오후 2시" />
+    </div>
+    <!-- 단종/품절 시 주문번호 입력 -->
+    <div class="conditional-row" id="rowOrderNo" style="margin-bottom:12px;">
+      <label>주문번호</label>
+      <input type="text" id="orderNo" placeholder="예: 20250617-123456" />
+    </div>
+    <!-- 교환 재출고 시 운송장 입력 -->
+    <div class="conditional-row" id="rowTracking">
+      <div class="grid2">
+        <div>
+          <label>택배사</label>
+          <select id="courier">
+            <option value="CJ대한통운">CJ대한통운</option>
+            <option value="한진택배">한진택배</option>
+            <option value="롯데택배">롯데택배</option>
+            <option value="우체국택배">우체국택배</option>
+          </select>
+        </div>
+        <div>
+          <label>운송장번호</label>
+          <input type="text" id="trackingNo" placeholder="예: 522094983774" />
+        </div>
+      </div>
+    </div>
+    <!-- 분실 반품 진행 상태 -->
+    <div class="conditional-row" id="rowLostStatus" style="margin-bottom:12px;">
+      <label>진행 상태</label>
+      <select id="lostStatus" onchange="onLostStatusChange()">
+        <option value="부재">고객 부재 및 택배사 확인 중</option>
+        <option value="종결">택배사 확인 및 종결 안내</option>
+      </select>
+    </div>
+    <!-- 교환 출고 유형 -->
+    <div class="conditional-row" id="rowExchangeType" style="margin-bottom:12px;">
+      <label>출고 유형</label>
+      <select id="exchangeType">
+        <option value="POD">POD</option>
+        <option value="당일출고">당일 출고</option>
+      </select>
+    </div>
+    <!-- 파손/훼손 교환 + 첨부 시 출고 예정 일자 -->
+    <div class="conditional-row" id="rowExchangeShipDate" style="margin-bottom:12px;">
+      <label>출고 예정 일자</label>
+      <input type="text" id="exchangeShipDate" placeholder="예: 6/25" />
+    </div>
+    <!-- 반품불가 시 사유 입력 -->
+    <div class="conditional-row" id="rowReturnDeny">
+      <label>반품 불가 사유</label>
+      <select id="denyReason">
+        <option value="생활 오염">생활 오염</option>
+        <option value="상품 사용 흔적">상품 사용 흔적</option>
+        <option value="세탁 흔적">세탁 흔적</option>
+        <option value="상품 훼손">상품 훼손</option>
+        <option value="구성품 누락">구성품 누락</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="btn-generate" onclick="generate()">문자 초안 생성</button>
+
+  <div class="card" id="resultCard" style="margin-top: 16px;">
+    <div class="result-header">
+      <span class="sms-badge" id="smsBadge">LMS</span>
+      <button class="btn-copy" onclick="copyText()">복사</button>
+    </div>
+    <div class="output-box" id="output"></div>
+    <div class="byte-info">※ 90bytes 이하 SMS / 초과 시 LMS 자동 전환</div>
+  </div>
+</div><!-- /page-msg inner -->
+</div><!-- /page-msg -->
+
+<!-- ===== PAGE: 클레임 등록 ===== -->
+<div id="page-claim" class="page">
+<!-- 클레임 등록 모달 -->
+<div id="claim-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.45);overflow-y:auto;" onclick="if(event.target===this)closeClaimModal()">
+  <div style="background:#fff;border-radius:14px;max-width:720px;margin:40px auto;padding:32px;position:relative;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <span style="font-size:17px;font-weight:700;">신규 클레임 등록</span>
+      <button onclick="closeClaimModal()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div class="section-label">기본 정보</div>
+    <div class="grid2 form-row"><div><label>발생 월</label><select id="c-month"><option value="">선택</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></div><div><label>작성일 *</label><input type="date" id="c-date"/></div></div>
+    <div class="grid2 form-row"><div><label>클레임 인입일</label><input type="date" id="c-indate"/></div><div><label>배송 일자</label><input type="date" id="c-shipdate"/></div></div>
+    <div class="divider"></div>
+    <div class="section-label">채널 / 주문</div>
+    <div class="grid2 form-row">
+      <div><label>인입 채널</label><select id="c-channel"><option value="">선택</option><option>채팅</option><option>일반 접수건</option><option>게시판</option><option>CS 메모</option><option>유선 인입</option><option>CS 확인</option><option>내부 점검(타부서)</option><option>이메일</option><option>헬프센터</option><option>리뷰 대응</option></select></div>
+      <div><label>플랫폼</label><select id="c-platform"><option value="">선택</option><option>카페24</option><option>29CM</option><option>무신사</option><option>협찬</option></select></div>
+    </div>
+    <div class="grid2 form-row"><div><label>주문번호</label><input type="text" id="c-orderno"/></div><div><label>주문자명</label><input type="text" id="c-buyer"/></div></div>
+    <div class="divider"></div>
+    <div class="section-label">상품 정보</div>
+    <div class="grid2 form-row"><div><label>상품명</label><input type="text" id="c-product"/></div><div><label>옵션명</label><input type="text" id="c-option" placeholder="없으면 [옵션 지정 불가] 자동 입력"/></div></div>
+    <div class="form-row"><label>상품 분류</label>
+      <select id="c-category"><option value="">선택</option><option>쿠션 커버</option><option>미니 쿠션 커버</option><option>파우치</option><option>패브릭 포스터</option><option>쉬폰 패브릭 포스터</option><option>베개 커버</option><option>담요</option><option>니트블랭킷</option><option>티셔츠</option><option>테이블매트</option><option>파자마</option><option>에코백</option><option>극세사 발매트</option><option>극세사 주방매트</option><option>러그</option><option>이불</option><option>규조토 발매트</option><option>규조토 주방매트</option><option>포스터</option><option>포스터+액자</option><option>핸드타월</option><option>타월 발매트</option><option>액자 세트</option><option>캔버스 액자</option><option>액자 단품</option><option>컵</option><option>플레이트</option><option>양말</option><option>테크류</option><option>부자재(꼭꼬핀, 논슬립 등)</option><option>PVC 주방매트</option><option>사은품</option><option>매트리스 커버</option><option>침대 패드</option><option>쿠션 커버+쿠션 솜</option><option>쿠션 커버+방석 솜</option><option>베개 커버+베개 솜</option><option>미니 쿠션 커버+미니 쿠션 솜</option><option>냉감 침대패드</option><option>냉감 이불</option></select>
+    </div>
+    <div class="divider"></div>
+    <div class="section-label">클레임 분류</div>
+    <div class="grid2 form-row">
+      <div><label>이슈별 분류</label>
+        <select id="c-issue"><option value="">선택</option>
+          <optgroup label="제품"><option>[제품] 파손/훼손</option><option>[제품] 품질(원단/프린팅/해상도/지퍼/디자인/사이즈)</option><option>[제품] 품질(원단)</option><option>[제품] 품질(프린팅)</option><option>[제품] 품질(해상도)</option><option>[제품] 품질(지퍼)</option><option>[제품] 품질(디자인)</option><option>[제품] 품질(사이즈)</option><option>[제품] 품질(오염)</option><option>[제품] 품질(기타)</option></optgroup>
+          <optgroup label="발주/주문"><option>[발주] 발주 누락</option><option>[주문] 매칭 오류</option><option>[주문] 수집 누락</option><option>[주문] 전체 누락</option><option>[주문] 부분 누락</option><option>[주문] 과출고</option><option>[주문] 발주 누락</option><option>[주문] 상품 추가 누락</option><option>[주문] 상품 정보 상이</option></optgroup>
+          <optgroup label="출고"><option>[출고] 전체 누락</option><option>[출고] 부분 누락</option><option>[출고] 과출고</option><option>[출고] 오출고</option><option>[출고] 출고 지연</option></optgroup>
+          <optgroup label="배송"><option>[배송] 파손/훼손</option><option>[배송] 분실</option><option>[배송] 오배송</option><option>[배송] 배송완료 미수령</option><option>[배송] 분실 접수 후 배송완료</option></optgroup>
+          <optgroup label="고객 요청"><option>[고객 요청] 사이즈</option><option>[고객 요청] 디자인</option><option>[고객 요청] 냄새</option><option>[고객 요청] 해상도</option><option>[고객 요청] 색상/색감</option><option>[고객 요청] 두께</option><option>[고객 요청] 소재</option><option>[고객 요청] 이염(색 번짐/물 빠짐)</option><option>[고객 요청] 오염(얼룩/먼지/이물질)</option><option>[고객 요청] 정책 불만</option><option>[고객 요청] 포장 불만족</option><option>[고객 요청] 서비스 불만족</option><option>[고객 요청] 상품 정보 상이</option><option>[고객 요청] 안전성 우려</option><option>[고객 요청] 생각한 상품이 아님</option><option>[고객 요청] 주문 오류</option><option>[고객 요청] 기타(사유 미확인 포함)</option><option>[고객 요청] 불량 오인지</option><option>[고객 요청] 할인 소급</option></optgroup>
+          <optgroup label="기타"><option>[3PL] 상품 추가 누락</option><option>[3PL] 상품 과등록</option><option>[타부서] 오발주</option><option>[배송사] 반송</option><option>[고객] 오출고 오인지</option></optgroup>
+        </select>
+      </div>
+      <div><label>귀책 주체</label><select id="c-liability"><option value="">선택</option><option>CS</option><option>재고</option><option>발주</option><option>주문</option><option>검수</option><option>출고</option><option>입고</option><option>공급처</option><option>배송사</option><option>3PL</option><option>고객</option><option>뚜누</option><option>알수없음</option><option>타부서</option></select></div>
+    </div>
+    <div class="grid2 form-row">
+      <div><label>처리 유형</label>
+        <select id="c-type"><option value="">선택</option>
+          <optgroup label="교환"><option>오출고 교환</option><option>불량 교환</option><option>단순변심 교환</option><option>파손/훼손 교환</option><option>분실 교환</option><option>반송 교환</option><option>누락 교환</option><option>미회수/교환</option></optgroup>
+          <optgroup label="반품"><option>불량 반품</option><option>오출고 반품</option><option>단순변심 반품</option><option>파손/훼손 반품</option><option>분실 반품</option><option>반송 반품</option><option>누락 반품</option><option>미회수/반품</option></optgroup>
+          <optgroup label="기타 처리"><option>제작 발주 및 수집</option><option>과출고 회수</option><option>클레임 철회</option><option>CS안내(품절/단순/예약발송)</option><option>차액 환불</option><option>상품가 결제 완료</option></optgroup>
+        </select>
+      </div>
+      <div><label>클레임 성격</label><select id="c-nature"><option value="">선택</option><option>VOC</option><option>일반 접수</option><option>내부 점검</option><option>CS</option><option>배송사</option></select></div>
+    </div>
+    <div class="form-row"><label>사유</label><textarea id="c-reason"></textarea></div>
+    <div class="divider"></div>
+    <div class="section-label">처리 정보</div>
+    <div class="grid3 form-row">
+      <div><label>회수 여부</label><select id="c-return-yn"><option value="">-</option><option>Y</option><option>N</option></select></div>
+      <div><label>재출고 여부</label><select id="c-reship-yn"><option value="">-</option><option>Y</option><option>N</option></select></div>
+      <div><label>사고 접수 여부</label><select id="c-accident"><option value="">-</option><option>Y</option><option>N</option></select></div>
+    </div>
+    <div class="form-row"><label>처리 상태</label><select id="c-status"><option value="">선택</option><option>처리 중</option><option>처리 완료</option></select></div>
+    <div class="divider"></div>
+    <div class="section-label">비용</div>
+    <div class="grid3 form-row">
+      <div><label>상품 비용</label><input type="number" id="c-cost-product" min="0"/></div>
+      <div><label>회수 비용</label><input type="number" id="c-cost-return" min="0"/></div>
+      <div><label>재출고 비용</label><input type="number" id="c-cost-reship" min="0"/></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <button class="btn-primary" onclick="addClaim()">등록</button>
+      <button class="btn-secondary" onclick="closeClaimModal()">취소</button>
+    </div>
+  </div>
+</div>
+<!-- 클레임 현황 본문 -->
+<div style="padding:20px 24px 0;">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <span style="font-size:18px;font-weight:700;">클레임 현황</span>
+    <span id="claim-count-badge" style="font-size:13px;color:#888;font-weight:400;"></span>
+    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-primary" onclick="openClaimModal()">+ 클레임 등록</button>
+      <button id="btn-group-order" class="btn-secondary" onclick="toggleGroupByOrder()" title="같은 주문번호를 1건으로 묶어서 표시">주문별 보기</button>
+      <button class="btn-secondary" onclick="exportClaims()">CSV 내보내기</button>
+      <button class="btn-secondary" onclick="document.getElementById('csv-import-input').click()">CSV 가져오기</button>
+      <button class="btn-secondary" onclick="confirmClearClaims()" style="color:#dc2626;border-color:#fecaca;">전체 삭제</button>
+      <input type="file" id="csv-import-input" accept=".csv" style="display:none;" onchange="importClaims(this)"/>
+    </div>
+  </div>
+</div>
+<div style="overflow:auto;max-height:calc(100vh - 190px);padding:0 24px 24px;">
+  <table id="claim-sheet" style="width:100%;border-collapse:collapse;font-size:13px;min-width:1400px;background:#fff;border:1px solid #e0e0de;border-radius:8px;">
+    <thead>
+      <tr style="background:#f6f6f4;">
+        <th data-col="month" style="border:1px solid #e0e0de;color:#555;font-weight:600;">발생 월</th>
+        <th data-col="date" style="border:1px solid #e0e0de;color:#555;font-weight:600;">작성일</th>
+        <th data-col="indate" style="border:1px solid #e0e0de;color:#555;font-weight:600;">인입일</th>
+        <th data-col="donedate" style="border:1px solid #e0e0de;color:#555;font-weight:600;">처리완료일</th>
+        <th data-col="channel" style="border:1px solid #e0e0de;color:#555;font-weight:600;">인입 채널</th>
+        <th data-col="platform" style="border:1px solid #e0e0de;color:#555;font-weight:600;">플랫폼</th>
+        <th data-col="orderno" style="border:1px solid #e0e0de;color:#555;font-weight:600;">주문번호</th>
+        <th data-col="buyer" style="border:1px solid #e0e0de;color:#555;font-weight:600;">주문자</th>
+        <th data-col="product" style="border:1px solid #e0e0de;color:#555;font-weight:600;">상품명</th>
+        <th data-col="option" style="border:1px solid #e0e0de;color:#555;font-weight:600;">옵션명</th>
+        <th data-col="category" style="border:1px solid #e0e0de;color:#555;font-weight:600;">상품분류</th>
+        <th data-col="issue" style="border:1px solid #e0e0de;color:#555;font-weight:600;">이슈분류</th>
+        <th data-col="liability" style="border:1px solid #e0e0de;color:#555;font-weight:600;">귀책</th>
+        <th data-col="type" style="border:1px solid #e0e0de;color:#555;font-weight:600;">처리유형</th>
+        <th data-col="reason" style="border:1px solid #e0e0de;color:#555;font-weight:600;">사유</th>
+        <th data-col="returnYn" style="border:1px solid #e0e0de;color:#555;font-weight:600;">회수</th>
+        <th data-col="reshipYn" style="border:1px solid #e0e0de;color:#555;font-weight:600;">재출고</th>
+        <th data-col="accident" style="border:1px solid #e0e0de;color:#555;font-weight:600;">사고접수</th>
+        <th data-col="status" style="border:1px solid #e0e0de;color:#555;font-weight:600;">상태</th>
+        <th data-col="_lead" style="border:1px solid #e0e0de;color:#555;font-weight:600;">리드타임</th>
+        <th data-col="_sla" style="border:1px solid #e0e0de;color:#555;font-weight:600;">SLA</th>
+        <th data-col="costP" style="border:1px solid #e0e0de;color:#555;font-weight:600;">상품비용</th>
+        <th data-col="costR" style="border:1px solid #e0e0de;color:#555;font-weight:600;">회수비용</th>
+        <th data-col="costS" style="border:1px solid #e0e0de;color:#555;font-weight:600;">재출고비용</th>
+        <th data-col="_del" style="border:1px solid #e0e0de;color:#555;font-weight:600;">삭제</th>
+      </tr>
+    </thead>
+    <tbody id="claim-tbody"></tbody>
+  </table>
+  <div class="empty-msg" id="claim-empty" style="background:#fff;border:1px solid #e0e0de;border-top:none;padding:40px;border-radius:0 0 8px 8px;">등록된 클레임이 없습니다. <span style="color:#1a73e8;cursor:pointer;" onclick="openClaimModal()">+ 클레임 등록</span></div>
+</div>
+</div><!-- /page-claim -->
+
+<!-- ===== PAGE: VOC 통계 ===== -->
+<div id="page-voc" class="page">
+<div style="max-width:1200px;margin:0 auto;padding:24px;">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">금일</div><div class="stat-value" id="sv-today">0</div><div class="stat-compare same" id="sv-today-cmp">-</div></div>
+    <div class="stat-card"><div class="stat-label">이번 주</div><div class="stat-value" id="sv-week">0</div><div class="stat-compare same" id="sv-week-cmp">-</div></div>
+    <div class="stat-card"><div class="stat-label">이번 달</div><div class="stat-value" id="sv-month">0</div><div class="stat-compare same" id="sv-month-cmp">-</div></div>
+  </div>
+  <div class="card"><div class="card-title">이번 주 귀책별 현황</div><div id="chart-liability"></div></div>
+  <div class="card"><div class="card-title">이번 주 처리 유형별 현황</div><div id="chart-type"></div></div>
+  <div class="card"><div class="card-title">이번 달 이슈 TOP 10</div><div id="chart-issue"></div></div>
+  <div class="card"><div class="card-title">이번 주 플랫폼별 현황</div><div id="chart-platform"></div></div>
+</div>
+</div><!-- /page-voc -->
+
+<!-- ===== PAGE: 반품 입고 ===== -->
+<div id="page-return" class="page">
+<div style="max-width:960px;margin:0 auto;padding:24px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <span style="font-size:18px;font-weight:700;">반품 입고</span>
+    <button class="btn-secondary" onclick="exportReturns()">CSV 내보내기</button>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">금일 입고</div><div class="stat-value" id="sr-today">0</div><div class="stat-compare same" id="sr-today-cmp">-</div></div>
+    <div class="stat-card"><div class="stat-label">이번 주</div><div class="stat-value" id="sr-week">0</div><div class="stat-compare same" id="sr-week-cmp">-</div></div>
+    <div class="stat-card"><div class="stat-label">이번 달</div><div class="stat-value" id="sr-month">0</div><div class="stat-compare same" id="sr-month-cmp">-</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">반품 입고 등록</div>
+    <div class="form-row"><label>입고일 *</label><input type="date" id="r-date"/></div>
+    <div class="grid2 form-row"><div><label>원송장 번호</label><input type="text" id="r-orig" placeholder="원송장 번호"/></div><div><label>반송장 번호</label><input type="text" id="r-retno" placeholder="반송장 번호"/></div></div>
+    <div class="grid2 form-row"><div><label>고객명</label><input type="text" id="r-name" placeholder="고객명"/></div><div><label>주문번호 ※CS팀 확인</label><input type="text" id="r-orderno" placeholder="주문번호"/></div></div>
+    <div class="grid2 form-row"><div><label>상품명</label><input type="text" id="r-product" placeholder="상품명"/></div><div><label>옵션 / 기종</label><input type="text" id="r-option" placeholder="옵션 또는 기종"/></div></div>
+    <div class="grid2 form-row"><div><label>수량</label><input type="number" id="r-qty" placeholder="1" min="1" value="1"/></div><div><label>개봉 여부</label><select id="r-opened"><option value="">-</option><option>Y</option><option>N</option></select></div></div>
+    <div class="form-row"><label>개봉 여부 및 검수 결과</label><textarea id="r-inspect" placeholder="예: 정상, 불량 - 사유 등"></textarea></div>
+    <div class="form-row"><label>비고</label><input type="text" id="r-note" placeholder="비고"/></div>
+    <button class="btn-primary" onclick="addReturn()">입고 등록</button>
+  </div>
+  <div class="card">
+    <div class="card-title">입고 목록</div>
+    <div class="table-wrap"><table><thead><tr><th>입고일</th><th>고객명</th><th>상품명</th><th>옵션</th><th>수량</th><th>개봉</th><th>검수결과</th><th>주문번호</th><th>비고</th><th></th></tr></thead><tbody id="return-tbody"></tbody></table><div class="empty-msg" id="return-empty">등록된 입고 내역이 없습니다</div></div>
+  </div>
+</div>
+</div><!-- /page-return -->
+
+<!-- 컬럼 필터 팝업 -->
+<div id="cfp">
+  <div style="padding:10px 12px 8px;">
+    <input id="cfp-q" type="text" placeholder="🔍 검색...">
+  </div>
+  <div id="cfp-list"></div>
+  <div style="padding:8px 12px;border-top:1px solid #f0f0ee;display:flex;gap:6px;">
+    <button id="cfp-reset" style="flex:1;padding:5px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:6px;cursor:pointer;background:#f8f8f6;font-family:inherit;">초기화</button>
+    <button id="cfp-close" style="flex:1;padding:5px 8px;font-size:12px;border:none;border-radius:6px;cursor:pointer;background:#1a1a1a;color:#fff;font-family:inherit;">닫기</button>
+  </div>
+</div>
+
+<script>
+// ===== 페이지 전환 + 스크롤 유지 =====
+function _saveScroll(page){
+  if(page==='claim'){
+    const w=document.querySelector('#page-claim [style*="overflow:auto"]');
+    if(w)localStorage.setItem('sc_claim',w.scrollTop);
+  }else if(page==='voc'||page==='return'){
+    localStorage.setItem('sc_'+page,window.scrollY);
+  }
+}
+function _restoreScroll(page){
+  requestAnimationFrame(()=>{
+    if(page==='claim'){
+      const w=document.querySelector('#page-claim [style*="overflow:auto"]');
+      const v=parseInt(localStorage.getItem('sc_claim')||'0');
+      if(w)w.scrollTop=v;
+    }else if(page==='voc'||page==='return'){
+      window.scrollTo(0,parseInt(localStorage.getItem('sc_'+page)||'0'));
+    }
+  });
+}
+function switchPage(name){
+  // 현재 페이지 스크롤 저장
+  const cur=localStorage.getItem('tuunu_page')||'';
+  if(cur)_saveScroll(cur);
+  localStorage.setItem('tuunu_page','');
+  document.querySelectorAll('.gnb-nav-item').forEach(b=>b.classList.remove('active'));
+  const nav=document.querySelector('.gnb-nav-item[data-page="'+name+'"]');
+  if(nav)nav.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  localStorage.setItem('tuunu_page',name);
+  if(name==='home')renderHomeDashboard();
+  if(name==='voc'){renderVocStats();renderVocCharts();_restoreScroll('voc');}
+  if(name==='return'){renderReturnStats();renderReturnTable();_restoreScroll('return');}
+  if(name==='claim'){renderClaimTable();_restoreScroll('claim');}
+}
+// 새로고침 전 스크롤 저장
+window.addEventListener('beforeunload',()=>{
+  _saveScroll(localStorage.getItem('tuunu_page')||'');
+});
+// ===== 스토리지 =====
+const CK='tuunu_claims_v1',RK='tuunu_returns_v1';
+const loadClaims=()=>JSON.parse(localStorage.getItem(CK)||'[]');
+const saveClaims=d=>localStorage.setItem(CK,JSON.stringify(d));
+const loadReturns=()=>JSON.parse(localStorage.getItem(RK)||'[]');
+const saveReturns=d=>localStorage.setItem(RK,JSON.stringify(d));
+// ===== 날짜 헬퍼 =====
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function offsetDay(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function weekRange(offset=0){const d=new Date(),dow=(d.getDay()+6)%7,mon=new Date(d);mon.setDate(d.getDate()-dow+offset*7);const sun=new Date(mon);sun.setDate(mon.getDate()+6);return[mon.toISOString().slice(0,10),sun.toISOString().slice(0,10)];}
+function monthRange(offset=0){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+offset);const start=d.toISOString().slice(0,10);d.setMonth(d.getMonth()+1);d.setDate(0);return[start,d.toISOString().slice(0,10)];}
+// "2026. 1. 6" → "2026-01-06" 정규화
+function normDate(s){
+  if(!s)return'';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  const m=s.match(/(\d{4})[.\s]+(\d{1,2})[.\s]+(\d{1,2})/);
+  if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  return s;
+}
+function countIn(arr,field,from,to){return arr.filter(r=>{const v=normDate(r[field]);return v>=from&&v<=to;}).length;}
+function setTxt(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
+// ===== 홈 대시보드 =====
+function applyDateFilter(){renderHomeDashboard();}
+function clearDateFilter(){
+  const f=document.getElementById('h-filter-from'),t=document.getElementById('h-filter-to');
+  if(f)f.value='';if(t)t.value='';
+  renderHomeDashboard();
+}
+// 중복 주문번호 제외 카운트
+function countUniq(arr,dateField,from,to){
+  const seen=new Set();let n=0;
+  arr.forEach(r=>{const v=normDate(r[dateField]);if(v>=from&&v<=to){const k=r.orderno||String(r.id);if(!seen.has(k)){seen.add(k);n++;}}});
+  return n;
+}
+// ===== 차트 =====
+const _charts={};
+const CHART_COLORS=['#f8b4c0','#ffd6a5','#caffbf','#9bf6ff','#a0c4ff','#bdb2ff','#ffc6ff','#ffb3b3'];
+
+function countsByField(arr,field){
+  const c={};arr.forEach(r=>{const k=r[field];if(k)c[k]=(c[k]||0)+1;});return c;
+}
+
+function renderDonutChart(canvasId,legendId,countsObj){
+  const sorted=Object.entries(countsObj).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  const total=sorted.reduce((s,[,v])=>s+v,0);
+  const el=document.getElementById(canvasId);if(!el)return;
+  if(_charts[canvasId]){_charts[canvasId].destroy();delete _charts[canvasId];}
+
+  if(!total){
+    el.style.display='none';
+    const leg=document.getElementById(legendId);
+    if(leg)leg.innerHTML='<span style="color:#bbb;font-size:12px;">데이터 없음</span>';
+    return;
+  }
+  el.style.display='';
+
+  const centerPlugin={
+    id:'center',
+    afterDraw(chart){
+      const{ctx,chartArea:{left,top,width,height}}=chart;
+      const cx=left+width/2,cy=top+height/2;
+      ctx.save();
+      ctx.font='bold 22px -apple-system,BlinkMacSystemFont,sans-serif';
+      ctx.fillStyle='#1a1a1a';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(total,cx,cy-9);
+      ctx.font='11px -apple-system,BlinkMacSystemFont,sans-serif';
+      ctx.fillStyle='#aaa';
+      ctx.fillText('총건',cx,cy+11);
+      ctx.restore();
+    }
+  };
+
+  _charts[canvasId]=new Chart(el.getContext('2d'),{
+    type:'doughnut',
+    data:{
+      labels:sorted.map(([k])=>k),
+      datasets:[{data:sorted.map(([,v])=>v),backgroundColor:CHART_COLORS.slice(0,sorted.length),borderWidth:2,borderColor:'#fff',hoverBorderWidth:2}]
+    },
+    options:{
+      cutout:'68%',responsive:true,maintainAspectRatio:true,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed}건 (${Math.round(ctx.parsed/total*100)}%)`}}
+      }
+    },
+    plugins:[centerPlugin]
+  });
+
+  const leg=document.getElementById(legendId);
+  if(leg)leg.innerHTML=sorted.map(([k,v],i)=>
+    `<div class="chart-legend-item"><span class="chart-legend-dot" style="background:${CHART_COLORS[i]};"></span><span>${k}</span><span style="font-weight:600;">${Math.round(v/total*100)}%</span></div>`
+  ).join('');
+}
+
+function renderWeeklyTrendChart(claims){
+  const[ws,we]=weekRange();
+  const dayNames=['월','화','수','목','금','토','일'];
+  const days=[];const cur=new Date(ws);
+  while(cur.toISOString().slice(0,10)<=we){days.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
+
+  const counts=days.map(d=>{
+    const uniq=new Set(claims.filter(r=>normDate(r.date)===d).map(r=>r.orderno||String(r.id)));
+    return uniq.size;
+  });
+  const weekTotal=counts.reduce((a,b)=>a+b,0);
+  setTxt('weekly-total-badge',`이번 주 총 ${weekTotal}건`);
+
+  const el=document.getElementById('chart-weekly');if(!el)return;
+  if(_charts['chart-weekly']){_charts['chart-weekly'].destroy();delete _charts['chart-weekly'];}
+
+  _charts['chart-weekly']=new Chart(el.getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:dayNames.slice(0,days.length),
+      datasets:[{
+        label:'접수 건수',data:counts,
+        backgroundColor:counts.map(v=>v>0?'rgba(26,115,232,0.18)':'rgba(200,200,200,0.1)'),
+        borderColor:counts.map(v=>v>0?'#1a73e8':'#ddd'),
+        borderWidth:2,borderRadius:6,borderSkipped:false
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y}건`}}},
+      scales:{
+        y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0f0ee'},border:{display:false}},
+        x:{ticks:{font:{size:12}},grid:{display:false},border:{display:false}}
+      }
+    }
+  });
+}
+function renderHomeDashboard(){
+  const claims=loadClaims(),returns=loadReturns(),t=todayStr();
+  const fromVal=document.getElementById('h-filter-from')?.value||'';
+  const toVal=document.getElementById('h-filter-to')?.value||'';
+  const[ws,we]=weekRange(),[ms,me]=monthRange();
+  const badge=document.getElementById('h-filter-badge');
+  let wkC;
+  const hasRange=fromVal||toVal;
+  if(hasRange){
+    // 기간 조회: from이 없으면 아주 먼 과거, to가 없으면 오늘
+    const from=fromVal||'1900-01-01',to=toVal||t;
+    setTxt('h-today',countUniq(claims,'date',from,to)+'건');
+    setTxt('h-done',countUniq(claims.filter(r=>{const v=normDate(r.donedate);return v>=from&&v<=to;}),'date','1900','9999')+'건');
+    setTxt('h-week',countUniq(claims,'date',from,to)+'건');
+    setTxt('h-month',countUniq(claims,'date',from,to)+'건');
+    const label=(fromVal||'시작')+'  ~  '+(toVal||'오늘');
+    if(badge){badge.style.display='';badge.textContent='📅 '+label+' 기간 조회 중';}
+    wkC=claims.filter(r=>{const v=normDate(r.date);return v>=from&&v<=to;});
+    setTxt('h-ret-today',countIn(returns,'date',from,to)+'건');
+    setTxt('h-ret-week',countIn(returns,'date',from,to)+'건');
+    setTxt('h-ret-month',countIn(returns,'date',from,to)+'건');
+    setTxt('side-today-claim',countUniq(claims,'date',from,to)+'건');
+    setTxt('side-today-return',countIn(returns,'date',from,to)+'건');
+    // 레이블 업데이트
+    const labels={h_today:'접수 건수',h_week:'기간 접수',h_month:'기간 접수'};
+    const todayLbl=document.querySelector('#h-today')?.closest('.status-item')?.querySelector('.status-item-label');
+    if(todayLbl)todayLbl.textContent='기간 접수';
+    const weekLbl=document.querySelector('#h-week')?.closest('.status-item')?.querySelector('.status-item-label');
+    if(weekLbl)weekLbl.textContent='기간 접수(주)';
+    const monthLbl=document.querySelector('#h-month')?.closest('.status-item')?.querySelector('.status-item-label');
+    if(monthLbl)monthLbl.textContent='기간 접수(월)';
+  } else {
+    if(badge)badge.style.display='none';
+    wkC=claims.filter(r=>{const v=normDate(r.date);return v>=ws&&v<=we;});
+    setTxt('h-today',countUniq(claims,'date',t,t)+'건');
+    setTxt('h-done',countUniq(claims.filter(r=>normDate(r.donedate)===t),'date','1900','9999')+'건');
+    setTxt('h-week',countUniq(claims,'date',ws,we)+'건');
+    setTxt('h-month',countUniq(claims,'date',ms,me)+'건');
+    setTxt('h-ret-today',countIn(returns,'date',t,t)+'건');
+    setTxt('h-ret-week',countIn(returns,'date',ws,we)+'건');
+    setTxt('h-ret-month',countIn(returns,'date',ms,me)+'건');
+    setTxt('side-today-claim',countUniq(claims,'date',t,t)+'건');
+    setTxt('side-today-return',countIn(returns,'date',t,t)+'건');
+    // 레이블 원복
+    const todayLbl=document.querySelector('#h-today')?.closest('.status-item')?.querySelector('.status-item-label');
+    if(todayLbl)todayLbl.textContent='금일 접수';
+    const weekLbl=document.querySelector('#h-week')?.closest('.status-item')?.querySelector('.status-item-label');
+    if(weekLbl)weekLbl.textContent='이번 주';
+    const monthLbl=document.querySelector('#h-month')?.closest('.status-item')?.querySelector('.status-item-label');
+    if(monthLbl)monthLbl.textContent='이번 달';
+  }
+  setTxt('side-today-done',claims.filter(r=>normDate(r.donedate)===t).length+'건');
+  // 귀책별·처리유형 차트 (이번 주, 중복 주문번호 제외)
+  const wkUniq=[];const seenLib=new Set();
+  wkC.forEach(r=>{const k=r.orderno||String(r.id);if(!seenLib.has(k)){seenLib.add(k);wkUniq.push(r);}});
+  renderDonutChart('chart-liability','h-liability-list',countsByField(wkUniq,'liability'));
+  renderDonutChart('chart-type','h-type-list',countsByField(wkUniq,'type'));
+  renderWeeklyTrendChart(claims);
+  renderHomeClaimTable(claims);
+  renderSideReturnList(returns.slice(0,5));
+}
+function renderHomeClaimTable(claims){
+  const tbody=document.getElementById('home-claim-tbody'),empty=document.getElementById('home-claim-empty');
+  if(!claims.length){tbody.innerHTML='';empty.style.display='';return;}
+  empty.style.display='none';
+  const sorted=[...claims].sort((a,b)=>normDate(b.date).localeCompare(normDate(a.date)));
+  tbody.innerHTML=sorted.slice(0,20).map(r=>`<tr><td>${normDate(r.date)||r.date||'-'}</td><td>${r.platform||'-'}</td><td style="font-size:11px;">${r.orderno||'-'}</td><td>${r.buyer||'-'}</td><td>${r.product||'-'}</td><td style="font-size:12px;">${r.issue||'-'}</td><td>${r.liability||'-'}</td><td>${r.type||'-'}</td><td>${r.status?'<span class="badge badge-'+r.status+'">'+r.status+'</span>':'-'}</td><td><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td></tr>`).join('');
+}
+function renderSideReturnList(returns){
+  const el=document.getElementById('side-return-list');if(!el)return;
+  if(!returns.length){el.innerHTML='<div class="empty-msg" style="padding:12px 0;font-size:13px;">입고 내역 없음</div>';return;}
+  el.innerHTML=returns.map(r=>`<div style="padding:8px 0;border-bottom:1px solid #f5f5f3;"><div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:#333;font-weight:500;">${r.name||'-'}</span><span style="color:#aaa;font-size:11px;">${r.date||''}</span></div><div style="color:#888;font-size:12px;margin-top:2px;">${r.product||'-'}${r.option?' / '+r.option:''}</div></div>`).join('');
+}
+// ===== 클레임 CRUD =====
+// ===== 한국 공휴일 (영업일 SLA 계산용) =====
+const KR_HOLIDAYS=new Set([
+  '2025-01-01','2025-01-28','2025-01-29','2025-01-30',
+  '2025-03-01','2025-03-03','2025-05-05','2025-05-06',
+  '2025-06-06','2025-08-15',
+  '2025-10-03','2025-10-05','2025-10-06','2025-10-07','2025-10-09','2025-12-25',
+  '2026-01-01','2026-01-27','2026-01-28','2026-01-29',
+  '2026-03-01','2026-03-02','2026-05-05','2026-05-24',
+  '2026-06-06','2026-08-15','2026-08-17',
+  '2026-09-24','2026-09-25','2026-09-26',
+  '2026-10-03','2026-10-05','2026-10-09','2026-12-25'
+]);
+function calcBusinessDays(start,end){
+  if(!start||!end)return null;
+  const s=new Date(start),e=new Date(end);
+  if(e<s)return 0;
+  let count=0;const cur=new Date(s);cur.setDate(cur.getDate()+1);
+  while(cur<=e){const dow=cur.getDay(),ds=cur.toISOString().slice(0,10);if(dow!==0&&dow!==6&&!KR_HOLIDAYS.has(ds))count++;cur.setDate(cur.getDate()+1);}
+  return count;
+}
+function calcSLA(days){if(days===null)return{text:'-',color:'#bbb'};return days<=4?{text:'준수',color:'#2e7d32'}:{text:'초과',color:'#c62828'};}
+let _editClaimId=null;
+function updateDoneDate(id,value){
+  const claims=loadClaims(),idx=claims.findIndex(r=>r.id===id);
+  if(idx===-1)return;
+  claims[idx].donedate=value;
+  if(value)claims[idx].status='처리 완료';
+  saveClaims(claims);
+  renderClaimTable();renderHomeDashboard();
+}
+function openClaimModal(){
+  _editClaimId=null;
+  document.querySelector('#claim-modal span[style*="17px"]').textContent='신규 클레임 등록';
+  document.querySelector('#claim-modal .btn-primary').textContent='등록';
+  document.getElementById('claim-modal').style.display='block';document.body.style.overflow='hidden';
+}
+function openEditModal(id){
+  const r=loadClaims().find(c=>c.id===id);if(!r)return;
+  _editClaimId=id;
+  document.querySelector('#claim-modal span[style*="17px"]').textContent='클레임 수정';
+  document.querySelector('#claim-modal .btn-primary').textContent='저장';
+  const set=(elId,val)=>{
+    const el=document.getElementById(elId);if(!el)return;
+    el.value=val||'';
+    if(el._sdInput)el._sdInput.value=val||'';
+  };
+  set('c-date',r.date);set('c-month',r.month);set('c-indate',r.indate);set('c-shipdate',r.shipdate);
+  set('c-channel',r.channel);set('c-platform',r.platform);set('c-orderno',r.orderno);set('c-buyer',r.buyer);
+  set('c-product',r.product);set('c-option',r.option==='[옵션 지정 불가]'?'':r.option);
+  set('c-category',r.category);set('c-issue',r.issue);set('c-liability',r.liability);
+  set('c-type',r.type);set('c-nature',r.nature);set('c-reason',r.reason);
+  set('c-return-yn',r.returnYn);set('c-reship-yn',r.reshipYn);set('c-accident',r.accident);
+  set('c-status',r.status);set('c-cost-product',r.costP);set('c-cost-return',r.costR);set('c-cost-reship',r.costS);
+  document.getElementById('claim-modal').style.display='block';document.body.style.overflow='hidden';
+}
+function closeClaimModal(){document.getElementById('claim-modal').style.display='none';document.body.style.overflow='';_editClaimId=null;}
+function addClaim(){
+  const date=document.getElementById('c-date').value;
+  if(!date){alert('작성일을 입력해 주세요.');return;}
+  const optionVal=document.getElementById('c-option').value.trim()||'[옵션 지정 불가]';
+  const fields={date,month:document.getElementById('c-month').value||date.slice(0,7),indate:document.getElementById('c-indate').value,shipdate:document.getElementById('c-shipdate').value,channel:document.getElementById('c-channel').value,platform:document.getElementById('c-platform').value,orderno:document.getElementById('c-orderno').value,buyer:document.getElementById('c-buyer').value,product:document.getElementById('c-product').value,option:optionVal,category:document.getElementById('c-category').value,issue:document.getElementById('c-issue').value,liability:document.getElementById('c-liability').value,type:document.getElementById('c-type').value,nature:document.getElementById('c-nature').value,reason:document.getElementById('c-reason').value,returnYn:document.getElementById('c-return-yn').value,reshipYn:document.getElementById('c-reship-yn').value,accident:document.getElementById('c-accident').value,status:document.getElementById('c-status').value,costP:document.getElementById('c-cost-product').value,costR:document.getElementById('c-cost-return').value,costS:document.getElementById('c-cost-reship').value};
+  const claims=loadClaims();
+  if(_editClaimId){
+    const idx=claims.findIndex(c=>c.id===_editClaimId);
+    if(idx!==-1){claims[idx]={...claims[idx],...fields};saveClaims(claims);}
+  }else{
+    claims.unshift({id:Date.now(),donedate:'',...fields});saveClaims(claims);
+  }
+  renderClaimTable();renderHomeDashboard();clearClaimForm();closeClaimModal();
+  // 새 클레임 등록 후 테이블 맨 위로 스크롤 (최신 항목이 맨 위에 있음)
+  requestAnimationFrame(()=>{
+    const wrap=document.querySelector('#page-claim [style*="overflow:auto"]');
+    if(wrap)wrap.scrollTop=0;
+  });
+}
+function deleteClaim(id){
+  if(!confirm('삭제하시겠습니까?'))return;
+  saveClaims(loadClaims().filter(r=>r.id!==id));
+  renderClaimTable();renderHomeDashboard();
+}
+function clearClaimForm(){
+  ['c-month','c-indate','c-shipdate','c-channel','c-platform','c-orderno','c-buyer','c-product','c-option','c-category','c-issue','c-liability','c-type','c-nature','c-reason','c-return-yn','c-reship-yn','c-accident','c-status','c-cost-product','c-cost-return','c-cost-reship'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.value='';if(el._sdInput)el._sdInput.value='';
+  });
+  document.getElementById('c-date').value=todayStr();
+  const d=new Date();document.getElementById('c-month').value=String(d.getMonth()+1);
+}
+// ===== 인라인 편집 필드 정의 =====
+const CF={
+  month:{type:'select',opts:['1','2','3','4','5','6','7','8','9','10','11','12']},date:{type:'date'},indate:{type:'date'},donedate:{type:'date'},
+  channel:{type:'select',opts:['채팅','일반 접수건','게시판','CS 메모','유선 인입','CS 확인','내부 점검(타부서)','이메일','헬프센터','리뷰 대응']},
+  platform:{type:'select',opts:['카페24','29CM','무신사','협찬']},
+  orderno:{type:'text'},buyer:{type:'text'},
+  product:{type:'text',align:'left'},option:{type:'text'},
+  category:{type:'select',opts:['쿠션 커버','미니 쿠션 커버','파우치','패브릭 포스터','쉬폰 패브릭 포스터','베개 커버','담요','니트블랭킷','티셔츠','테이블매트','파자마','에코백','극세사 발매트','극세사 주방매트','러그','이불','규조토 발매트','규조토 주방매트','포스터','포스터+액자','핸드타월','타월 발매트','액자 세트','캔버스 액자','액자 단품','컵','플레이트','양말','테크류','부자재(꼭꼬핀, 논슬립 등)','PVC 주방매트','사은품','매트리스 커버','침대 패드','쿠션 커버+쿠션 솜','쿠션 커버+방석 솜','베개 커버+베개 솜','미니 쿠션 커버+미니 쿠션 솜','냉감 침대패드','냉감 이불']},
+  issue:{type:'select',opts:['[제품] 파손/훼손','[제품] 품질(원단/프린팅/해상도/지퍼/디자인/사이즈)','[제품] 품질(원단)','[제품] 품질(프린팅)','[제품] 품질(해상도)','[제품] 품질(지퍼)','[제품] 품질(디자인)','[제품] 품질(사이즈)','[제품] 품질(오염)','[제품] 품질(기타)','[발주] 발주 누락','[주문] 매칭 오류','[주문] 수집 누락','[주문] 전체 누락','[주문] 부분 누락','[주문] 과출고','[주문] 발주 누락','[주문] 상품 추가 누락','[주문] 상품 정보 상이','[출고] 전체 누락','[출고] 부분 누락','[출고] 과출고','[출고] 오출고','[출고] 출고 지연','[배송] 파손/훼손','[배송] 분실','[배송] 오배송','[배송] 배송완료 미수령','[배송] 분실 접수 후 배송완료','[고객 요청] 사이즈','[고객 요청] 디자인','[고객 요청] 냄새','[고객 요청] 해상도','[고객 요청] 색상/색감','[고객 요청] 두께','[고객 요청] 소재','[고객 요청] 이염(색 번짐/물 빠짐)','[고객 요청] 오염(얼룩/먼지/이물질)','[고객 요청] 정책 불만','[고객 요청] 포장 불만족','[고객 요청] 서비스 불만족','[고객 요청] 상품 정보 상이','[고객 요청] 안전성 우려','[고객 요청] 생각한 상품이 아님','[고객 요청] 주문 오류','[고객 요청] 기타(사유 미확인 포함)','[고객 요청] 불량 오인지','[고객 요청] 할인 소급','[3PL] 상품 추가 누락','[3PL] 상품 과등록','[타부서] 오발주','[배송사] 반송','[고객] 오출고 오인지']},
+  liability:{type:'select',opts:['CS','재고','발주','주문','검수','출고','입고','공급처','배송사','3PL','고객','뚜누','알수없음','타부서']},
+  type:{type:'select',opts:['오출고 교환','불량 교환','단순변심 교환','파손/훼손 교환','분실 교환','반송 교환','누락 교환','미회수/교환','불량 반품','오출고 반품','단순변심 반품','파손/훼손 반품','분실 반품','반송 반품','누락 반품','미회수/반품','제작 발주 및 수집','과출고 회수','클레임 철회','CS안내(품절/단순/예약발송)','차액 환불','상품가 결제 완료']},
+  nature:{type:'select',opts:['VOC','일반 접수','내부 점검','CS','배송사']},
+  reason:{type:'text'},
+  returnYn:{type:'select',opts:['Y','N']},reshipYn:{type:'select',opts:['Y','N']},accident:{type:'select',opts:['Y','N']},
+  status:{type:'select',opts:['처리 중','처리 완료']},
+  costP:{type:'number'},costR:{type:'number'},costS:{type:'number'}
+};
+const CF_ORDER=['month','date','indate','donedate','channel','platform','orderno','buyer','product','option','category','issue','liability','type','reason','returnYn','reshipYn','accident','status'];
+
+function editCell(td,claimId,field,curVal){
+  if(td.querySelector('input,select,textarea'))return;
+  const f=CF[field]||{type:'text'};
+  const type=f.type,opts=f.opts||[];
+  const bStyle='width:100%;border:none;border-bottom:2px solid #1a73e8;background:transparent;font-size:12px;outline:none;box-sizing:border-box;text-align:center;';
+  let el;
+  if(type==='select'){
+    el=document.createElement('select');el.style.cssText=bStyle+'cursor:pointer;';
+    [['','-'],...opts.map(o=>[o,o])].forEach(([v,t])=>{const op=document.createElement('option');op.value=v;op.textContent=t;if(v===curVal)op.selected=true;el.appendChild(op);});
+  }else{
+    el=document.createElement('input');el.type=type==='number'?'number':type==='date'?'date':'text';
+    el.value=curVal||'';el.style.cssText=bStyle;
+  }
+  td.innerHTML='';td.appendChild(el);el.focus();
+  if(el.select&&type!=='date')el.select();
+  const save=()=>{
+    const claims=loadClaims(),idx=claims.findIndex(c=>c.id===claimId);
+    if(idx!==-1){
+      claims[idx][field]=el.value;
+      if(field==='donedate'&&el.value)claims[idx].status='처리 완료';
+      saveClaims(claims);
+    }
+    renderClaimTable();renderHomeDashboard();
+  };
+  el.addEventListener('blur',save);
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el.blur();}if(e.key==='Escape')renderClaimTable();});
+  if(type==='select')el.addEventListener('change',()=>el.blur());
+}
+
+function initColResize(){
+  const table=document.getElementById('claim-sheet');if(!table)return;
+  table.querySelectorAll('.col-rz,.th-filter-btn').forEach(h=>h.remove());
+  table.querySelectorAll('th').forEach(th=>{
+    // 필터 버튼
+    const col=th.dataset.col;
+    if(col&&col!=='_del'&&col!=='_lead'){
+      const fb=document.createElement('button');
+      fb.className='th-filter-btn'+(claimFilters[col]?' active':'');
+      fb.title='필터';
+      fb.textContent=claimFilters[col]?'▼':'⌄';
+      fb.addEventListener('click',e=>{e.stopPropagation();openColFilter(col,fb);});
+      th.appendChild(fb);
+    }
+    // 리사이즈 핸들
+    const h=document.createElement('div');h.className='col-rz';
+    h.addEventListener('mousedown',e=>{
+      const sx=e.clientX,sw=th.offsetWidth;
+      h.classList.add('dragging');document.body.style.cursor='col-resize';
+      const mv=e2=>{const w=Math.max(50,sw+(e2.clientX-sx));th.style.minWidth=w+'px';th.style.maxWidth=w+'px';};
+      const up=()=>{h.classList.remove('dragging');document.body.style.cursor='';document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};
+      document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+      e.preventDefault();e.stopPropagation();
+    });
+    th.appendChild(h);
+  });
+}
+
+const TD='border:1px solid #e8e8e6;padding:7px 10px;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;';
+
+// ===== 컬럼 헤더 필터 (구글시트 스타일) =====
+let claimFilters={};
+let _cfpCol=null;
+
+function _cfpVals(col){
+  const claims=loadClaims();
+  if(col==='_sla'){return['준수','초과'];}
+  if(col==='costP'||col==='costR'||col==='costS'){return[...new Set(claims.map(r=>r[col]||'').filter(v=>v))].sort((a,b)=>Number(a)-Number(b));}
+  return[...new Set(claims.map(r=>r[col]||'').filter(v=>v))].sort((a,b)=>a.localeCompare(b,'ko'));
+}
+function _cfpRender(q){
+  const list=document.getElementById('cfp-list');if(!list)return;
+  const vals=_cfpVals(_cfpCol);
+  const cur=claimFilters[_cfpCol]||'';
+  const items=vals.filter(v=>!q||v.toLowerCase().includes(q.toLowerCase()));
+  list.innerHTML=[
+    `<div class="cfp-item${!cur?' sel':''}" onclick="_cfpSet('')">(전체)</div>`,
+    ...items.map(v=>`<div class="cfp-item${cur===v?' sel':''}" onclick="_cfpSet('${v.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">${v}</div>`)
+  ].join('');
+}
+function _cfpSet(val){
+  claimFilters[_cfpCol]=val;
+  document.getElementById('cfp').style.display='none';
+  renderClaimTable();
+}
+function openColFilter(col,btn){
+  if(_cfpCol===col&&document.getElementById('cfp').style.display!=='none'){
+    document.getElementById('cfp').style.display='none';_cfpCol=null;return;
+  }
+  _cfpCol=col;
+  const q=document.getElementById('cfp-q');
+  if(q)q.value='';
+  _cfpRender('');
+  const rect=btn.getBoundingClientRect();
+  const popup=document.getElementById('cfp');
+  popup.style.display='block';
+  const pw=240;
+  let left=rect.left;
+  if(left+pw>window.innerWidth-8)left=window.innerWidth-pw-8;
+  popup.style.left=left+'px';
+  popup.style.top=(rect.bottom+4)+'px';
+  if(q)q.focus();
+}
+function closeColFilter(){document.getElementById('cfp').style.display='none';_cfpCol=null;}
+function resetColFilter(){if(_cfpCol)claimFilters[_cfpCol]='';closeColFilter();renderClaimTable();}
+function resetAllFilters(){claimFilters={};renderClaimTable();}
+
+// 전체 삭제
+function confirmClearClaims(){
+  if(!confirm('클레임 데이터 전체를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.'))return;
+  saveClaims([]);renderClaimTable();renderHomeDashboard();
+}
+// 주문별 보기 토글
+let _groupByOrder=false;
+function toggleGroupByOrder(){
+  _groupByOrder=!_groupByOrder;
+  const btn=document.getElementById('btn-group-order');
+  if(btn){btn.style.background=_groupByOrder?'#1a1a1a':'';btn.style.color=_groupByOrder?'#fff':'';}
+  renderClaimTable();
+}
+function getFilteredClaims(){
+  let claims=loadClaims();
+  Object.entries(claimFilters).forEach(([key,val])=>{
+    if(!val)return;
+    if(key==='_sla'){
+      claims=claims.filter(r=>{const bd=calcBusinessDays(r.indate,r.donedate);return calcSLA(bd).text===val;});
+    }else{
+      claims=claims.filter(r=>(r[key]||'').toLowerCase()===val.toLowerCase()||(r[key]||'').includes(val));
+    }
+  });
+  if(_groupByOrder){
+    const seen=new Set(),grouped=[];
+    claims.forEach(r=>{
+      const k=r.orderno||String(r.id);
+      if(!seen.has(k)){
+        seen.add(k);
+        const cnt=claims.filter(c=>(c.orderno||String(c.id))===k).length;
+        grouped.push({...r,_grpCnt:cnt>1?cnt:0});
+      }
+    });
+    return grouped;
+  }
+  return claims;
+}
+
+function renderClaimTable(){
+  const tbody=document.getElementById('claim-tbody'),empty=document.getElementById('claim-empty');
+  const allClaims=loadClaims(),claims=getFilteredClaims();
+  const badge=document.getElementById('claim-count-badge');
+  const hasFilter=Object.values(claimFilters).some(v=>v);
+  const uniqCnt=new Set(allClaims.map(r=>r.orderno||String(r.id))).size;
+  const filtUniq=new Set(claims.map(r=>r.orderno||String(r.id))).size;
+  if(badge)badge.textContent=hasFilter||_groupByOrder
+    ?`${filtUniq}건 / 전체 ${uniqCnt}건`
+    :`총 ${uniqCnt}건`;
+  if(!claims.length){tbody.innerHTML='';if(empty)empty.style.display='';return;}
+  if(empty)empty.style.display='none';
+  tbody.innerHTML=claims.map((r,i)=>{
+    const bdays=calcBusinessDays(r.indate,r.donedate);
+    const sla=calcSLA(bdays);
+    const bg=i%2===0?'#fff':'#fafaf8';
+    let cells=``;
+    CF_ORDER.forEach(key=>{
+      const f=CF[key],val=r[key]||'';
+      const isLeft=f.align==='left';
+      let disp=val||'-';
+      // 주문별 보기 시 주문번호 옆에 건수 뱃지
+      if(key==='orderno'&&r._grpCnt>1)disp+=` <span style="background:#1a73e8;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;">${r._grpCnt}건</span>`;
+      cells+=`<td class="${isLeft?'td-left':''}" style="${TD}" title="${val||'-'}" data-id="${r.id}" data-field="${key}" data-val="${val.replace(/"/g,'&quot;')}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)">${disp}</td>`;
+    });
+    cells+=`<td style="${TD}">${bdays!==null?bdays:'-'}</td>`;
+    cells+=`<td style="${TD}font-weight:600;color:${sla.color};">${sla.text}</td>`;
+    ['costP','costR','costS'].forEach(key=>{
+      const val=r[key]||'';const disp=val?Number(val).toLocaleString():'-';
+      cells+=`<td style="${TD}" data-id="${r.id}" data-field="${key}" data-val="${val}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)">${disp}</td>`;
+    });
+    cells+=`<td style="${TD}"><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
+    return`<tr style="background:${bg};">${cells}</tr>`;
+  }).join('');
+  initColResize();
+}
+// ===== 반품 CRUD =====
+function addReturn(){
+  const date=document.getElementById('r-date').value;
+  if(!date){alert('입고일을 입력해 주세요.');return;}
+  const rec={id:Date.now(),date,orig:document.getElementById('r-orig').value,retno:document.getElementById('r-retno').value,name:document.getElementById('r-name').value,product:document.getElementById('r-product').value,option:document.getElementById('r-option').value,qty:document.getElementById('r-qty').value||'1',opened:document.getElementById('r-opened').value,inspect:document.getElementById('r-inspect').value,orderno:document.getElementById('r-orderno').value,note:document.getElementById('r-note').value};
+  const returns=loadReturns();returns.unshift(rec);saveReturns(returns);
+  renderReturnTable();renderReturnStats();renderHomeDashboard();clearReturnForm();
+}
+function deleteReturn(id){
+  if(!confirm('삭제하시겠습니까?'))return;
+  saveReturns(loadReturns().filter(r=>r.id!==id));
+  renderReturnTable();renderReturnStats();renderHomeDashboard();
+}
+function clearReturnForm(){
+  ['r-orig','r-retno','r-name','r-product','r-option','r-opened','r-inspect','r-orderno','r-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('r-qty').value='1';document.getElementById('r-date').value=todayStr();
+}
+function renderReturnStats(){
+  const r=loadReturns(),t=todayStr(),yd=offsetDay(-1);
+  const[ws,we]=weekRange(),[lws,lwe]=weekRange(-1),[ms,me]=monthRange(),[lms,lme]=monthRange(-1);
+  function cmp(c,p){const d=c-p;if(d>0)return{text:'전 대비 +'+d+'건',cls:'up'};if(d<0)return{text:'전 대비 '+d+'건',cls:'down'};return{text:'전 대비 동일',cls:'same'};}
+  function ss(prefix,val,c){const vEl=document.getElementById(prefix);if(vEl)vEl.textContent=val+'건';const cEl=document.getElementById(prefix+'-cmp');if(cEl){cEl.textContent=c.text;cEl.className='stat-compare '+c.cls;}}
+  ss('sr-today',countIn(r,'date',t,t),cmp(countIn(r,'date',t,t),countIn(r,'date',yd,yd)));
+  ss('sr-week',countIn(r,'date',ws,we),cmp(countIn(r,'date',ws,we),countIn(r,'date',lws,lwe)));
+  ss('sr-month',countIn(r,'date',ms,me),cmp(countIn(r,'date',ms,me),countIn(r,'date',lms,lme)));
+}
+function renderReturnTable(){
+  const returns=loadReturns(),tbody=document.getElementById('return-tbody'),empty=document.getElementById('return-empty');
+  if(!returns.length){tbody.innerHTML='';empty.style.display='';return;}
+  empty.style.display='none';
+  tbody.innerHTML=returns.map(r=>`<tr><td>${r.date||'-'}</td><td>${r.name||'-'}</td><td>${r.product||'-'}</td><td>${r.option||'-'}</td><td>${r.qty||'-'}</td><td>${r.opened||'-'}</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.inspect||''}">${r.inspect||'-'}</td><td style="font-size:11px;">${r.orderno||'-'}</td><td>${r.note||'-'}</td><td><button class="btn-danger" onclick="deleteReturn(${r.id})">삭제</button></td></tr>`).join('');
+}
+// ===== VOC =====
+function renderVocStats(){
+  const c=loadClaims(),t=todayStr(),yd=offsetDay(-1);
+  const[ws,we]=weekRange(),[lws,lwe]=weekRange(-1),[ms,me]=monthRange(),[lms,lme]=monthRange(-1);
+  function cmp(curr,prev){const d=curr-prev;if(d>0)return{text:'전 대비 +'+d+'건',cls:'up'};if(d<0)return{text:'전 대비 '+d+'건',cls:'down'};return{text:'전 대비 동일',cls:'same'};}
+  function ss(prefix,val,cm){const vEl=document.getElementById(prefix);if(vEl)vEl.textContent=val+'건';const cEl=document.getElementById(prefix+'-cmp');if(cEl){cEl.textContent=cm.text;cEl.className='stat-compare '+cm.cls;}}
+  ss('sv-today',countIn(c,'date',t,t),cmp(countIn(c,'date',t,t),countIn(c,'date',yd,yd)));
+  ss('sv-week',countIn(c,'date',ws,we),cmp(countIn(c,'date',ws,we),countIn(c,'date',lws,lwe)));
+  ss('sv-month',countIn(c,'date',ms,me),cmp(countIn(c,'date',ms,me),countIn(c,'date',lms,lme)));
+}
+function renderVocCharts(){
+  const c=loadClaims(),[ws,we]=weekRange(),[ms,me]=monthRange();
+  const wk=c.filter(r=>r.date>=ws&&r.date<=we),mo=c.filter(r=>r.date>=ms&&r.date<=me);
+  renderBar('chart-liability',wk,'liability');renderBar('chart-type',wk,'type');
+  renderBar('chart-issue',mo,'issue',10);renderBar('chart-platform',wk,'platform');
+}
+function renderBar(id,data,field,limit=20){
+  const el=document.getElementById(id);if(!el)return;
+  const cnt={};data.forEach(r=>{const v=r[field]||'(미입력)';cnt[v]=(cnt[v]||0)+1;});
+  const sorted=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,limit);
+  if(!sorted.length){el.innerHTML='<div class="empty-msg">데이터 없음</div>';return;}
+  const max=sorted[0][1];
+  el.innerHTML=sorted.map(([l,n])=>`<div class="voc-row"><div class="voc-label" title="${l}">${l}</div><div class="voc-bar-wrap"><div class="voc-bar" style="width:${(n/max*100).toFixed(0)}%"></div></div><div class="voc-count">${n}</div></div>`).join('');
+}
+// ===== CSV =====
+function dlCSV(filename,headers,rows){
+  const csv='﻿'+[headers,...rows].map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download=filename;a.click();
+}
+// ===== CSV 파싱 (따옴표/쉼표 포함 필드 처리) =====
+function parseCSV(text){
+  // BOM 제거
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  const rows=[];let cur=[],field='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],nx=text[i+1];
+    if(inQ){
+      if(ch==='"'&&nx==='"'){field+='"';i++;}
+      else if(ch==='"'){inQ=false;}
+      else{field+=ch;}
+    }else{
+      if(ch==='"'){inQ=true;}
+      else if(ch===','){cur.push(field.trim());field='';}
+      else if(ch==='\r'&&nx==='\n'){cur.push(field.trim());rows.push(cur);cur=[];field='';i++;}
+      else if(ch==='\n'||ch==='\r'){cur.push(field.trim());rows.push(cur);cur=[];field='';}
+      else{field+=ch;}
+    }
+  }
+  if(field||cur.length){cur.push(field.trim());rows.push(cur);}
+  return rows;
+}
+// 구글 시트 헤더 → 내부 필드 매핑 (순서 고정)
+const CSV_MAP=[
+  'month','date','indate','shipdate','donedate',
+  'channel','platform','orderno','buyer','product',
+  'option','category','issue','liability','type',
+  'nature','reason','returnYn','reshipYn','accident',
+  'costP','costR','costS',null/*리드타임-자동계산*/,'status',null/*SLA-자동계산*/
+];
+function importClaims(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const rows=parseCSV(e.target.result);
+    if(rows.length<2){alert('데이터가 없습니다.');input.value='';return;}
+    // 첫 행이 헤더인지 확인 (작성일 컬럼에 날짜 형식이 아닌 경우 헤더로 판단)
+    const startRow=rows[0][1]&&/^\d{4}/.test(rows[0][1])?0:1;
+    const newClaims=[];
+    for(let i=startRow;i<rows.length;i++){
+      const cols=rows[i];
+      if(cols.every(c=>!c))continue; // 빈 행 건너뜀
+      const rec={id:Date.now()+i};
+      CSV_MAP.forEach((field,idx)=>{
+        if(!field)return;
+        rec[field]=cols[idx]||'';
+      });
+      // 옵션명 없으면 기본값
+      if(!rec.option)rec.option='[옵션 지정 불가]';
+      newClaims.push(rec);
+    }
+    if(!newClaims.length){alert('가져올 데이터가 없습니다.');input.value='';return;}
+    const existing=loadClaims();
+    const merged=[...newClaims,...existing];
+    saveClaims(merged);
+    renderClaimTable();renderHomeDashboard();
+    alert(`✅ ${newClaims.length}건을 가져왔습니다.`);
+    input.value='';
+  };
+  reader.readAsText(file,'UTF-8');
+}
+function exportClaims(){
+  const c=loadClaims();if(!c.length){alert('데이터가 없습니다.');return;}
+  dlCSV('클레임_누적_'+todayStr()+'.csv',['발생 월','작성일','클레임 인입일','배송 일자','처리 완료일','인입 채널','플랫폼','주문번호','주문자명','상품명','옵션명','상품 분류','이슈별 분류','귀책 주체','처리 유형','클레임 성격','사유','회수 여부','재출고 여부','사고 접수 여부','상품 비용','회수 비용','재출고 비용','처리 리드타임','처리 상태','SLA'],c.map(r=>[r.month,r.date,r.indate,r.shipdate,r.donedate,r.channel,r.platform,r.orderno,r.buyer,r.product,r.option,r.category,r.issue,r.liability,r.type,r.nature,r.reason,r.returnYn,r.reshipYn,r.accident,r.costP,r.costR,r.costS,r.leadtime,r.status,r.sla]));
+}
+function exportReturns(){
+  const r=loadReturns();if(!r.length){alert('데이터가 없습니다.');return;}
+  dlCSV('반품_입고_'+todayStr()+'.csv',['입고일','원송장 번호','반송장 번호','고객명','상품명','옵션/기종','수량','개봉 여부','검수 결과','주문번호','비고'],r.map(x=>[x.date,x.orig,x.retno,x.name,x.product,x.option,x.qty,x.opened,x.inspect,x.orderno,x.note]));
+}
+
+const FOOTER = `※ 추가로 궁금하신 내용이 있으시면 언제든 뚜누 고객센터로 연락 부탁드립니다.
+▶ 채팅상담 : 뚜누 홈페이지 → 우측 하단 말풍선 모양 클릭(바로가기 https://bit.ly/4oPkOtp)
+▶ 이메일 문의 : help@tounou.co.kr
+▶ 고객센터 : 053-657-1799
+▶ 운영시간 : 평일 09:00 ~ 18:00 (점심 12:00 ~ 13:00) / 주말·공휴일 휴무`;
+
+const ISSUES = {
+  '아웃바운드': ['출고 일정 안내', '단종/품절 안내', '상품 수령 확인', '반품 불가 안내', '운송장 번호 안내', '선물하기 안내'],
+  '출고일정': ['출고 일정 안내'],
+  '클레임': ['단순변심', '불량 주장', '파손/훼손', '분실', '오출고', '누락'],
+  '단종품절': ['단종 안내','품절 안내'],
+  '상품수령확인': ['수령 확인']
+};
+
+const LIABILITY = {
+  '뚜누': ['제품_파손/훼손','제품_품질(원단)','제품_품질(프린팅)','제품_품질(해상도)','제품_품질(지퍼)','제품_품질(사이즈)','제품_품질(디자인)','제품_품질(오염)','제품_품질(기타)','출고_오출고','출고_부분 누락','출고_전체 누락','출고_과출고','주문_수집 누락','주문_매칭 오류','주문_과출고','주문_부분 누락','주문_상품 추가 누락','주문_상품 정보 상이','주문_발주 누락','주문_발주 누락(발주)','주문_타부서 오발주','배송_오배송'],
+  '배송사': ['배송_파손/훼손','배송_분실','배송_배송완료 미수령','배송_반송','배송_분실 접수 후 배송완료','출고_출고 지연'],
+  '고객': ['고객요청_두께','고객요청_소재','고객요청_사이즈','고객요청_색상/색감','고객요청_디자인','고객요청_해상도','고객요청_생각한 상품이 아님','고객요청_주문 오류','고객요청_포장 불만족','고객요청_불량 오인지','고객요청_안전성 우려','고객요청_냄새','고객요청_서비스 불만족','고객요청_할인 소급','고객요청_상품 정보 상이','고객요청_기타(사유 미확인 포함)','주문_고객 오출고 오인지']
+};
+
+const APOLOGY = {
+  '제품_파손/훼손': '파손된 상품으로 불편을 드려 대단히 죄송합니다.',
+  '배송_파손/훼손': '배송 과정에서 상품이 파손되어 대단히 죄송합니다.',
+  '배송_분실': '배송 중 분실로 불편을 드려 대단히 죄송합니다.',
+  '출고_오출고': '잘못된 상품이 출고되어 불편을 드려 대단히 죄송합니다.',
+  '출고_부분 누락': '상품 누락으로 불편을 드려 대단히 죄송합니다.',
+  '출고_전체 누락': '상품 누락으로 불편을 드려 대단히 죄송합니다.',
+  '배송_오배송': '잘못된 상품이 배송되어 불편을 드려 대단히 죄송합니다.',
+  'default_뚜누': '만족스럽지 못한 상품으로 불편을 드려 대단히 죄송합니다.',
+  'default_배송사': '배송 과정에서 불편을 드려 대단히 죄송합니다.'
+};
+
+const EMPATHY = {
+  '고객요청_색상/색감': '실제로 받아보셨을 때 화면과 색감 차이가 있으셨다면 많이 아쉬우셨을 것 같습니다.',
+  '고객요청_사이즈': '직접 받아보시기 전까지 사이즈 가늠이 쉽지 않으셨을텐데, 막상 받아보시고 맞지 않으셨다면 불편하셨을 것 같습니다.',
+  '고객요청_디자인': '이미지로 보셨을 때와 실물의 느낌이 달라 아쉬우셨을 것 같습니다.',
+  '고객요청_해상도': '이미지로 보셨을 때와 실물의 해상도 차이가 있으셨다면 많이 아쉬우셨을 것 같습니다.',
+  '고객요청_소재': '받아보시기 전까지 소재감을 직접 확인하기 어려우셨을텐데, 기대하셨던 것과 달라 불편하셨을 것 같습니다.',
+  '고객요청_두께': '받아보시기 전까지 두께감을 직접 확인하기 어려우셨을텐데, 기대하셨던 것과 달라 불편하셨을 것 같습니다.',
+  '고객요청_냄새': '새 상품 특유의 냄새로 불편하셨을 것 같습니다.',
+  '고객요청_생각한 상품이 아님': '이미지와 실물의 느낌이 달라 아쉬우셨을 것 같습니다.',
+  'default': '기대하셨던 것과 달라 불편하셨을 것 같습니다.'
+};
+
+const SHIPPING_FEE = {
+  '반품_전체': '반품 배송비 6,000원은 환불금에서 공제되어 처리될 예정이며,',
+  '반품_부분_무배충족': '반품 배송비 3,000원은 환불금에서 공제되어 처리될 예정이며,',
+  '반품_부분_무배미충족': '부분 반품으로 인해 잔여 상품이 무료 배송 조건을 충족하지 않아 반품 배송비 6,000원은 환불금에서 공제되어 처리될 예정이며,'
+};
+
+let selectedIssue = null;
+
+const OUTBOUND_CHIP_MAP = {
+  '출고 일정 안내': '출고일정',
+  '단종/품절 안내': '단종품절',
+  '상품 수령 확인': '상품수령확인',
+  '반품 불가 안내': '반품불가_direct',
+  '운송장 번호 안내': '운송장번호_OB',
+  '선물하기 안내': '선물하기안내_OB'
+};
+
+function initChips() {
+  Object.entries(ISSUES).forEach(([group, items]) => {
+    const container = document.getElementById('chips-' + group);
+    if (!container) return;
+    items.forEach(item => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.textContent = item;
+      chip.dataset.key = group + '_' + item;
+      chip.onclick = () => {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        selectedIssue = chip.dataset.key;
+        if (group === '아웃바운드') {
+          document.getElementById('rowClaimMain').className = 'conditional-row';
+          const mapped = OUTBOUND_CHIP_MAP[item];
+          if (mapped) setupOutbound(mapped);
+        } else if (group === '클레임') {
+          document.getElementById('rowClaimMain').className = 'conditional-row visible';
+          const sel = document.getElementById('claimMain');
+          if (item === '파손/훼손') {
+            sel.innerHTML = '<option value="">선택</option><option value="반품">반품</option><option value="교환배송전">교환 (배송 전)</option><option value="교환배송후">교환 (배송 후)</option>';
+          } else {
+            sel.innerHTML = '<option value="">선택</option><option value="반품">반품</option><option value="교환">교환</option>';
+          }
+          sel.value = '';
+          document.getElementById('claimType').innerHTML = '<option value="">선택</option>';
+          document.getElementById('rowSubType').className = 'conditional-row';
+          onClaimTypeChange();
+        }
+      };
+      container.appendChild(chip);
+    });
+  });
+}
+
+const SUB_OPTIONS = {
+  '반품': [
+    ['반품_전체', '전체'],
+    ['반품_부분_무배충족', '변심 부분 (무배 충족)'],
+    ['반품_부분_무배미충족', '변심 부분 (무배 미충족)'],
+    ['반품불가', '반품 불가 안내']
+  ],
+  '교환': [
+    ['교환_회수접수', '회수 접수 안내'],
+    ['교환_재출고완료_분실', '운송장 번호 안내 (분실)'],
+    ['교환_재출고완료_배송후', '운송장 번호 안내 (파손/배송 후)'],
+    ['교환_재출고완료_반송후', '운송장 번호 안내 (파손/반송 후)']
+  ],
+  '출고일정': [
+    ['출고일정_단독', '단독 주문'],
+    ['출고일정_복수', '복수 주문']
+  ],
+  '상품수령확인': [
+    ['수령확인_부재', '부재'],
+    ['수령확인_회신없음', '회신 없음']
+  ],
+  '운송장번호_OB': [
+    ['교환_변심교환', '변심 교환'],
+    ['교환_재출고완료_분실', '분실 교환'],
+    ['교환_재출고완료_배송후', '파손/불량 (배송 후)'],
+    ['교환_재출고완료_배송전', '파손 교환 (배송 전)']
+  ]
+};
+
+function setupOutbound(main) {
+  const subSel = document.getElementById('claimType');
+  const rowSub = document.getElementById('rowSubType');
+  subSel.innerHTML = '<option value="">선택</option>';
+  if (main === '단종품절') {
+    rowSub.className = 'conditional-row';
+    subSel.innerHTML = '<option value="단종품절">단종품절</option>';
+    subSel.value = '단종품절';
+  } else if (main === '반품불가_direct') {
+    rowSub.className = 'conditional-row';
+    subSel.innerHTML = '<option value="반품불가">반품불가</option>';
+    subSel.value = '반품불가';
+  } else if (main === '선물하기안내_OB') {
+    rowSub.className = 'conditional-row';
+    subSel.innerHTML = '<option value="선물하기_안내">선물하기_안내</option>';
+    subSel.value = '선물하기_안내';
+  } else if (main && SUB_OPTIONS[main]) {
+    rowSub.className = 'conditional-row visible';
+    SUB_OPTIONS[main].forEach(([val, label]) => {
+      const o = document.createElement('option'); o.value = val; o.textContent = label; subSel.appendChild(o);
+    });
+    if (SUB_OPTIONS[main].length === 1) { subSel.value = SUB_OPTIONS[main][0][0]; }
+  } else {
+    rowSub.className = 'conditional-row';
+  }
+  onClaimTypeChange();
+}
+
+function onMainTypeChange() {
+  const main = document.getElementById('claimMain').value;
+  const subSel = document.getElementById('claimType');
+  const rowSub = document.getElementById('rowSubType');
+  subSel.innerHTML = '<option value="">선택</option>';
+
+  if (main === '단종품절') {
+    rowSub.className = 'conditional-row';
+    subSel.innerHTML = '<option value="단종품절">단종품절</option>';
+    subSel.value = '단종품절';
+  } else if (main === '반품불가_direct') {
+    rowSub.className = 'conditional-row';
+    subSel.innerHTML = '<option value="반품불가">반품불가</option>';
+    subSel.value = '반품불가';
+  } else if (main === '교환') {
+    if (selectedIssue === '클레임_단순변심') {
+      rowSub.className = 'conditional-row';
+      subSel.innerHTML = '<option value="단순변심교환_부재">단순변심교환_부재</option>';
+      subSel.value = '단순변심교환_부재';
+    } else if (selectedIssue === '클레임_불량 주장') {
+      rowSub.className = 'conditional-row';
+      subSel.innerHTML = '<option value="불량주장_교환">불량주장_교환</option>';
+      subSel.value = '불량주장_교환';
+    } else if (selectedIssue === '클레임_파손/훼손') {
+      rowSub.className = 'conditional-row';
+      subSel.innerHTML = '<option value="파손훼손_교환">파손훼손_교환</option>';
+      subSel.value = '파손훼손_교환';
+    } else if (selectedIssue === '클레임_분실') {
+      rowSub.className = 'conditional-row';
+      subSel.innerHTML = '<option value="분실_교환">분실_교환</option>';
+      subSel.value = '분실_교환';
+    } else if (selectedIssue === '클레임_오출고') {
+      rowSub.className = 'conditional-row';
+      subSel.innerHTML = '<option value="오출고_교환">오출고_교환</option>';
+      subSel.value = '오출고_교환';
+    } else if (selectedIssue === '클레임_누락') {
+      rowSub.className = 'conditional-row';
+      subSel.innerHTML = '<option value="누락_교환">누락_교환</option>';
+      subSel.value = '누락_교환';
+    } else {
+      rowSub.className = 'conditional-row';
+      subSel.innerHTML = '<option value="교환_회수접수">교환_회수접수</option>';
+      subSel.value = '교환_회수접수';
+    }
+  } else if (main === '교환배송전') {
+    rowSub.className = 'conditional-row';
+    subSel.innerHTML = '<option value="파손훼손_교환배송전">파손훼손_교환배송전</option>';
+    subSel.value = '파손훼손_교환배송전';
+  } else if (main === '교환배송후') {
+    rowSub.className = 'conditional-row';
+    subSel.innerHTML = '<option value="파손훼손_교환">파손훼손_교환</option>';
+    subSel.value = '파손훼손_교환';
+  } else if (main === '반품') {
+    if (selectedIssue === '클레임_불량 주장' || selectedIssue === '클레임_오출고') {
+      rowSub.className = 'conditional-row visible';
+      [['반품_전체','전체 반품'],['반품_부분_무배충족','부분 반품 (무배 충족)'],['반품_부분_무배미충족','부분 반품 (무배 미충족)']].forEach(([val, label]) => {
+        const o = document.createElement('option'); o.value = val; o.textContent = label; subSel.appendChild(o);
+      });
+    } else if (selectedIssue === '클레임_파손/훼손') {
+      rowSub.className = 'conditional-row';
+      subSel.innerHTML = '<option value="파손훼손_반품">파손훼손_반품</option>';
+      subSel.value = '파손훼손_반품';
+    } else if (selectedIssue === '클레임_분실') {
+      rowSub.className = 'conditional-row';
+      subSel.innerHTML = '<option value="분실_반품">분실_반품</option>';
+      subSel.value = '분실_반품';
+    } else if (selectedIssue === '클레임_누락') {
+      rowSub.className = 'conditional-row';
+      subSel.innerHTML = '<option value="누락_반품">누락_반품</option>';
+      subSel.value = '누락_반품';
+    } else {
+      rowSub.className = 'conditional-row visible';
+      [['반품_전체','전체 반품'],['반품_부분_무배충족','부분 반품 (무배 충족)'],['반품_부분_무배미충족','부분 반품 (무배 미충족)']].forEach(([val, label]) => {
+        const o = document.createElement('option'); o.value = val; o.textContent = label; subSel.appendChild(o);
+      });
+    }
+  } else if (main && SUB_OPTIONS[main]) {
+    rowSub.className = 'conditional-row visible';
+    SUB_OPTIONS[main].forEach(([val, label]) => {
+      const o = document.createElement('option'); o.value = val; o.textContent = label; subSel.appendChild(o);
+    });
+    if (SUB_OPTIONS[main].length === 1) { subSel.value = SUB_OPTIONS[main][0][0]; }
+  } else {
+    rowSub.className = 'conditional-row';
+  }
+  onClaimTypeChange();
+}
+
+function updateObTimeVisibility() {
+  const v = document.getElementById('claimType').value;
+  const ab = document.getElementById('absence').value;
+  const photoVal2 = document.getElementById('photoAttached').value;
+  const shipCheckEl = document.getElementById('shipCheck');
+  const shipCheckVal = shipCheckEl ? shipCheckEl.value : '';
+  const defectJudgeValOb = document.getElementById('defectJudge') ? document.getElementById('defectJudge').value : '';
+  const showOb = (v === '수령확인_부재' || (selectedIssue === '클레임_불량 주장' && (v.startsWith('반품_') || v === '불량주장_교환') && !((v.startsWith('반품_') || v === '불량주장_교환') && photoVal2 === '첨부' && defectJudgeValOb === '불량확인')) || (selectedIssue === '클레임_오출고' && (v.startsWith('반품_') || v === '오출고_교환') && photoVal2 !== '첨부') || (selectedIssue === '클레임_누락' && (v === '누락_반품' || v === '누락_교환') && shipCheckVal !== '누락확인') || v === '단순변심교환_부재' || v === '반품불가' || v === '단종품절' || ((v === '파손훼손_반품' || v === '파손훼손_교환') && photoVal2 === '미첨부')) && ab === '1차';
+  document.getElementById('rowObTime').className = 'conditional-row' + (showOb ? ' visible' : '');
+}
+
+function onAbsenceChange() {
+  updateObTimeVisibility();
+}
+
+function onDefectJudgeChange() {
+  onClaimTypeChange();
+}
+
+function onPhotoAttachedChange() {
+  onClaimTypeChange();
+}
+
+function onLostStatusChange() {
+  const v = document.getElementById('claimType').value;
+  const ls = document.getElementById('lostStatus').value;
+  if (v === '분실_교환') {
+    document.getElementById('rowExchangeShipDate').className = 'conditional-row' + (ls === '종결' ? ' visible' : '');
+    document.getElementById('rowExchangeType').className = 'conditional-row' + (ls === '종결' ? ' visible' : '');
+  }
+}
+
+function onClaimTypeChange() {
+  const v = document.getElementById('claimType').value;
+  const isShipDate = v === '출고일정_단독' || v === '출고일정_복수';
+  const isDansoReturns = selectedIssue === '클레임_단순변심' && v.startsWith('반품_');
+  const photoVal = document.getElementById('photoAttached').value;
+  const claimMainVal = document.getElementById('claimMain').value;
+  const isBullyangPhoto = selectedIssue === '클레임_불량 주장' && (claimMainVal === '반품' || v === '불량주장_교환');
+  const isOchulgoPhoto = selectedIssue === '클레임_오출고' && (claimMainVal === '반품' || v === '오출고_교환');
+  const isPhotoType = v === '파손훼손_반품' || v === '파손훼손_교환' || isBullyangPhoto || isOchulgoPhoto;
+  const isPasonPhoto = v === '파손훼손_반품' || v === '파손훼손_교환';
+  const isTracking = v === '교환_재출고완료_분실' || v === '교환_재출고완료_배송후' || v === '교환_재출고완료_반송후' || v === '교환_재출고완료_배송전' || v === '교환_변심교환';
+  const shipCheckVal2 = document.getElementById('shipCheck').value;
+  const defectJudgeEl = document.getElementById('defectJudge');
+  const defectJudge = defectJudgeEl ? defectJudgeEl.value : '';
+  const isBullyangConfirmed = selectedIssue === '클레임_불량 주장' && v === '불량주장_교환' && defectJudge === '불량확인' && photoVal === '첨부';
+  const isBullyangConfirmedReturn = selectedIssue === '클레임_불량 주장' && claimMainVal === '반품' && defectJudge === '불량확인' && photoVal === '첨부';
+  const hideAbsence = isShipDate || v === '수령확인_회신없음' || v === '교환_회수접수' || isDansoReturns || v === '단순변심교환_회신없음' || (isPasonPhoto && photoVal === '첨부') || (isOchulgoPhoto && photoVal === '첨부') || isTracking || v === '분실_반품' || v === '분실_교환' || ((v === '누락_반품' || v === '누락_교환') && shipCheckVal2 === '누락확인') || isBullyangConfirmed || isBullyangConfirmedReturn || v === '파손훼손_교환배송전' || v === '선물하기_안내';
+  document.getElementById('rowAbsence').className = 'conditional-row' + (hideAbsence ? '' : ' visible');
+  document.getElementById('rowShipDate').className = 'conditional-row' + (isShipDate ? ' visible' : '');
+  updateObTimeVisibility();
+  document.getElementById('rowOrderNo').className = 'conditional-row' + (v === '단종품절' ? ' visible' : '');
+  document.getElementById('rowTracking').className = 'conditional-row' + (v === '교환_재출고완료_분실' || v === '교환_재출고완료_배송후' || v === '교환_재출고완료_반송후' || v === '교환_재출고완료_배송전' || v === '교환_변심교환' ? ' visible' : '');
+  document.getElementById('rowPhotoAttached').className = 'conditional-row' + (isPhotoType ? ' visible' : '');
+  const isDansoExchange = selectedIssue === '클레임_단순변심' && v.includes('교환');
+  const showExchangeType = v.includes('교환') && !isDansoExchange
+    && (v !== '불량주장_교환' || defectJudge === '불량확인')
+    && !(v === '누락_교환' && shipCheckVal2 === '발송확인')
+    && !(v === '파손훼손_교환' && photoVal !== '첨부')
+    && !isTracking
+    && !(v === '오출고_교환' && photoVal !== '첨부')
+    && !(v === '분실_교환' && document.getElementById('lostStatus').value === '부재');
+  document.getElementById('rowDefectJudge').className = 'conditional-row' + (selectedIssue === '클레임_불량 주장' && photoVal === '첨부' && (v === '불량주장_교환' || claimMainVal === '반품') ? ' visible' : '');
+  document.getElementById('rowExchangeType').className = 'conditional-row' + (showExchangeType ? ' visible' : '');
+  document.getElementById('rowExchangeShipDate').className = 'conditional-row' + ((v === '파손훼손_교환' && photoVal === '첨부') || (v === '파손훼손_교환배송전') || (v === '분실_교환' && document.getElementById('lostStatus').value === '종결') || (v === '오출고_교환' && photoVal === '첨부') || (v === '누락_교환' && shipCheckVal2 === '누락확인') || (v === '불량주장_교환' && photoVal === '첨부' && defectJudge === '불량확인') ? ' visible' : '');
+  document.getElementById('rowReturnDeny').className = 'conditional-row' + (v === '반품불가' ? ' visible' : '');
+  if (isBullyangConfirmedReturn) document.getElementById('rowSubType').className = 'conditional-row';
+  document.getElementById('rowLostStatus').className = 'conditional-row' + (v === '분실_반품' || v === '분실_교환' ? ' visible' : '');
+  document.getElementById('rowShipCheck').className = 'conditional-row' + (v === '누락_반품' || v === '누락_교환' ? ' visible' : '');
+}
+
+function getLiability(key) {
+  if (LIABILITY['뚜누'].includes(key)) return '뚜누';
+  if (LIABILITY['배송사'].includes(key)) return '배송사';
+  return '고객';
+}
+
+function getSorryOrEmpathy(key, liability) {
+  if (liability === '고객') return EMPATHY[key] || EMPATHY['default'];
+  return APOLOGY[key] || (liability === '뚜누' ? APOLOGY['default_뚜누'] : APOLOGY['default_배송사']);
+}
+
+function buildText() {
+  if (!selectedIssue) return null;
+  const product = document.getElementById('product').value.trim() || '[상품명]';
+  const claimType = document.getElementById('claimType').value;
+  const claimMain = document.getElementById('claimMain').value;
+  const absence = document.getElementById('absence').value;
+  const lines = [];
+
+  lines.push('고객님, 안녕하세요. 뚜누입니다.');
+
+  if (claimType === '선물하기_안내') {
+    lines.push('');
+    lines.push('선물 받으신 상품 배송 보류로 확인되어 안내차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    lines.push('선물하기로 받으신 상품 배송지 미입력 상태로 확인되어 주소지 입력 확인 부탁드립니다.');
+    lines.push('주소지 입력이 어려우신 경우 뚜누 고객센터로 연락 부탁드립니다.');
+    lines.push('');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '출고일정_단독' || claimType === '출고일정_복수') {
+    const shipDate = document.getElementById('shipDate').value.trim() || '[출고 예정 기간]';
+    lines.push('');
+    lines.push('먼저, 만족스럽지 못한 배송으로 불편을 드려 죄송합니다.');
+    lines.push('주문하신 상품 발송 일정 안내차 연락 드렸으나 부재로 문자 보내드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    lines.push(`해당 상품 제작 중 불량으로 확인되어 익일부터 긴급 재제작 예정에 있으며 ${shipDate} 사이 발송 될 예정입니다.`);
+    lines.push('');
+    lines.push('주문 제작 상품으로 정확한 발송일 안내 어려운 점 양해 부탁드립니다.');
+    if (claimType === '출고일정_복수') {
+      lines.push('제작이 완료되는대로 같이 주문하신 상품과 발송할 수 있도록 하겠습니다.');
+    }
+    lines.push('');
+    lines.push('제작 일정은 상황에 따라 일부 변동될 수 있으며, 변동이 생길 경우 개별적으로 다시 안내드리겠습니다.');
+    lines.push('고객님의 소중한 상품이 빠르게 발송 될 수 있도록 최선을 다하겠습니다.');
+    lines.push('');
+    lines.push('조금만 더 기다려 주시면 감사하겠습니다 ♥');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '단종품절') {
+    const orderNo = document.getElementById('orderNo').value.trim() || '[주문번호]';
+    if (absence === '1차') {
+      const obTime = document.getElementById('obTime').value.trim() || '[2차 OB 예정 시간]';
+      lines.push('');
+      lines.push('먼저, 주문 상품 단종으로 인해 불편을 드려 대단히 죄송합니다.');
+      lines.push('주문하신 상품 안내차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+      lines.push('');
+      lines.push(`■ 주문번호 : ${orderNo}`);
+      lines.push(`■ 상품명 : ${product}`);
+      lines.push('');
+      lines.push('해당 상품은 현재 모든 수량이 소진되어 발송이 어려운 상태로 다른 상품으로 교환 또는 취소로 처리 도와드릴 예정입니다.');
+      lines.push('');
+      lines.push('실시간 재고 연동이 원활하지 않아 품절된 상품임에도 구매가 가능했던 것으로 확인되었습니다.');
+      lines.push('해당 건은 담당 부서를 통해 피드백 전달 후 재발 방지를 위한 내부 시스템 개선 및 조치를 요청드려 놓았으며, 동일 건 발생되지 않도록 내부적으로도 최선을 다하겠습니다.');
+      lines.push('');
+      lines.push(`처리 방향 확인을 위해 ${obTime}에 다시 한번 연락 드릴 수 있도록 하겠습니다.`);
+      lines.push('취소를 원하시는 경우 번거로우시겠지만 주문 내역에서 취소 신청 부탁드립니다.');
+      lines.push('');
+      lines.push('이용에 불편 드려 다시 한번 죄송합니다.');
+      lines.push('감사합니다.');
+    } else {
+      lines.push('');
+      lines.push('주문하신 상품 안내차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+      lines.push('');
+      lines.push(`■ 주문번호 : ${orderNo}`);
+      lines.push(`■ 상품명 : ${product}`);
+      lines.push('');
+      lines.push('해당 상품은 현재 모든 수량이 소진되어 발송이 어려운 상태로 처리 방향 확인이 필요하여 유선 연락 드렸으나 연락이 원활하지 않아 번거로우시겠지만 아래 경로를 통해 연락 부탁드립니다.');
+      lines.push('');
+      lines.push('번거롭게 해드려 죄송합니다.');
+      lines.push('감사합니다.');
+    }
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '수령확인_부재') {
+    const obTime = document.getElementById('obTime').value.trim() || '[OB 예정 시간]';
+    lines.push('');
+    lines.push('주문하신 상품 수령 확인차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    if (absence === '1차') {
+      lines.push('배송 관련하여 안내 문자를 발송해드렸으나, 현재까지 배송 조회상 \'배송 중\' 상태로 확인되고 있습니다.');
+      lines.push('');
+      lines.push(`상품을 정상적으로 수령하셨는지 확인이 필요하여 ${obTime}에 다시 한번 연락 드릴 수 있도록 하겠습니다.`);
+    } else {
+      lines.push('해당 상품 정상 수령 확인이 필요하여 번거로우시겠지만 아래 경로 통하여 회신 부탁드립니다.');
+    }
+    lines.push('');
+    lines.push('확인 요청으로 번거로움을 드리게 되어 죄송합니다.');
+    lines.push('');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '수령확인_회신없음') {
+    lines.push('');
+    lines.push('주문하신 상품 수령 확인차 여러차례 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    lines.push('해당 상품 수령 확인차 회신 요청 드렸으나 별도 회신이 확인되지 않아 상품은 정상 수령하신 것으로 예상되어, 배송 완료 처리 예정입니다.');
+    lines.push('');
+    lines.push('다만 아직 상품을 수령하지 못하셨거나 도움이 필요하신 경우에는 번거로우시겠지만 아래 경로를 통해 연락 부탁드립니다.');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '단순변심교환_부재') {
+    const obTime = document.getElementById('obTime').value.trim() || '[OB 예정 시간]';
+    lines.push('');
+    lines.push('교환 신청하신 상품 관련하여 확인차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    if (absence === '1차') {
+      lines.push(`교환 원하시는 상품 확인이 필요하여 ${obTime}에 다시 연락 드릴 예정입니다.`);
+      lines.push('번거로우시겠지만, 그 전에 통화를 원하시는 경우 아래 경로를 통해 연락 부탁드립니다.');
+    } else {
+      lines.push('교환 원하시는 상품 확인을 위해 연락 드렸으나 연결이 원활하지 않아 우선 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+      lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+      lines.push('');
+      lines.push('회수 상품 검수 진행 후 교환 상품 확인을 위해 재연락 드릴 예정으로 시간 양해 부탁드립니다.');
+    }
+    lines.push('');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '단순변심교환_회신없음') {
+    lines.push('');
+    lines.push('교환 신청하신 상품 관련하여 여러차례 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    lines.push('별도 회신이 확인되지 않아 교환 신청 건은 취소 처리 예정입니다.');
+    lines.push('');
+    lines.push('도움이 필요하신 경우에는 번거로우시겠지만 아래 경로를 통해 연락 부탁드립니다.');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '파손훼손_반품') {
+    const photoAttached = document.getElementById('photoAttached').value;
+    const obTime = document.getElementById('obTime').value.trim() || '[OB 예정 시간]';
+    lines.push('');
+    lines.push('먼저, 만족스럽지 못한 배송으로 불편을 드려 죄송합니다.');
+    if (photoAttached === '첨부') {
+      lines.push('반품 신청하신 상품 확인차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+      lines.push('');
+      lines.push(`- 상품명 : ${product}`);
+      lines.push('');
+      lines.push('금일 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+      lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 더 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+      lines.push('');
+      lines.push('회수 상품 입고 및 검수 완료 후 순차적으로 환불이 진행되는 점 양해 부탁드립니다.');
+    } else {
+      lines.push('반품 신청하신 상품 확인차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+      lines.push('');
+      lines.push(`- 상품명 : ${product}`);
+      lines.push('');
+      if (absence === '1차') {
+        lines.push(`말씀 주신 내용에 대한 사진 확인 및 추가 상담을 위해 ${obTime}에 다시 한번 연락드릴 예정입니다.`);
+        lines.push('번거로우시겠지만, 그 전에 전달이 가능하신 경우 보다 빠른 확인 및 처리를 위해 수령하신 상품 사진을 아래 경로를 통해 회신 부탁드리며, 외부 택배 포장에 훼손이 있는 경우에는 택배 송장이 보이도록 포장 상태 사진도 함께 전달 부탁드립니다.');
+      } else {
+        lines.push('수령하신 상품의 사진 확인을 위해 연락 드렸으나 연결이 원활하지 않아 우선 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+        lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 더 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+        lines.push('');
+        lines.push('회수 후 상품 검수를 진행할 예정이며, 검수 결과 상품이 정상으로 확인될 경우 반품 배송비 6,000원이 발생할 수 있는 점 양해 부탁드립니다.');
+        lines.push('');
+        lines.push('검수 완료 후 다시 안내드릴 수 있도록 하겠습니다.');
+      }
+    }
+    lines.push('');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '파손훼손_교환배송전') {
+    const exchShipDate = document.getElementById('exchangeShipDate').value.trim() || '[출고 예정 일자]';
+    lines.push('');
+    lines.push('먼저, 만족스럽지 못한 배송으로 불편을 드려 죄송합니다.');
+    lines.push('주문하신 상품 배송 관련 안내를 위해 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    const exchangeTypePreDel = document.getElementById('exchangeType').value;
+    if (exchangeTypePreDel === '당일출고') {
+      lines.push(`해당 상품 배송 중 파손으로 인해 ${exchShipDate} 발송 예정입니다.`);
+    } else {
+      lines.push('해당 상품은 배송 중 파손으로 확인되어 반송 처리되었으며, 재발송 진행 예정입니다.');
+      lines.push('');
+      lines.push('다만 해당 상품은 주문 제작 상품으로 재제작 후 발송이 진행될 예정인 점 양해 부탁드립니다.');
+      lines.push(`교환 상품은 ${exchShipDate} 출고 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+    }
+    lines.push('전산상 처리를 위해 주문 내역에서 \'교환\'이 접수될 예정이나, 별도의 회수 절차 없이 상품 재발송만 진행되오니 혼선 없으시길 바랍니다.');
+    lines.push('');
+    lines.push('발송 진행시 운송장 번호 안내 드릴 수 있도록 하겠습니다.');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '파손훼손_교환') {
+    const photoAttached = document.getElementById('photoAttached').value;
+    const obTime = document.getElementById('obTime').value.trim() || '[OB 예정 시간]';
+    let pasonSkipBlank = false;
+    lines.push('');
+    lines.push('먼저, 만족스럽지 못한 배송으로 불편을 드려 죄송합니다.');
+    if (photoAttached === '첨부') {
+      const exchShipDate = document.getElementById('exchangeShipDate').value.trim() || '[출고 예정 일자]';
+      const exchangeTypePason = document.getElementById('exchangeType').value;
+      lines.push('교환 신청하신 상품 안내차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+      lines.push('');
+      lines.push(`- 상품명 : ${product}`);
+      lines.push('');
+      lines.push('금일 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+      lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 더 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+      lines.push('');
+      if (exchangeTypePason === 'POD') {
+        lines.push('다만 해당 상품은 주문 제작 상품으로, 재제작 후 발송이 진행될 예정입니다.');
+        lines.push(`교환 상품은 ${exchShipDate} 출고 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+      } else {
+        lines.push(`교환 상품은 회수 수거 확인 후 발송 도와드리고 있어 ${exchShipDate} 에 발송 될 예정으로 시간 양해 부탁드립니다.`);
+      }
+      lines.push('');
+      lines.push('발송 진행시 운송장 번호 안내 드릴 수 있도록 하겠습니다.');
+      pasonSkipBlank = true;
+    } else {
+      lines.push('교환 신청하신 상품 확인차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+      lines.push('');
+      lines.push(`- 상품명 : ${product}`);
+      lines.push('');
+      if (absence === '1차') {
+        lines.push(`말씀 주신 내용에 대한 사진 확인 및 추가 상담을 위해 ${obTime}에 다시 한번 연락드릴 예정입니다.`);
+        lines.push('번거로우시겠지만, 그 전에 전달이 가능하신 경우 보다 빠른 확인 및 처리를 위해 수령하신 상품 사진을 아래 경로를 통해 회신 부탁드리며, 외부 택배 포장에 훼손이 있는 경우에는 택배 송장이 보이도록 포장 상태 사진도 함께 전달 부탁드립니다.');
+        lines.push('');
+        lines.push('번거롭게 해드려 죄송합니다.');
+      } else {
+        lines.push('수령하신 상품의 사진 확인을 위해 연락 드렸으나 연결이 원활하지 않아 우선 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+        lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 더 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+        lines.push('');
+        lines.push('회수 후 상품 검수를 진행할 예정이며, 검수 결과 상품이 정상으로 확인될 경우 교환 배송비 6,000원이 발생할 수 있으며 교환 발송은 보류 될 가능성 있습니다.');
+        lines.push('');
+        lines.push('검수 완료 후 다시 안내드릴 수 있도록 하겠습니다.');
+      }
+    }
+    if (!pasonSkipBlank) lines.push('');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '오출고_교환') {
+    const photoAttached = document.getElementById('photoAttached').value;
+    const obTime = document.getElementById('obTime').value.trim() || '[OB 예정 시간]';
+    lines.push('');
+    lines.push('먼저, 잘못된 상품이 발송되어 불편을 드려 죄송합니다.');
+    lines.push('교환 신청하신 상품 확인차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    let skipBlankBeforeThx = false;
+    if (photoAttached === '첨부') {
+      const exchShipDate = document.getElementById('exchangeShipDate').value.trim() || '[출고 예정 일자]';
+      lines.push('전달해 주신 사진 확인 후 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+      lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+      lines.push('');
+      const exchangeTypeOchulgo = document.getElementById('exchangeType').value;
+      if (exchangeTypeOchulgo === 'POD') {
+        lines.push('교환 상품은 주문 제작 상품으로 재제작 후 발송이 진행 될 예정입니다.');
+        lines.push(`교환 상품은 ${exchShipDate} 출고 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+        lines.push('');
+        lines.push('발송 진행시 운송장 번호 안내 드릴 수 있도록 하겠습니다.');
+        skipBlankBeforeThx = true;
+      } else {
+        lines.push(`교환 상품은 회수 수거 확인 후 발송 도와드리고 있어 ${exchShipDate}에 발송 될 예정으로 시간 양해 부탁드립니다.`);
+        lines.push('');
+        lines.push('발송 진행시 운송장 번호 안내 드릴 수 있도록 하겠습니다.');
+        skipBlankBeforeThx = true;
+      }
+    } else {
+      if (absence === '1차') {
+        lines.push(`말씀 주신 내용에 대한 사진 확인 및 추가 상담을 위해 ${obTime}에 다시 한번 연락드릴 예정입니다.`);
+        lines.push('번거로우시겠지만, 그 전에 사진 전달이 가능하신 경우 보다 신속한 확인 및 처리를 위해 수령하신 상품 사진을 아래 경로를 통해 먼저 회신 부탁드리겠습니다.');
+      } else {
+        lines.push('확인을 위해 연락 드렸으나 연결이 원활하지 않아 우선 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+        lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+        lines.push('');
+        lines.push('회수 후 상품 검수를 진행할 예정이며, 검수 결과 주문하신 상품으로 발송된 것으로 확인될 경우 교환 배송비 6,000원이 발생할 수 있는 점 양해 부탁드립니다.');
+        lines.push('');
+        lines.push('검수 완료 후 다시 안내드릴 수 있도록 하겠습니다.');
+      }
+    }
+    if (!skipBlankBeforeThx) lines.push('');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '불량주장_교환') {
+    const photoAttached = document.getElementById('photoAttached').value;
+    const obTime = document.getElementById('obTime').value.trim() || '[OB 예정 시간]';
+    const defectJudgeBt = document.getElementById('defectJudge') ? document.getElementById('defectJudge').value : '';
+    let bullyangSkipBlank = false;
+    lines.push('');
+    lines.push('먼저, 만족스럽지 못한 상품으로 불편을 드려 죄송합니다.');
+    lines.push('교환 신청하신 상품 확인차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    if (defectJudgeBt === '불량확인' && photoAttached === '첨부') {
+      const exchangeTypeBt = document.getElementById('exchangeType').value;
+      const exchShipDate = document.getElementById('exchangeShipDate').value.trim() || '[출고 예정 일자]';
+      lines.push('전달해주신 사진 확인 결과 불량으로 확인되어 교환 처리 도와드릴 예정입니다.');
+      if (exchangeTypeBt === '당일출고') {
+        lines.push(`교환 상품은 회수 수거 확인 후 발송 도와드리고 있어 ${exchShipDate} 에 발송 될 예정으로 시간 양해 부탁드립니다.`);
+      } else {
+        lines.push('다만 해당 상품은 주문 제작 상품으로, 재제작 후 발송이 진행될 예정입니다.');
+        lines.push(`교환 상품은 ${exchShipDate} 출고 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+      }
+      lines.push('');
+      lines.push('발송 진행시 운송장 번호 안내 드릴 수 있도록 하겠습니다.');
+      bullyangSkipBlank = true;
+    } else if (photoAttached === '첨부') {
+      if (absence === '1차') {
+        lines.push(`전달해 주신 사진 확인하였으며, 말씀해주신 사유 확인을 위해 ${obTime} 다시 한번 연락 드릴 수 있도록 하겠습니다.`);
+        lines.push('');
+        lines.push('번거로우시겠지만, 그 전에 통화를 원하시는 경우 아래 경로를 통해 연락 부탁드립니다.');
+      } else {
+        lines.push('전달해 주신 사진 확인 후 사유 확인을 위해 연락 드렸으나 연결이 원활하지 않아 우선 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+        lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+        lines.push('');
+        lines.push('회수 후 상품 검수를 진행할 예정이며, 검수 결과 상품이 정상으로 확인될 경우 교환 배송비 6,000원이 발생할 수 있는 점 양해 부탁드립니다.');
+        lines.push('');
+        lines.push('검수 완료 후 다시 안내드릴 수 있도록 하겠습니다.');
+      }
+    } else {
+      if (absence === '1차') {
+        lines.push(`말씀 주신 내용에 대한 사진 확인 및 추가 상담을 위해 ${obTime}에 다시 한번 연락드릴 예정입니다.`);
+        lines.push('번거로우시겠지만, 그 전에 사진 전달이 가능하신 경우 보다 신속한 확인 및 처리를 위해 수령하신 상품 사진을 아래 경로를 통해 먼저 회신 부탁드리겠습니다.');
+      } else {
+        lines.push('사유 확인을 위해 연락 드렸으나 연결이 원활하지 않아 우선 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+        lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+        lines.push('');
+        lines.push('회수 후 상품 검수를 진행할 예정이며, 검수 결과 상품이 정상으로 확인될 경우 교환 배송비 6,000원이 발생할 수 있는 점 양해 부탁드립니다.');
+        lines.push('');
+        lines.push('검수 완료 후 다시 안내드릴 수 있도록 하겠습니다.');
+      }
+    }
+    if (!bullyangSkipBlank) lines.push('');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (selectedIssue === '클레임_오출고' && claimType.startsWith('반품_')) {
+    const photoAttached = document.getElementById('photoAttached').value;
+    const obTime = document.getElementById('obTime').value.trim() || '[OB 예정 시간]';
+    const fee = claimType === '반품_부분_무배충족' ? '3,000' : '6,000';
+    lines.push('');
+    lines.push('먼저, 잘못된 상품이 발송되어 불편을 드려 죄송합니다.');
+    lines.push('반품 신청하신 상품 확인차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    if (photoAttached === '첨부') {
+      lines.push('전달해 주신 사진 확인 후 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+      lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+      lines.push('');
+      lines.push('회수 상품 입고 및 검수 완료 후 순차적으로 환불이 진행되는 점 양해 부탁드립니다.');
+    } else {
+      if (absence === '1차') {
+        lines.push(`말씀 주신 내용에 대한 사진 확인 및 추가 상담을 위해 ${obTime}에 다시 한번 연락드릴 예정입니다.`);
+        lines.push('번거로우시겠지만, 그 전에 사진 전달이 가능하신 경우 보다 신속한 확인 및 처리를 위해 수령하신 상품 사진을 아래 경로를 통해 먼저 회신 부탁드리겠습니다.');
+      } else {
+        lines.push('확인을 위해 연락 드렸으나 연결이 원활하지 않아 우선 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+        lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+        lines.push('');
+        lines.push(`회수 후 상품 검수를 진행할 예정이며, 검수 결과 주문하신 상품으로 발송된 것으로 확인될 경우 반품 배송비 ${fee}원이 발생할 수 있는 점 양해 부탁드립니다.`);
+        lines.push('');
+        lines.push('검수 완료 후 다시 안내드릴 수 있도록 하겠습니다.');
+      }
+    }
+    lines.push('');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (selectedIssue === '클레임_불량 주장' && (claimType.startsWith('반품_') || claimMain === '반품')) {
+    const photoAttached = document.getElementById('photoAttached').value;
+    const obTime = document.getElementById('obTime').value.trim() || '[OB 예정 시간]';
+    lines.push('');
+    lines.push('먼저, 만족스럽지 못한 상품으로 불편을 드려 죄송합니다.');
+    lines.push('반품 신청하신 상품 확인차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    const fee = claimType === '반품_부분_무배충족' ? '3,000' : '6,000';
+    const defectJudgeR = document.getElementById('defectJudge') ? document.getElementById('defectJudge').value : '';
+    if (photoAttached === '첨부' && defectJudgeR === '불량확인') {
+      lines.push('전달해주신 사진 확인 결과 불량으로 확인되어 반품 처리 도와드릴 예정입니다.');
+      lines.push('금일 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+      lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+      lines.push('');
+      lines.push('회수 상품 입고 및 검수 완료 후 순차적으로 환불이 진행되는 점 양해 부탁드립니다.');
+    } else if (photoAttached === '첨부') {
+      if (absence === '1차') {
+        lines.push(`전달해 주신 사진 확인하였으며, 말씀해주신 사유 추가 확인을 위해 ${obTime} 다시 한번 연락 드릴 수 있도록 하겠습니다.`);
+        lines.push('번거로우시겠지만, 그 전에 통화를 원하시는 경우 아래 경로를 통해 연락 부탁드립니다.');
+      } else {
+        lines.push('전달해 주신 사진 확인 후 사유 확인을 위해 연락 드렸으나 연결이 원활하지 않아 우선 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+        lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+        lines.push('');
+        lines.push(`회수 후 상품 검수를 진행할 예정이며, 검수 결과 상품이 정상으로 확인될 경우 반품 배송비 ${fee}원이 발생할 수 있는 점 양해 부탁드립니다.`);
+        lines.push('');
+        lines.push('검수 완료 후 다시 안내드릴 수 있도록 하겠습니다.');
+      }
+    } else {
+      if (absence === '1차') {
+        lines.push(`말씀 주신 내용에 대한 사진 확인 및 추가 상담을 위해 ${obTime}에 다시 한번 연락드릴 예정입니다.`);
+        lines.push('번거로우시겠지만, 그 전에 사진 전달이 가능하신 경우 보다 신속한 확인 및 처리를 위해 수령하신 상품 사진을 아래 경로를 통해 먼저 회신 부탁드리겠습니다.');
+      } else {
+        lines.push('사유 확인을 위해 연락 드렸으나 연결이 원활하지 않아 우선 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+        lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+        lines.push('');
+        lines.push(`회수 후 상품 검수를 진행할 예정이며, 검수 결과 상품이 정상으로 확인될 경우 반품 배송비 ${fee}원이 발생할 수 있는 점 양해 부탁드립니다.`);
+        lines.push('');
+        lines.push('검수 완료 후 다시 안내드릴 수 있도록 하겠습니다.');
+      }
+    }
+    lines.push('');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '분실_반품') {
+    const lostStatus = document.getElementById('lostStatus').value;
+    lines.push('');
+    lines.push('먼저 상품을 기다리셨을 텐데 배송 과정에서 불편을 드려 죄송합니다.');
+    if (lostStatus === '부재') {
+      lines.push('반품 신청하신 상품 안내차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+      lines.push('');
+      lines.push(`- 상품명 : ${product}`);
+      lines.push('');
+      lines.push('해당 상품은 배송 중 분실이 의심되어 택배사 확인 절차를 진행하고 있습니다.');
+      lines.push('고객님께서 환불을 원하시는 것으로 확인되어 환불 진행 도와드릴 예정입니다.');
+      lines.push('');
+      lines.push('현재 택배사 확인이 진행 중이며, 확인 및 내부 처리 완료 후 최대한 빠르게 환불 진행 도와드릴 예정입니다.');
+      lines.push('진행 경과는 확인되는 대로 다시 안내드리겠으며, 처리까지 다소 시간이 소요될 수 있는 점 너른 양해 부탁드립니다.');
+    } else {
+      lines.push('반품 신청하신 상품 관련 안내를 위해 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+      lines.push('');
+      lines.push(`- 상품명 : ${product}`);
+      lines.push('');
+      lines.push('택배사 확인 결과 해당 상품은 배송 중 분실된 것으로 확인되어 금일 환불 처리 도와드렸습니다.');
+    }
+    lines.push('');
+    lines.push('불편을 드린 점 다시 한번 죄송합니다.');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '분실_교환') {
+    const lostStatus = document.getElementById('lostStatus').value;
+    let lostExchangeSkipBlank = false;
+    lines.push('');
+    lines.push('먼저 상품을 기다리셨을 텐데 배송 과정에서 불편을 드려 죄송합니다.');
+    if (lostStatus === '부재') {
+      lines.push('교환 신청하신 상품 안내차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+      lines.push('');
+      lines.push(`- 상품명 : ${product}`);
+      lines.push('');
+      lines.push('해당 상품은 배송 중 분실이 의심되어 택배사 확인 절차를 진행하고 있습니다.');
+      lines.push('고객님께서 교환을 원하시는 것으로 확인되어 교환 진행 도와드릴 예정입니다.');
+      lines.push('');
+      lines.push('현재 택배사 확인이 진행 중이며, 확인 및 내부 처리 완료 후 최대한 빠르게 교환 진행 도와드릴 예정입니다.');
+      lines.push('진행 경과는 확인되는 대로 다시 안내드리겠으며, 처리까지 다소 시간이 소요될 수 있는 점 너른 양해 부탁드립니다.');
+      lines.push('불편을 드린 점 다시 한번 죄송합니다.');
+    } else {
+      lines.push('교환 신청하신 상품 관련 안내를 위해 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+      lines.push('');
+      lines.push(`- 상품명 : ${product}`);
+      lines.push('');
+      const exchShipDate = document.getElementById('exchangeShipDate').value.trim() || '[출고 예정 일자]';
+      const exchangeTypeLost = document.getElementById('exchangeType').value;
+      if (exchangeTypeLost === '당일출고') {
+        lines.push(`해당 상품 배송 중 분실로 인해 ${exchShipDate} 발송 예정입니다.`);
+      } else {
+        lines.push('해당 상품은 배송 중 분실로 확인되어 재발송 진행 예정입니다.');
+        lines.push('');
+        lines.push('다만 해당 상품은 주문 제작 상품으로 재제작 후 발송이 진행될 예정인 점 양해 부탁드립니다.');
+        lines.push(`교환 상품은 ${exchShipDate} 출고 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+      }
+      lines.push('전산상 처리를 위해 주문 내역에서 \'교환\'이 접수될 예정이나, 별도의 회수 절차 없이 상품 재발송만 진행되오니 혼선 없으시길 바랍니다.');
+      lines.push('');
+      lines.push('발송 진행시 운송장 번호 안내 드릴 수 있도록 하겠습니다.');
+      lostExchangeSkipBlank = true;
+    }
+    if (!lostExchangeSkipBlank) lines.push('');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (selectedIssue === '클레임_누락' && (claimType === '누락_반품' || claimType === '누락_교환')) {
+    const isReturn = claimType === '누락_반품';
+    const obTime = document.getElementById('obTime').value.trim() || '[OB 예정 시간]';
+    const shipCheck = document.getElementById('shipCheck').value;
+    let nurakSkipBlank = false;
+    lines.push('');
+    if (shipCheck === '누락확인') {
+      if (isReturn) {
+        lines.push('먼저 기다려주신 상품을 정상적으로 받아보지 못해 불편을 드린 점 진심으로 사과드립니다.');
+        lines.push('반품 신청하신 상품 안내차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+        lines.push('');
+        lines.push(`- 상품명 : ${product}`);
+        lines.push('');
+        lines.push('확인 결과 해당 상품은 발송 과정에서 누락된 것으로 확인되었습니다.');
+        lines.push('고객님께 불편을 드리게 된 점 다시 한번 죄송하며, 요청해주신 내용에 따라 환불 처리 도와드렸습니다.');
+        lines.push('이용에 불편을 드린 점 너른 양해 부탁드립니다.');
+      } else {
+        const exchangeType = document.getElementById('exchangeType').value;
+        const exchShipDate = document.getElementById('exchangeShipDate').value.trim() || '[출고 예정 일자]';
+        lines.push('먼저 기다려주신 상품을 정상적으로 받아보지 못해 불편을 드린 점 진심으로 사과드립니다.');
+        lines.push('교환 신청하신 상품 안내차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+        lines.push('');
+        lines.push(`- 상품명 : ${product}`);
+        lines.push('');
+        if (exchangeType === '당일출고') {
+          lines.push(`확인 결과 해당 상품은 발송 과정에서 누락된 것으로 확인되어 ${exchShipDate}에 발송 될 예정으로 시간 양해 부탁드립니다.`);
+        } else {
+          lines.push('확인 결과 해당 상품은 발송 과정에서 누락된 것으로 확인되었습니다.');
+          lines.push('다만 해당 상품은 주문 제작 상품으로, 재제작 후 발송이 진행될 예정입니다.');
+          lines.push(`교환 상품은 ${exchShipDate} 출고 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+        }
+        lines.push('');
+        lines.push('발송 진행시 운송장 번호 안내 드릴 수 있도록 하겠습니다.');
+        nurakSkipBlank = true;
+      }
+    } else {
+      lines.push('먼저, 문의 주신 내용으로 불편을 겪고 계신 점 진심으로 사과드립니다.');
+      lines.push(`${isReturn ? '반품' : '교환'} 신청하신 상품 확인차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.`);
+      lines.push('');
+      lines.push(`- 상품명 : ${product}`);
+      lines.push('');
+      if (absence === '1차') {
+        lines.push('내부 확인 결과 해당 상품은 정상 발송된 것으로 확인되고 있습니다.');
+        lines.push(`다만 고객님께서 상품 누락으로 문의 주신 만큼 정확한 확인을 위해 추가 상담이 필요하여 ${obTime}에 다시 한번 연락드릴 예정입니다.`);
+        lines.push('번거로우시겠지만 그 전에 사진 전달이 가능하신 경우, 보다 신속한 확인 및 처리를 위해 수령하신 상품 및 포장 상태를 확인할 수 있는 사진을 아래 경로를 통해 회신 부탁드립니다.');
+      } else {
+        lines.push('사유 확인을 위해 연락 드렸으나 연결이 원활하지 않아 번거로우시겠지만 아래 경로를 통해 수령하신 상품 및 포장 상태를 확인할 수 있는 사진 전달 부탁드립니다.');
+        lines.push('');
+        lines.push('사진 확인 후 빠르게 연락 드릴 수 있도록 하겠습니다.');
+      }
+    }
+    if (!nurakSkipBlank) lines.push('');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  const liability = getLiability(selectedIssue);
+  const sorryEmpathy = getSorryOrEmpathy(selectedIssue, liability);
+  const isTonuFault = liability === '뚜누' || liability === '배송사';
+
+  if (absence === '1차') {
+    if (!claimType.startsWith('반품') && !claimType.startsWith('교환')) {
+      lines.push('');
+      lines.push('접수 사유 확인 후 불편 상황 안내차 연락 드렸으나, 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+      lines.push('[OB 시점]에 다시 한번 연락 드릴 예정입니다.');
+      lines.push('');
+      lines.push('번거롭게 해드려 죄송합니다.');
+      lines.push('감사합니다.');
+      lines.push('');
+      lines.push(FOOTER);
+      return lines.join('\n');
+    }
+  }
+
+  if (absence === '2차' && !claimType.startsWith('반품_')) {
+    lines.push('');
+    lines.push('해당 내용 안내를 위해 재차 연락 드렸으나, 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+  }
+
+  if (claimType === '반품불가') {
+    const denyReason = document.getElementById('denyReason').value.trim() || '[반품 불가 사유]';
+    const obTime = document.getElementById('obTime').value.trim() || '[2차 OB 예정 시간]';
+    if (absence === '1차') lines.push('');
+    lines.push('반품 신청하신 상품 관련 안내를 위해 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    lines.push(`해당 상품 검수를 진행한 결과, ${denyReason} 사유로 인해 상품 상태 기준에 따라 반품 처리가 어려운 점 양해 부탁드립니다.`);
+    lines.push('');
+    if (absence === '1차') {
+      lines.push(`정확한 안내를 위해 ${obTime}에 다시 전화 드릴 수 있도록 하겠습니다.`);
+    } else {
+      lines.push('정확한 안내를 위해 연락 드렸으나 연결이 원활하지 않아 번거로우시겠지만 아래 경로 통하여 연락 부탁드립니다.');
+    }
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '교환_변심교환') {
+    const courier = document.getElementById('courier').value;
+    const trackingNo = document.getElementById('trackingNo').value.trim() || '[운송장번호]';
+    lines.push('');
+    lines.push('교환 신청하신 상품 발송 안내 문자 보내드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push(`- 운송장번호 : ${courier} ${trackingNo}`);
+    lines.push('');
+    lines.push('위 송장 번호로 금일 발송 예정이며 금일 밤 또는 익일 중으로 배송 흐름 확인이 가능하십니다.');
+    lines.push('');
+    lines.push('교환 처리에 너른 양해해 주셔서 진심으로 감사드립니다.');
+    lines.push('상품 수령 후 이상이 있는 경우 언제든 뚜누 고객센터로 연락 부탁드립니다.');
+    lines.push('');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '교환_재출고완료_분실' || claimType === '교환_재출고완료_배송후' || claimType === '교환_재출고완료_반송후' || claimType === '교환_재출고완료_배송전') {
+    const courier = document.getElementById('courier').value;
+    const trackingNo = document.getElementById('trackingNo').value.trim() || '[운송장번호]';
+    lines.push('');
+    lines.push('교환 신청하신 상품 발송 안내 문자 보내드립니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push(`- 운송장번호 : ${courier} ${trackingNo}`);
+    lines.push('');
+    lines.push('위 송장 번호로 금일 발송 예정이며 금일 밤 또는 익일 중으로 배송 흐름 확인이 가능하십니다.');
+    if (claimType === '교환_재출고완료_반송후') {
+      lines.push('배송 과정에서 파손 이슈로 불편을 드렸음에도 교환 처리에 너른 양해해 주셔서 진심으로 감사드립니다.');
+      lines.push('상품 수령 후 이상이 있는 경우 언제든 뚜누 고객센터로 연락 부탁드립니다.');
+    } else if (claimType === '교환_재출고완료_분실') {
+      lines.push('');
+      lines.push('배송 과정에서 분실 이슈로 불편을 드렸음에도 교환 처리에 너른 양해해 주셔서 진심으로 감사드립니다.');
+      lines.push('상품 수령 후 이상이 있는 경우 언제든 뚜누 고객센터로 연락 부탁드립니다.');
+      lines.push('');
+      lines.push('또한 분실되었던 상품이 시간이 지난 후 배송될 수도 있어, 추후 동일 상품을 추가로 수령하시게 될 경우 번거로우시겠지만 뚜누 고객센터로 연락 부탁드립니다.');
+      lines.push('');
+    } else if (claimType === '교환_재출고완료_배송전') {
+      lines.push('');
+      lines.push('배송 과정에서 파손 이슈로 불편을 드렸음에도 교환 처리에 너른 양해해 주셔서 진심으로 감사드립니다.');
+      lines.push('상품 수령 후 이상이 있는 경우 언제든 뚜누 고객센터로 연락 부탁드립니다.');
+      lines.push('');
+    } else {
+      lines.push('');
+      lines.push('상품 수령 후 불편 사항을 느끼셨음에도 교환 일정에 너른 양해해 주셔서 감사드립니다.');
+      lines.push('상품 수령 후 이상이 있는 경우 언제든 뚜누 고객센터로 연락 부탁드립니다.');
+      lines.push('');
+    }
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType === '교환_회수접수') {
+    lines.push('');
+    lines.push(sorryEmpathy);
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    lines.push('금일 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+    lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+    lines.push('회수 확인 후 새 상품 재발송 진행 예정이며, 이 과정에서 다소 시간이 소요될 수 있는 점 양해 부탁드립니다.');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  if (claimType.startsWith('반품')) {
+    lines.push('');
+    if (liability === '고객') {
+      lines.push('반품 신청하신 상품 안내차 연락 드렸습니다.');
+    } else {
+      lines.push(sorryEmpathy);
+    }
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    lines.push('금일 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+    lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+
+    if (isTonuFault) {
+      lines.push('입고와 순차 검수 과정을 거쳐 환불 진행될 예정이며, 이 과정에서 다소 시간이 소요될 수 있는 점 양해 부탁드립니다.');
+      lines.push('감사합니다.');
+    } else {
+      const feeMsg = SHIPPING_FEE[claimType];
+      lines.push('');
+      lines.push(`${feeMsg} 회수 상품 입고 및 검수 완료 후 순차적으로 환불이 진행되는 점 양해 부탁드립니다.`);
+      lines.push('');
+      lines.push('감사합니다.');
+    }
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  lines.push('');
+  lines.push(sorryEmpathy);
+  lines.push('');
+  lines.push(`- 상품명 : ${product}`);
+  lines.push('');
+  lines.push('관련하여 확인 후 안내 드리겠습니다.');
+  lines.push('처리 과정에서 다소 시간이 소요될 수 있는 점 양해 부탁드립니다.');
+  lines.push('감사합니다.');
+  lines.push('');
+  lines.push(FOOTER);
+  return lines.join('\n');
+}
+
+function generate() {
+  if (!selectedIssue) { alert('이슈 유형을 선택해 주세요.'); return; }
+  const claimType = document.getElementById('claimType').value;
+  const rowSubType = document.getElementById('rowSubType');
+  if (rowSubType.classList.contains('visible') && !claimType) { alert('세부 유형을 선택해 주세요.'); return; }
+  const text = buildText();
+  const byteLen = new TextEncoder().encode(text).length;
+  const type = byteLen <= 90 ? 'SMS' : 'LMS';
+  document.getElementById('output').textContent = text;
+  const badge = document.getElementById('smsBadge');
+  badge.textContent = `${type} · ${byteLen}bytes`;
+  badge.className = 'sms-badge' + (type === 'LMS' ? ' lms' : '');
+  document.getElementById('resultCard').style.display = 'block';
+  document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function copyText() {
+  navigator.clipboard.writeText(document.getElementById('output').textContent).then(() => {
+    const btn = document.querySelector('.btn-copy');
+    btn.textContent = '복사됨 ✓';
+    setTimeout(() => { btn.textContent = '복사'; }, 1500);
+  });
+}
+
+// ===== Searchable Dropdown =====
+const CHO=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+function getInitials(str){return[...str].map(c=>{const code=c.charCodeAt(0);return code>=0xAC00&&code<=0xD7A3?CHO[Math.floor((code-0xAC00)/588)]:c;}).join('');}
+function isChoOnly(s){return s.length>0&&[...s].every(c=>CHO.includes(c));}
+function sdMatch(q,text){
+  if(!q)return true;
+  const tl=text.toLowerCase(),ql=q.toLowerCase();
+  if(tl.includes(ql))return true;
+  if(isChoOnly(q)){return getInitials(text).includes(q);}
+  return false;
+}
+function makeSearchable(selectId){
+  const sel=document.getElementById(selectId);
+  if(!sel||sel._sd)return;
+  sel._sd=true;
+
+  // Build options list from select (including optgroups)
+  const opts=[];
+  function collectOpts(parent,groupLabel){
+    parent.querySelectorAll(':scope > optgroup').forEach(og=>{
+      opts.push({type:'group',label:og.getAttribute('label')||''});
+      og.querySelectorAll('option').forEach(o=>{if(o.value)opts.push({type:'item',value:o.value,text:o.text});});
+    });
+    parent.querySelectorAll(':scope > option').forEach(o=>{if(o.value)opts.push({type:'item',value:o.value,text:o.text});});
+  }
+  collectOpts(sel);
+
+  // Build DOM
+  const wrap=document.createElement('div');wrap.className='sd-wrap';
+  const inp=document.createElement('input');inp.type='text';inp.className='sd-input';inp.autocomplete='off';inp.placeholder='선택 또는 검색';
+  const list=document.createElement('div');list.className='sd-list';
+
+  sel.parentNode.insertBefore(wrap,sel);
+  wrap.appendChild(inp);wrap.appendChild(list);
+  sel.style.display='none';wrap.appendChild(sel);
+
+  // Link: so clearClaimForm can reset
+  sel._sdInput=inp;
+
+  let focusIdx=-1;
+
+  function renderList(q=''){
+    list.innerHTML='';focusIdx=-1;
+    const items=[];
+    let lastGroup=null;
+    opts.forEach(o=>{
+      if(o.type==='group'){lastGroup=o.label;return;}
+      if(sdMatch(q,o.text)){items.push({group:lastGroup,value:o.value,text:o.text});}
+    });
+    if(!items.length){list.innerHTML='<div class="sd-empty">검색 결과 없음</div>';return;}
+    let curGroup=null;
+    items.forEach((item,idx)=>{
+      if(item.group&&item.group!==curGroup){
+        curGroup=item.group;
+        const gh=document.createElement('div');gh.className='sd-group';gh.textContent=item.group;list.appendChild(gh);
+      }
+      const el=document.createElement('div');el.className='sd-item';el.textContent=item.text;el.dataset.val=item.value;
+      el.addEventListener('mousedown',e=>{e.preventDefault();select(item.value,item.text);});
+      list.appendChild(el);
+    });
+    // 검색어 있으면 첫 번째 항목 자동 포커스
+    if(q){
+      const first=list.querySelector('.sd-item');
+      if(first){first.classList.add('focused');focusIdx=0;}
+    }
+  }
+
+  function select(val,text){inp.value=text;sel.value=val;list.classList.remove('open');inp.blur();}
+
+  function moveFocus(dir){
+    const items=list.querySelectorAll('.sd-item');if(!items.length)return;
+    items.forEach(i=>i.classList.remove('focused'));
+    focusIdx=Math.max(0,Math.min(focusIdx+dir,items.length-1));
+    items[focusIdx].classList.add('focused');
+    items[focusIdx].scrollIntoView({block:'nearest'});
+  }
+
+  inp.addEventListener('focus',()=>{renderList(inp.value);list.classList.add('open');});
+  inp.addEventListener('input',()=>{renderList(inp.value);list.classList.add('open');sel.value=inp.value;});
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'){e.preventDefault();moveFocus(1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();moveFocus(-1);}
+    else if(e.key==='Enter'){
+      e.preventDefault();
+      const focused=list.querySelector('.sd-item.focused');
+      if(focused){select(focused.dataset.val,focused.textContent);}
+      else{list.classList.remove('open');}
+    }else if(e.key==='Escape'){list.classList.remove('open');}
+  });
+  inp.addEventListener('blur',()=>setTimeout(()=>list.classList.remove('open'),150));
+}
+
+function initSearchables(){
+  ['c-channel','c-platform','c-category','c-issue','c-liability','c-type','c-nature','c-return-yn','c-reship-yn','c-accident','c-status','r-opened'].forEach(makeSearchable);
+}
+
+// ===== 공지 사항 =====
+const NK='tuunu_notices_v1';
+function loadNotices(){return JSON.parse(localStorage.getItem(NK)||'[]');}
+function saveNotices(d){localStorage.setItem(NK,JSON.stringify(d));}
+function toggleNoticeForm(){
+  const f=document.getElementById('notice-form');
+  if(!f)return;
+  const show=f.style.display==='none';
+  f.style.display=show?'':'none';
+  if(show){const inp=document.getElementById('notice-input');if(inp){inp.value='';inp.focus();}}
+}
+function addNotice(){
+  const inp=document.getElementById('notice-input');if(!inp)return;
+  const text=inp.value.trim();if(!text)return;
+  const notices=loadNotices();
+  notices.unshift({id:Date.now(),text,date:todayStr()});
+  saveNotices(notices);toggleNoticeForm();renderNotices();
+}
+function deleteNotice(id){
+  saveNotices(loadNotices().filter(n=>n.id!==id));renderNotices();
+}
+function renderNotices(){
+  const el=document.getElementById('notice-list');if(!el)return;
+  const notices=loadNotices();
+  if(!notices.length){el.innerHTML='<div style="color:#bbb;font-size:13px;padding:8px 0;">등록된 공지가 없습니다.</div>';return;}
+  el.innerHTML=notices.map(n=>`
+    <div style="padding:9px 0;border-bottom:1px solid #f5f5f3;display:flex;align-items:flex-start;gap:8px;">
+      <div style="flex:1;">
+        <div style="font-size:13px;color:#333;line-height:1.55;white-space:pre-wrap;">${n.text}</div>
+        <div style="font-size:11px;color:#bbb;margin-top:3px;">${n.date}</div>
+      </div>
+      <button onclick="deleteNotice(${n.id})" style="font-size:11px;padding:2px 6px;border:1px solid #fecaca;border-radius:4px;background:#fff;color:#dc2626;cursor:pointer;flex-shrink:0;">삭제</button>
+    </div>`).join('');
+}
+
+// ===== 인증 =====
+const USERS_KEY='tuunu_users_v3';
+const SESSION_KEY='tuunu_session_v1';
+
+const DEFAULT_USERS=[
+  {id:'chohee', pw:'chohee', name:'강초희_클레임'},
+  {id:'eunjin', pw:'eunjin', name:'김은진_응대'},
+  {id:'jaein',  pw:'jaein',  name:'이재인_리더'}
+];
+
+function _getUsers(){
+  try{const s=localStorage.getItem(USERS_KEY);return s?JSON.parse(s):JSON.parse(JSON.stringify(DEFAULT_USERS));}
+  catch(e){return JSON.parse(JSON.stringify(DEFAULT_USERS));}
+}
+function _saveUsers(arr){localStorage.setItem(USERS_KEY,JSON.stringify(arr));}
+function _findUser(id,pw){return _getUsers().find(function(u){return u.id===id&&u.pw===pw;})||null;}
+function _isLoggedIn(){return !!sessionStorage.getItem(SESSION_KEY);}
+function _currentUserId(){return sessionStorage.getItem(SESSION_KEY)||'';}
+function _currentUser(){return _getUsers().find(function(u){return u.id===_currentUserId();})||null;}
+
+function _updateGnbUser(){
+  var u=_currentUser();
+  var el=document.getElementById('gnb-username');
+  if(el){el.textContent=u?u.name:'';el.style.display=u?'':'none';}
+}
+
+function submitLogin(){
+  var id=document.getElementById('login-id').value.trim();
+  var pw=document.getElementById('login-pw').value;
+  var err=document.getElementById('login-err');
+  var user=_findUser(id,pw);
+  if(user){
+    sessionStorage.setItem(SESSION_KEY,user.id);
+    document.getElementById('login-screen').classList.add('hidden');
+    err.style.display='none';
+    _updateGnbUser();
+    if(!_appInited){_appInited=true;init();}
+  } else {
+    err.style.display='block';
+    document.getElementById('login-pw').value='';
+    document.getElementById('login-pw').focus();
+  }
+}
+
+function doLogout(){
+  if(!confirm('로그아웃 하시겠습니까?'))return;
+  sessionStorage.removeItem(SESSION_KEY);
+  document.getElementById('login-id').value='';
+  document.getElementById('login-pw').value='';
+  document.getElementById('login-err').style.display='none';
+  document.getElementById('login-screen').classList.remove('hidden');
+  _updateGnbUser();
+}
+
+function openSettings(){
+  document.getElementById('s-pw-cur').value='';
+  document.getElementById('s-pw-new').value='';
+  document.getElementById('s-pw-new2').value='';
+  document.getElementById('settings-msg').textContent='';
+  var u=_currentUser();
+  var infoEl=document.getElementById('settings-user-info');
+  if(infoEl)infoEl.textContent=u?('👤 '+u.name+'  (아이디: '+u.id+')'):'';
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
+
+function saveSettings(){
+  var curPw=document.getElementById('s-pw-cur').value;
+  var newPw=document.getElementById('s-pw-new').value;
+  var newPw2=document.getElementById('s-pw-new2').value;
+  var msgEl=document.getElementById('settings-msg');
+  var u=_currentUser();
+  if(!u){msgEl.style.color='#dc2626';msgEl.textContent='세션이 만료되었습니다. 다시 로그인해주세요.';return;}
+  if(curPw!==u.pw){msgEl.style.color='#dc2626';msgEl.textContent='현재 비밀번호가 올바르지 않습니다.';return;}
+  if(!newPw){msgEl.style.color='#dc2626';msgEl.textContent='새 비밀번호를 입력해주세요.';return;}
+  if(newPw!==newPw2){msgEl.style.color='#dc2626';msgEl.textContent='새 비밀번호가 일치하지 않습니다.';return;}
+  if(newPw.length<4){msgEl.style.color='#dc2626';msgEl.textContent='비밀번호는 4자 이상이어야 합니다.';return;}
+  var users=_getUsers();
+  var idx=users.findIndex(function(x){return x.id===u.id;});
+  if(idx>=0)users[idx].pw=newPw;
+  _saveUsers(users);
+  msgEl.style.color='#16a34a';msgEl.textContent='비밀번호가 변경되었습니다.';
+  setTimeout(closeSettings,1200);
+}
+
+document.getElementById('settings-modal').addEventListener('click',function(e){if(e.target===this)closeSettings();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeSettings();});
+
+let _appInited=false;
+function init(){
+  const today=new Date();
+  const dateEl=document.getElementById('gnb-date');
+  if(dateEl)dateEl.textContent=today.getFullYear()+'.'+(today.getMonth()+1).toString().padStart(2,'0')+'.'+today.getDate().toString().padStart(2,'0')+'('+['일','월','화','수','목','금','토'][today.getDay()]+')';
+  const d=document.getElementById('c-date');if(d)d.value=todayStr();
+  const m=document.getElementById('c-month');if(m)m.value=String(today.getMonth()+1);
+  const rd=document.getElementById('r-date');if(rd)rd.value=todayStr();
+  initChips();
+  initSearchables();
+  // 필터 팝업 이벤트
+  const cfp=document.getElementById('cfp');
+  document.getElementById('cfp-q').addEventListener('input',e=>_cfpRender(e.target.value));
+  document.getElementById('cfp-reset').addEventListener('click',resetColFilter);
+  document.getElementById('cfp-close').addEventListener('click',closeColFilter);
+  document.addEventListener('click',e=>{if(cfp&&cfp.style.display!=='none'&&!cfp.contains(e.target)&&!e.target.classList.contains('th-filter-btn'))closeColFilter();});
+  // 키보드 닫기
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&cfp&&cfp.style.display!=='none')closeColFilter();});
+  renderNotices();
+  const savedPage=localStorage.getItem('tuunu_page')||'home';
+  switchPage(savedPage);
+}
+
+// 세션 유지되어 있으면 바로 앱 시작, 아니면 로그인 화면 표시
+if(_isLoggedIn()){
+  document.getElementById('login-screen').classList.add('hidden');
+  _updateGnbUser();
+  _appInited=true;
+  init();
+}
+</script>
+</body>
+</html>
