@@ -2041,13 +2041,24 @@ function importClaimsXLSX(input){
       const HM={};
       Object.entries(HM_RAW).forEach(([k,v])=>{HM[_norm(k)]=v;});
 
-      const allHeaders=Object.keys(rows[0]);
-      const mappedHeaders=allHeaders.filter(h=>HM[_norm(h)]);
-      const unmapped=allHeaders.filter(h=>!HM[_norm(h)]);
+      // 헤더 매핑: 완전 일치 우선, 없으면 HM 키가 _norm(h)의 앞부분과 일치하면 매핑
+      const _getField=h=>{
+        const nh=_norm(h);
+        if(HM[nh])return HM[nh];
+        // startsWith 매핑: "이슈별분류발생원인" → "이슈별분류" 키로 매핑
+        for(const [k,v] of Object.entries(HM)){
+          if(k.length>=4&&nh.startsWith(k))return v;
+        }
+        return null;
+      };
+
+      const allHeaders=Object.keys(rows[0]).filter(h=>!String(h).startsWith('__EMPTY')&&String(h).trim()!=='');
+      const mappedHeaders=allHeaders.filter(h=>_getField(h));
+      const unmapped=allHeaders.filter(h=>!_getField(h));
 
       // 이슈별분류 매핑 여부 + 실제 컬럼명 확인
-      const issueMapped=mappedHeaders.some(h=>HM[_norm(h)]==='issue');
-      const issueHeader=allHeaders.find(h=>HM[_norm(h)]==='issue');
+      const issueMapped=mappedHeaders.some(h=>_getField(h)==='issue');
+      const issueHeader=allHeaders.find(h=>_getField(h)==='issue');
       // 이슈 샘플 값 (첫 5개)
       const issueSamples=issueHeader
         ?rows.slice(0,5).map(r=>String(r[issueHeader]||'')).filter(Boolean)
@@ -2069,7 +2080,7 @@ function importClaimsXLSX(input){
       rows.forEach((row,i)=>{
         const rec={id:ts+i};
         Object.entries(row).forEach(([h,v])=>{
-          const field=HM[_norm(h)];
+          const field=_getField(h);
           if(!field)return;
           let sv=String(v||'').trim();
           // 날짜 필드: serial 포함 모든 형식 → ISO
