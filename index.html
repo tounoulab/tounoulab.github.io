@@ -169,6 +169,8 @@ tr:hover td{background:#fafafa;}
 .col-rz:hover,.col-rz.dragging{background:rgba(26,115,232,0.35);}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -715,11 +717,45 @@ window.addEventListener('beforeunload',()=>{
   _saveScroll(localStorage.getItem('tuunu_page')||'');
 });
 // ===== 스토리지 =====
-const CK='tuunu_claims_v1',RK='tuunu_returns_v1';
-const loadClaims=()=>JSON.parse(localStorage.getItem(CK)||'[]');
-const saveClaims=d=>localStorage.setItem(CK,JSON.stringify(d));
-const loadReturns=()=>JSON.parse(localStorage.getItem(RK)||'[]');
-const saveReturns=d=>localStorage.setItem(RK,JSON.stringify(d));
+// ===== FIREBASE =====
+const firebaseConfig={apiKey:"AIzaSyAREUe2xlsVblUgOCPosfs_QTIm1okVJLA",authDomain:"tounoulab.firebaseapp.com",projectId:"tounoulab",storageBucket:"tounoulab.firebasestorage.app",messagingSenderId:"493309183828",appId:"1:493309183828:web:48be81212472ccce5c2ac1"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+let _claimsData=[],_returnsData=[],_noticesData=[];
+const loadClaims=()=>_claimsData;
+const loadReturns=()=>_returnsData;
+
+function _fsSet(col,id,data){return db.collection(col).doc(String(id)).set(data);}
+function _fsUpdate(col,id,data){return db.collection(col).doc(String(id)).update(data);}
+function _fsDelete(col,id){return db.collection(col).doc(String(id)).delete();}
+async function _fsBulkSave(col,arr){
+  const snap=await db.collection(col).get();
+  const b=db.batch();
+  snap.docs.forEach(d=>b.delete(d.ref));
+  arr.forEach(item=>b.set(db.collection(col).doc(String(item.id)),item));
+  return b.commit();
+}
+const saveClaims=arr=>_fsBulkSave('claims',arr);
+const saveReturns=arr=>_fsBulkSave('returns',arr);
+
+function setupFirebaseListeners(){
+  db.collection('claims').orderBy('id','desc').onSnapshot(snap=>{
+    _claimsData=snap.docs.map(d=>d.data());
+    if(document.getElementById('page-claim').classList.contains('active'))renderClaimTable();
+    renderHomeDashboard();
+  },err=>console.error('claims listener:',err));
+  db.collection('returns').orderBy('id','desc').onSnapshot(snap=>{
+    _returnsData=snap.docs.map(d=>d.data());
+    renderReturnStats();
+    if(document.getElementById('page-return').classList.contains('active'))renderReturnTable();
+    renderHomeDashboard();
+  },err=>console.error('returns listener:',err));
+  db.collection('notices').orderBy('id','desc').onSnapshot(snap=>{
+    _noticesData=snap.docs.map(d=>d.data());
+    renderNotices();
+  },err=>console.error('notices listener:',err));
+}
 // ===== 날짜 헬퍼 =====
 function todayStr(){return new Date().toISOString().slice(0,10);}
 function offsetDay(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
@@ -980,15 +1016,13 @@ function addClaim(){
   if(!date){alert('작성일을 입력해 주세요.');return;}
   const optionVal=document.getElementById('c-option').value.trim()||'[옵션 지정 불가]';
   const fields={date,month:document.getElementById('c-month').value||date.slice(0,7),indate:document.getElementById('c-indate').value,shipdate:document.getElementById('c-shipdate').value,channel:document.getElementById('c-channel').value,platform:document.getElementById('c-platform').value,orderno:document.getElementById('c-orderno').value,buyer:document.getElementById('c-buyer').value,product:document.getElementById('c-product').value,option:optionVal,category:document.getElementById('c-category').value,issue:document.getElementById('c-issue').value,liability:document.getElementById('c-liability').value,type:document.getElementById('c-type').value,nature:document.getElementById('c-nature').value,reason:document.getElementById('c-reason').value,returnYn:document.getElementById('c-return-yn').value,reshipYn:document.getElementById('c-reship-yn').value,accident:document.getElementById('c-accident').value,status:document.getElementById('c-status').value,costP:document.getElementById('c-cost-product').value,costR:document.getElementById('c-cost-return').value,costS:document.getElementById('c-cost-reship').value};
-  const claims=loadClaims();
   if(_editClaimId){
-    const idx=claims.findIndex(c=>c.id===_editClaimId);
-    if(idx!==-1){claims[idx]={...claims[idx],...fields};saveClaims(claims);}
+    _fsUpdate('claims',_editClaimId,fields).catch(e=>console.error(e));
   }else{
-    claims.unshift({id:Date.now(),donedate:'',...fields});saveClaims(claims);
+    const id=Date.now();
+    _fsSet('claims',id,{id,donedate:'',...fields}).catch(e=>console.error(e));
   }
-  renderClaimTable();renderHomeDashboard();clearClaimForm();closeClaimModal();
-  // 새 클레임 등록 후 테이블 맨 위로 스크롤 (최신 항목이 맨 위에 있음)
+  clearClaimForm();closeClaimModal();
   requestAnimationFrame(()=>{
     const wrap=document.querySelector('#page-claim [style*="overflow:auto"]');
     if(wrap)wrap.scrollTop=0;
@@ -996,8 +1030,7 @@ function addClaim(){
 }
 function deleteClaim(id){
   if(!confirm('삭제하시겠습니까?'))return;
-  saveClaims(loadClaims().filter(r=>r.id!==id));
-  renderClaimTable();renderHomeDashboard();
+  _fsDelete('claims',id).catch(e=>console.error(e));
 }
 function clearClaimForm(){
   ['c-month','c-indate','c-shipdate','c-channel','c-platform','c-orderno','c-buyer','c-product','c-option','c-category','c-issue','c-liability','c-type','c-nature','c-reason','c-return-yn','c-reship-yn','c-accident','c-status','c-cost-product','c-cost-return','c-cost-reship'].forEach(id=>{
@@ -1042,13 +1075,9 @@ function editCell(td,claimId,field,curVal){
   td.innerHTML='';td.appendChild(el);el.focus();
   if(el.select&&type!=='date')el.select();
   const save=()=>{
-    const claims=loadClaims(),idx=claims.findIndex(c=>c.id===claimId);
-    if(idx!==-1){
-      claims[idx][field]=el.value;
-      if(field==='donedate'&&el.value)claims[idx].status='처리 완료';
-      saveClaims(claims);
-    }
-    renderClaimTable();renderHomeDashboard();
+    const upd={[field]:el.value};
+    if(field==='donedate'&&el.value)upd.status='처리 완료';
+    _fsUpdate('claims',claimId,upd).catch(e=>console.error(e));
   };
   el.addEventListener('blur',save);
   el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el.blur();}if(e.key==='Escape')renderClaimTable();});
@@ -1135,7 +1164,7 @@ function resetAllFilters(){claimFilters={};renderClaimTable();}
 // 전체 삭제
 function confirmClearClaims(){
   if(!confirm('클레임 데이터 전체를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.'))return;
-  saveClaims([]);renderClaimTable();renderHomeDashboard();
+  saveClaims([]).catch(e=>console.error(e));
 }
 // 주문별 보기 토글
 let _groupByOrder=false;
@@ -1211,13 +1240,12 @@ function addReturn(){
   const date=document.getElementById('r-date').value;
   if(!date){alert('입고일을 입력해 주세요.');return;}
   const rec={id:Date.now(),date,orig:document.getElementById('r-orig').value,retno:document.getElementById('r-retno').value,name:document.getElementById('r-name').value,product:document.getElementById('r-product').value,option:document.getElementById('r-option').value,qty:document.getElementById('r-qty').value||'1',opened:document.getElementById('r-opened').value,inspect:document.getElementById('r-inspect').value,orderno:document.getElementById('r-orderno').value,note:document.getElementById('r-note').value};
-  const returns=loadReturns();returns.unshift(rec);saveReturns(returns);
-  renderReturnTable();renderReturnStats();renderHomeDashboard();clearReturnForm();
+  _fsSet('returns',rec.id,rec).catch(e=>console.error(e));
+  clearReturnForm();
 }
 function deleteReturn(id){
   if(!confirm('삭제하시겠습니까?'))return;
-  saveReturns(loadReturns().filter(r=>r.id!==id));
-  renderReturnTable();renderReturnStats();renderHomeDashboard();
+  _fsDelete('returns',id).catch(e=>console.error(e));
 }
 function clearReturnForm(){
   ['r-orig','r-retno','r-name','r-product','r-option','r-opened','r-inspect','r-orderno','r-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
@@ -1321,9 +1349,7 @@ function importClaims(input){
     if(!newClaims.length){alert('가져올 데이터가 없습니다.');input.value='';return;}
     const existing=loadClaims();
     const merged=[...newClaims,...existing];
-    saveClaims(merged);
-    renderClaimTable();renderHomeDashboard();
-    alert(`✅ ${newClaims.length}건을 가져왔습니다.`);
+    saveClaims(merged).then(()=>alert(`✅ ${newClaims.length}건을 가져왔습니다.`)).catch(e=>alert('오류: '+e));
     input.value='';
   };
   reader.readAsText(file,'UTF-8');
@@ -2537,9 +2563,8 @@ function initSearchables(){
 }
 
 // ===== 공지 사항 =====
-const NK='tuunu_notices_v1';
-function loadNotices(){return JSON.parse(localStorage.getItem(NK)||'[]');}
-function saveNotices(d){localStorage.setItem(NK,JSON.stringify(d));}
+// ===== 공지 사항 =====
+function loadNotices(){return _noticesData;}
 function toggleNoticeForm(){
   const f=document.getElementById('notice-form');
   if(!f)return;
@@ -2550,16 +2575,16 @@ function toggleNoticeForm(){
 function addNotice(){
   const inp=document.getElementById('notice-input');if(!inp)return;
   const text=inp.value.trim();if(!text)return;
-  const notices=loadNotices();
-  notices.unshift({id:Date.now(),text,date:todayStr()});
-  saveNotices(notices);toggleNoticeForm();renderNotices();
+  const id=Date.now();
+  _fsSet('notices',id,{id,text,date:todayStr()}).catch(e=>console.error(e));
+  toggleNoticeForm();
 }
 function deleteNotice(id){
-  saveNotices(loadNotices().filter(n=>n.id!==id));renderNotices();
+  _fsDelete('notices',id).catch(e=>console.error(e));
 }
 function renderNotices(){
   const el=document.getElementById('notice-list');if(!el)return;
-  const notices=loadNotices();
+  const notices=_noticesData;
   if(!notices.length){el.innerHTML='<div style="color:#bbb;font-size:13px;padding:8px 0;">등록된 공지가 없습니다.</div>';return;}
   el.innerHTML=notices.map(n=>`
     <div style="padding:9px 0;border-bottom:1px solid #f5f5f3;display:flex;align-items:flex-start;gap:8px;">
@@ -2677,7 +2702,7 @@ function init(){
   document.addEventListener('click',e=>{if(cfp&&cfp.style.display!=='none'&&!cfp.contains(e.target)&&!e.target.classList.contains('th-filter-btn'))closeColFilter();});
   // 키보드 닫기
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&cfp&&cfp.style.display!=='none')closeColFilter();});
-  renderNotices();
+  setupFirebaseListeners();
   const savedPage=localStorage.getItem('tuunu_page')||'home';
   switchPage(savedPage);
 }
