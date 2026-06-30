@@ -740,19 +740,19 @@ const saveClaims=arr=>_fsBulkSave('claims',arr);
 const saveReturns=arr=>_fsBulkSave('returns',arr);
 
 function setupFirebaseListeners(){
-  db.collection('claims').orderBy('id','desc').onSnapshot(snap=>{
-    _claimsData=snap.docs.map(d=>d.data());
-    if(document.getElementById('page-claim').classList.contains('active'))renderClaimTable();
+  db.collection('claims').onSnapshot(snap=>{
+    _claimsData=snap.docs.map(d=>d.data()).sort((a,b)=>b.id-a.id);
+    renderClaimTable();
     renderHomeDashboard();
   },err=>console.error('claims listener:',err));
-  db.collection('returns').orderBy('id','desc').onSnapshot(snap=>{
-    _returnsData=snap.docs.map(d=>d.data());
+  db.collection('returns').onSnapshot(snap=>{
+    _returnsData=snap.docs.map(d=>d.data()).sort((a,b)=>b.id-a.id);
     renderReturnStats();
-    if(document.getElementById('page-return').classList.contains('active'))renderReturnTable();
+    renderReturnTable();
     renderHomeDashboard();
   },err=>console.error('returns listener:',err));
-  db.collection('notices').orderBy('id','desc').onSnapshot(snap=>{
-    _noticesData=snap.docs.map(d=>d.data());
+  db.collection('notices').onSnapshot(snap=>{
+    _noticesData=snap.docs.map(d=>d.data()).sort((a,b)=>b.id-a.id);
     renderNotices();
   },err=>console.error('notices listener:',err));
 }
