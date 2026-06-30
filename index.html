@@ -152,7 +152,7 @@ tr:hover td{background:#fafafa;}
 .sd-item:hover,.sd-item.focused{background:#f0f4ff;color:#1a1a1a;}
 .sd-empty{padding:10px 12px;font-size:12px;color:#aaa;}
 /* claim sheet inline edit */
-#claim-sheet th{text-align:center !important;padding:8px 28px 8px 10px !important;position:sticky;top:0;z-index:3;background:#f6f6f4;user-select:none;white-space:nowrap;}
+#claim-sheet th{text-align:center !important;padding:8px 28px !important;position:sticky;top:0;z-index:3;background:#f6f6f4;user-select:none;white-space:nowrap;font-size:15px !important;font-weight:700 !important;color:#333 !important;}
 /* SLA / 리드타임 테이블 정렬 */
 #sla-table th,#leadtime-table th{text-align:center !important;}
 #sla-table th:first-child,#leadtime-table th:first-child{text-align:center !important;}
@@ -163,28 +163,31 @@ tr:hover td{background:#fafafa;}
 #leadtime-table th:not(:first-child),#leadtime-table td:not(:first-child){width:52px;}
 #sla-table td,#leadtime-table td{text-align:center !important;}
 /* 틀 고정 컬럼 (발생월~상품분류) */
-#claim-sheet th[data-col="month"]   {left:0;   min-width:64px; z-index:5;}
+/* 틀고정: month(64) date(84) indate(84) shipdate(84) donedate(96) channel(80) platform(80) orderno(120) buyer(68) product(130) option(100) category(82) */
+#claim-sheet th[data-col="month"]   {left:0px;  min-width:64px; z-index:5;}
 #claim-sheet th[data-col="date"]    {left:64px; min-width:84px; z-index:5;}
 #claim-sheet th[data-col="indate"]  {left:148px;min-width:84px; z-index:5;}
-#claim-sheet th[data-col="donedate"]{left:232px;min-width:96px; z-index:5;}
-#claim-sheet th[data-col="channel"] {left:328px;min-width:80px; z-index:5;}
-#claim-sheet th[data-col="platform"]{left:408px;min-width:80px; z-index:5;}
-#claim-sheet th[data-col="orderno"] {left:488px;min-width:120px;z-index:5;}
-#claim-sheet th[data-col="buyer"]   {left:608px;min-width:68px; z-index:5;}
-#claim-sheet th[data-col="product"] {left:676px;min-width:130px;z-index:5;}
-#claim-sheet th[data-col="option"]  {left:806px;min-width:100px;z-index:5;}
-#claim-sheet th[data-col="category"]{left:906px;min-width:82px; z-index:5;}
-#claim-sheet tbody td[data-field="month"]   {position:sticky;left:0;   z-index:1;background:inherit;}
+#claim-sheet th[data-col="shipdate"]{left:232px;min-width:84px; z-index:5;}
+#claim-sheet th[data-col="donedate"]{left:316px;min-width:96px; z-index:5;}
+#claim-sheet th[data-col="channel"] {left:412px;min-width:80px; z-index:5;}
+#claim-sheet th[data-col="platform"]{left:492px;min-width:80px; z-index:5;}
+#claim-sheet th[data-col="orderno"] {left:572px;min-width:120px;z-index:5;}
+#claim-sheet th[data-col="buyer"]   {left:692px;min-width:68px; z-index:5;}
+#claim-sheet th[data-col="product"] {left:760px;min-width:130px;z-index:5;}
+#claim-sheet th[data-col="option"]  {left:890px;min-width:100px;z-index:5;}
+#claim-sheet th[data-col="category"]{left:990px;min-width:82px; z-index:5;}
+#claim-sheet tbody td[data-field="month"]   {position:sticky;left:0px;  z-index:1;background:inherit;}
 #claim-sheet tbody td[data-field="date"]    {position:sticky;left:64px; z-index:1;background:inherit;}
 #claim-sheet tbody td[data-field="indate"]  {position:sticky;left:148px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="donedate"]{position:sticky;left:232px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="channel"] {position:sticky;left:328px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="platform"]{position:sticky;left:408px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="orderno"] {position:sticky;left:488px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="buyer"]   {position:sticky;left:608px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="product"] {position:sticky;left:676px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="option"]  {position:sticky;left:806px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="category"]{position:sticky;left:906px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="shipdate"]{position:sticky;left:232px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="donedate"]{position:sticky;left:316px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="channel"] {position:sticky;left:412px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="platform"]{position:sticky;left:492px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="orderno"] {position:sticky;left:572px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="buyer"]   {position:sticky;left:692px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="product"] {position:sticky;left:760px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="option"]  {position:sticky;left:890px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="category"]{position:sticky;left:990px;z-index:1;background:inherit;}
 .th-filter-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:4px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;padding:0;z-index:4;}
 .th-filter-btn:hover{background:#e8e8e6;color:#555;}
 .th-filter-btn.active{background:#1a73e8;color:#fff;}
@@ -741,33 +744,34 @@ tr:hover td{background:#fafafa;}
   <table id="claim-sheet" style="width:100%;border-collapse:collapse;font-size:13px;min-width:1400px;background:#fff;border:1px solid #e0e0de;border-radius:8px;">
     <thead>
       <tr style="background:#f6f6f4;">
-        <th data-col="month" style="border:1px solid #e0e0de;color:#555;font-weight:600;">발생 월</th>
-        <th data-col="date" style="border:1px solid #e0e0de;color:#555;font-weight:600;">작성일</th>
-        <th data-col="indate" style="border:1px solid #e0e0de;color:#555;font-weight:600;">인입일</th>
-        <th data-col="donedate" style="border:1px solid #e0e0de;color:#555;font-weight:600;">처리완료일</th>
-        <th data-col="channel" style="border:1px solid #e0e0de;color:#555;font-weight:600;">인입 채널</th>
-        <th data-col="platform" style="border:1px solid #e0e0de;color:#555;font-weight:600;">플랫폼</th>
-        <th data-col="orderno" style="border:1px solid #e0e0de;color:#555;font-weight:600;">주문번호</th>
-        <th data-col="buyer" style="border:1px solid #e0e0de;color:#555;font-weight:600;">주문자</th>
-        <th data-col="product" style="border:1px solid #e0e0de;color:#555;font-weight:600;">상품명</th>
-        <th data-col="option" style="border:1px solid #e0e0de;color:#555;font-weight:600;">옵션명</th>
-        <th data-col="category" style="border:1px solid #e0e0de;color:#555;font-weight:600;">상품분류</th>
-        <th data-col="issue" style="border:1px solid #e0e0de;color:#555;font-weight:600;">이슈분류</th>
-        <th data-col="liability" style="border:1px solid #e0e0de;color:#555;font-weight:600;">귀책</th>
-        <th data-col="type" style="border:1px solid #e0e0de;color:#555;font-weight:600;">처리유형</th>
-        <th data-col="nature" style="border:1px solid #e0e0de;color:#555;font-weight:600;">클레임성격</th>
-        <th data-col="reason" style="border:1px solid #e0e0de;color:#555;font-weight:600;">사유</th>
-        <th data-col="returnYn" style="border:1px solid #e0e0de;color:#555;font-weight:600;">회수</th>
-        <th data-col="reshipYn" style="border:1px solid #e0e0de;color:#555;font-weight:600;">재출고</th>
-        <th data-col="accident" style="border:1px solid #e0e0de;color:#555;font-weight:600;">사고접수</th>
-        <th data-col="status" style="border:1px solid #e0e0de;color:#555;font-weight:600;">상태</th>
-        <th data-col="_lead" style="border:1px solid #e0e0de;color:#555;font-weight:600;">리드타임</th>
-        <th data-col="_sla" style="border:1px solid #e0e0de;color:#555;font-weight:600;">SLA</th>
-        <th data-col="costP" style="border:1px solid #e0e0de;color:#555;font-weight:600;">상품비용</th>
-        <th data-col="costR" style="border:1px solid #e0e0de;color:#555;font-weight:600;">회수비용</th>
-        <th data-col="costS" style="border:1px solid #e0e0de;color:#555;font-weight:600;">재출고비용</th>
-        <th data-col="_img" style="border:1px solid #e0e0de;color:#555;font-weight:600;">첨부</th>
-        <th data-col="_del" style="border:1px solid #e0e0de;color:#555;font-weight:600;">삭제</th>
+        <th data-col="month" style="border:1px solid #e0e0de;">발생 월</th>
+        <th data-col="date" style="border:1px solid #e0e0de;">작성일</th>
+        <th data-col="indate" style="border:1px solid #e0e0de;">인입일</th>
+        <th data-col="shipdate" style="border:1px solid #e0e0de;">배송일자</th>
+        <th data-col="donedate" style="border:1px solid #e0e0de;">처리완료일</th>
+        <th data-col="channel" style="border:1px solid #e0e0de;">인입 채널</th>
+        <th data-col="platform" style="border:1px solid #e0e0de;">플랫폼</th>
+        <th data-col="orderno" style="border:1px solid #e0e0de;">주문번호</th>
+        <th data-col="buyer" style="border:1px solid #e0e0de;">주문자</th>
+        <th data-col="product" style="border:1px solid #e0e0de;">상품명</th>
+        <th data-col="option" style="border:1px solid #e0e0de;">옵션명</th>
+        <th data-col="category" style="border:1px solid #e0e0de;">상품분류</th>
+        <th data-col="issue" style="border:1px solid #e0e0de;">이슈분류</th>
+        <th data-col="liability" style="border:1px solid #e0e0de;">귀책</th>
+        <th data-col="type" style="border:1px solid #e0e0de;">처리유형</th>
+        <th data-col="nature" style="border:1px solid #e0e0de;">클레임성격</th>
+        <th data-col="_img" style="border:1px solid #e0e0de;">첨부</th>
+        <th data-col="reason" style="border:1px solid #e0e0de;">사유</th>
+        <th data-col="returnYn" style="border:1px solid #e0e0de;">회수</th>
+        <th data-col="reshipYn" style="border:1px solid #e0e0de;">재출고</th>
+        <th data-col="accident" style="border:1px solid #e0e0de;">사고접수</th>
+        <th data-col="status" style="border:1px solid #e0e0de;">상태</th>
+        <th data-col="_lead" style="border:1px solid #e0e0de;">리드타임</th>
+        <th data-col="_sla" style="border:1px solid #e0e0de;">SLA</th>
+        <th data-col="costP" style="border:1px solid #e0e0de;">상품비용</th>
+        <th data-col="costR" style="border:1px solid #e0e0de;">회수비용</th>
+        <th data-col="costS" style="border:1px solid #e0e0de;">재출고비용</th>
+        <th data-col="_del" style="border:1px solid #e0e0de;">삭제</th>
       </tr>
     </thead>
     <tbody id="claim-tbody"></tbody>
@@ -1218,7 +1222,9 @@ const KR_HOLIDAYS=new Set([
 const _bdCache={};
 function calcBusinessDays(start,end){
   if(!start||!end)return null;
-  const ns=normDate(start),ne=normDate(end);
+  // 시리얼 숫자나 다양한 날짜 형식 정규화
+  const ns=normDate(_xlsxDateToISO(String(start))||String(start));
+  const ne=normDate(_xlsxDateToISO(String(end))||String(end));
   if(!ns||!ne)return null;
   const key=ns+'|'+ne;
   if(_bdCache[key]!==undefined)return _bdCache[key];
@@ -1295,7 +1301,7 @@ function clearClaimForm(){
 }
 // ===== 인라인 편집 필드 정의 =====
 const CF={
-  month:{type:'select',opts:['1','2','3','4','5','6','7','8','9','10','11','12']},date:{type:'date'},indate:{type:'date'},donedate:{type:'date'},
+  month:{type:'select',opts:['1','2','3','4','5','6','7','8','9','10','11','12']},date:{type:'date'},indate:{type:'date'},shipdate:{type:'date'},donedate:{type:'date'},
   channel:{type:'select',opts:['채팅','일반 접수건','게시판','CS 메모','유선 인입','CS 확인','내부 점검(타부서)','이메일','헬프센터','리뷰 대응']},
   platform:{type:'select',opts:['카페24','29CM','무신사','협찬']},
   orderno:{type:'text'},buyer:{type:'text'},
@@ -1311,13 +1317,19 @@ const CF={
   costP:{type:'number'},costR:{type:'number'},costS:{type:'number'},
   leadtime:{type:'number'},vocAmt:{type:'number'},csAmt:{type:'number'}
 };
-const CF_ORDER=['month','date','indate','donedate','channel','platform','orderno','buyer','product','option','category','issue','liability','type','nature','reason','returnYn','reshipYn','accident','status'];
+const CF_ORDER=['month','date','indate','shipdate','donedate','channel','platform','orderno','buyer','product','option','category','issue','liability','type','nature','_img','reason','returnYn','reshipYn','accident','status'];
 
 function editCell(td,claimId,field,curVal){
   if(td.querySelector('input,select,textarea'))return;
   const f=CF[field]||{type:'text'};
   const type=f.type,opts=f.opts||[];
   const bStyle='width:100%;border:none;border-bottom:2px solid #1a73e8;background:transparent;font-size:12px;outline:none;box-sizing:border-box;text-align:center;';
+
+  // 이슈분류처럼 옵션이 많은 필드는 검색 가능 팝업 사용
+  if(type==='select'&&opts.length>10){
+    _openSearchSelect(td,claimId,field,curVal,opts);return;
+  }
+
   let el;
   if(type==='select'){
     el=document.createElement('select');el.style.cssText=bStyle+'cursor:pointer;';
@@ -1338,15 +1350,61 @@ function editCell(td,claimId,field,curVal){
   if(type==='select')el.addEventListener('change',()=>el.blur());
 }
 
+function _openSearchSelect(td,claimId,field,curVal,opts){
+  // 기존 팝업 닫기
+  document.querySelectorAll('.inline-search-pop').forEach(p=>p.remove());
+  const rect=td.getBoundingClientRect();
+  const pop=document.createElement('div');
+  pop.className='inline-search-pop';
+  pop.style.cssText=`position:fixed;z-index:9000;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,0.15);width:220px;left:${Math.min(rect.left,window.innerWidth-230)}px;top:${rect.bottom+2}px;`;
+  const inp=document.createElement('input');
+  inp.placeholder='검색...';
+  inp.style.cssText='width:100%;border:none;border-bottom:1px solid #eee;padding:8px 10px;font-size:13px;outline:none;box-sizing:border-box;border-radius:8px 8px 0 0;';
+  const list=document.createElement('div');
+  list.style.cssText='max-height:200px;overflow-y:auto;';
+  const render=q=>{
+    const filtered=['(초기화)',...opts].filter(o=>!q||o.toLowerCase().includes(q.toLowerCase()));
+    list.innerHTML=filtered.map(o=>`<div class="isp-item" style="padding:7px 12px;font-size:12px;cursor:pointer;${o===curVal?'background:#f0f4ff;font-weight:600;':''}" data-val="${o==='(초기화)'?'':o}">${o}</div>`).join('');
+    list.querySelectorAll('.isp-item').forEach(item=>{
+      item.onmousedown=e=>{
+        e.preventDefault();
+        const val=item.dataset.val;
+        const upd={[field]:val};
+        if(field==='donedate'&&val)upd.status='처리 완료';
+        _fsUpdate('claims',claimId,upd).catch(e=>console.error(e));
+        pop.remove();
+      };
+    });
+  };
+  inp.oninput=()=>render(inp.value);
+  pop.appendChild(inp);pop.appendChild(list);
+  document.body.appendChild(pop);
+  render('');inp.focus();
+  // 바깥 클릭 시 닫기
+  setTimeout(()=>document.addEventListener('mousedown',function close(e){if(!pop.contains(e.target)){pop.remove();document.removeEventListener('mousedown',close);}},true),100);
+}
+
+// ===== 컬럼 너비 관리 =====
+const _colWidths={
+  month:64,date:84,indate:84,shipdate:84,donedate:96,
+  channel:80,platform:80,orderno:120,buyer:68,product:130,option:100,category:82,
+  issue:110,liability:70,type:120,nature:80,_img:70,
+  reason:140,returnYn:50,reshipYn:50,accident:60,status:70,
+  _lead:65,_sla:55,costP:80,costR:80,costS:80,_del:45
+};
+function _colW(key){const w=_colWidths[key];return w?`min-width:${w}px;max-width:${w}px;width:${w}px;`:'';}
+
 let _colResizeReady=false;
 function initColResize(){
   const table=document.getElementById('claim-sheet');if(!table)return;
   if(!_colResizeReady){
     _colResizeReady=true;
     table.querySelectorAll('th').forEach(th=>{
-      // 필터 버튼
+      // 초기 너비 적용
       const col=th.dataset.col;
-      if(col&&col!=='_del'&&col!=='_lead'){
+      if(_colWidths[col]){th.style.minWidth=_colWidths[col]+'px';th.style.maxWidth=_colWidths[col]+'px';}
+      // 필터 버튼
+      if(col&&col!=='_del'&&col!=='_lead'&&col!=='_img'){
         const fb=document.createElement('button');
         const _fa=claimFilters[col]instanceof Set?claimFilters[col].size>0:!!claimFilters[col];
         fb.className='th-filter-btn'+(_fa?' active':'');
@@ -1355,13 +1413,22 @@ function initColResize(){
         fb.addEventListener('click',e=>{e.stopPropagation();openColFilter(col,fb);});
         th.appendChild(fb);
       }
-      // 리사이즈 핸들
+      // 리사이즈 핸들 — 너비 변경 시 _colWidths에 저장 후 재렌더
       const h=document.createElement('div');h.className='col-rz';
       h.addEventListener('mousedown',e=>{
         const sx=e.clientX,sw=th.offsetWidth;
         h.classList.add('dragging');document.body.style.cursor='col-resize';
-        const mv=e2=>{const w=Math.max(50,sw+(e2.clientX-sx));th.style.minWidth=w+'px';th.style.maxWidth=w+'px';};
-        const up=()=>{h.classList.remove('dragging');document.body.style.cursor='';document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};
+        const mv=e2=>{
+          const w=Math.max(40,sw+(e2.clientX-sx));
+          th.style.minWidth=w+'px';th.style.maxWidth=w+'px';
+          if(col)_colWidths[col]=w;
+        };
+        const up=()=>{
+          h.classList.remove('dragging');document.body.style.cursor='';
+          document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);
+          // 너비 변경 반영하여 tbody 재렌더
+          _vsRender();
+        };
         document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
         e.preventDefault();e.stopPropagation();
       });
@@ -1651,37 +1718,38 @@ function _buildClaimRow(r,i){
   const sla=calcSLA(bdays);
   const bg=i%2===0?'#fff':'#fafaf8';
   let cells='';
+  const _imgCnt=(Array.isArray(r.reasonImgUrls)&&r.reasonImgUrls.length)?r.reasonImgUrls.length:(r.reasonImgUrl?1:0);
   CF_ORDER.forEach(key=>{
-    const f=CF[key];
+    // _img는 nature 뒤에 삽입
+    if(key==='_img'){
+      if(_imgCnt>0){
+        cells+=`<td class="tdc" style="white-space:nowrap;${_colW('_img')}">
+          <span style="cursor:pointer;font-size:14px;" title="이미지 보기" onclick="viewReasonImg(${r.id},0)">🖼️${_imgCnt>1?`<sup style="font-size:9px;color:#1a73e8;">${_imgCnt}</sup>`:''}</span>
+          <button data-attach-id="${r.id}" onclick="attachReasonImg(${r.id})" style="padding:1px 6px;font-size:10px;border:1px solid #d0d0ce;border-radius:4px;background:#fafaf8;cursor:pointer;color:#888;margin-left:4px;">+</button>
+          <span style="cursor:pointer;font-size:10px;color:#ccc;margin-left:2px;" title="전체 삭제" onclick="deleteReasonImg(${r.id})">✕</span>
+        </td>`;
+      }else{
+        cells+=`<td class="tdc" style="${_colW('_img')}"><button data-attach-id="${r.id}" onclick="attachReasonImg(${r.id})" style="padding:2px 8px;font-size:11px;border:1px solid #d0d0ce;border-radius:5px;background:#fafaf8;cursor:pointer;color:#555;">📎</button></td>`;
+      }
+      return;
+    }
+    const f=CF[key];if(!f)return;
     let raw=r[key]||'';
-    // 날짜 필드: 저장된 값이 시리얼 숫자든 문자열이든 ISO로 변환해서 표시
     if(_XLSX_DATE_FIELDS&&_XLSX_DATE_FIELDS.has(key)&&raw){raw=_xlsxDateToISO(raw)||raw;}
     const val=raw;
     const isLeft=f.align==='left';
     let disp=val||'-';
     if(key==='orderno'&&r._grpCnt>1)disp+=` <span style="background:#1a73e8;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;">${r._grpCnt}건</span>`;
-    cells+=`<td class="tdc${isLeft?' td-left':''}" title="${val||'-'}" data-id="${r.id}" data-field="${key}" data-val="${val.replace(/"/g,'&quot;')}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)">${disp}</td>`;
+    // 비용 필드는 숫자 포맷
+    if(['costP','costR','costS'].includes(key)){
+      const num=val?parseFloat(String(val).replace(/,/g,'')):NaN;
+      disp=(!isNaN(num)&&val)?num.toLocaleString():'-';
+    }
+    cells+=`<td class="tdc${isLeft?' td-left':''}" title="${val||'-'}" data-id="${r.id}" data-field="${key}" data-val="${val.replace(/"/g,'&quot;')}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)" style="${_colW(key)}">${disp}</td>`;
   });
   const leadDisp=bdays===null?(r.leadtime||'-'):bdays+1;
-  cells+=`<td class="tdc">${leadDisp}</td>`;
-  cells+=`<td class="tdc" style="font-weight:600;color:${sla.color};">${sla.text}</td>`;
-  ['costP','costR','costS'].forEach(key=>{
-    const val=r[key]||'';
-    const num=val?parseFloat(String(val).replace(/,/g,'')):NaN;
-    const disp=(!isNaN(num)&&val)?num.toLocaleString():'-';
-    cells+=`<td class="tdc" data-id="${r.id}" data-field="${key}" data-val="${val}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)">${disp}</td>`;
-  });
-  // 이미지: ID로만 참조 (base64 직접 삽입 금지 — 성능 핵심)
-  const _imgCnt=(Array.isArray(r.reasonImgUrls)&&r.reasonImgUrls.length)?r.reasonImgUrls.length:(r.reasonImgUrl?1:0);
-  if(_imgCnt>0){
-    cells+=`<td class="tdc" style="white-space:nowrap;">
-      <span style="cursor:pointer;font-size:14px;" title="이미지 보기" onclick="viewReasonImg(${r.id},0)">🖼️${_imgCnt>1?`<sup style="font-size:9px;color:#1a73e8;">${_imgCnt}</sup>`:''}</span>
-      <button data-attach-id="${r.id}" onclick="attachReasonImg(${r.id})" style="padding:1px 6px;font-size:10px;border:1px solid #d0d0ce;border-radius:4px;background:#fafaf8;cursor:pointer;color:#888;margin-left:4px;">+</button>
-      <span style="cursor:pointer;font-size:10px;color:#ccc;margin-left:2px;" title="전체 삭제" onclick="deleteReasonImg(${r.id})">✕</span>
-    </td>`;
-  }else{
-    cells+=`<td class="tdc"><button data-attach-id="${r.id}" onclick="attachReasonImg(${r.id})" style="padding:2px 8px;font-size:11px;border:1px solid #d0d0ce;border-radius:5px;background:#fafaf8;cursor:pointer;color:#555;">📎</button></td>`;
-  }
+  cells+=`<td class="tdc" style="${_colW('_lead')}">${leadDisp}</td>`;
+  cells+=`<td class="tdc" style="font-weight:600;color:${sla.color};${_colW('_sla')}">${sla.text}</td>`;
   cells+=`<td class="tdc"><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
   return`<tr style="background:${bg};">${cells}</tr>`;
 }
