@@ -916,11 +916,19 @@ function _activePage(){return localStorage.getItem('tuunu_page')||'home';}
 function setupFirebaseListeners(){
   let _claimSnapTimer=null;
   const _DATE_FIELDS=['date','indate','donedate','shipdate'];
+  const _fixYearErr=s=>{
+    // 2060~2099 연도는 오류로 간주: 2062-05-07 → 2026-05-07 (앞두자리 swap)
+    if(/^20[6-9]\d-\d{2}-\d{2}$/.test(s)){
+      const yr=s.slice(0,4);
+      return'20'+yr[2]+yr[3]+s.slice(4);
+    }
+    return s;
+  };
   const _normClaimDates=r=>{
     _DATE_FIELDS.forEach(f=>{
       if(!r[f])return;
       const iso=_xlsxDateToISO(String(r[f]));
-      if(iso&&/^\d{4}-\d{2}-\d{2}$/.test(iso))r[f]=iso;
+      if(iso&&/^\d{4}-\d{2}-\d{2}$/.test(iso))r[f]=_fixYearErr(iso);
     });
     return r;
   };
@@ -1985,49 +1993,62 @@ function importClaimsXLSX(input){
   const reader=new FileReader();
   reader.onload=e=>{
     try{
-      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true,raw:false});
+      const wb=XLSX.read(e.target.result,{type:'array',raw:true});
       const ws=wb.Sheets[wb.SheetNames[0]];
-      // raw:false → SheetJS가 날짜를 문자열로 포맷, raw:true는 시리얼로 줄 수 있음
-      // cellDates:true + raw:false 조합으로 날짜를 최대한 자동 변환
-      const rows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:true});
       if(!rows.length){alert('데이터가 없습니다.');input.value='';return;}
-      // 헤더 정규화: 모든 공백 제거 + 소문자 변환 (최대한 유연하게 매칭)
-      const _norm=s=>String(s).toLowerCase().trim().replace(/\s+/g,'').replace(/[·\-_]/g,'');
-      const HM_RAW={'발생 월':'month','발생월':'month','월':'month',
-        '작성일':'date','날짜':'date',
-        '클레임 인입일':'indate','인입일':'indate','접수일':'indate',
+
+      // 헤더 정규화: 모든 공백·특수문자 제거 + 소문자
+      const _norm=s=>String(s).toLowerCase().trim().replace(/\s+/g,'').replace(/[·\-_()\[\]]/g,'');
+
+      const HM_RAW={
+        '발생 월':'month','발생월':'month','월':'month',
+        '작성일':'date','날짜':'date','일자':'date',
+        '클레임 인입일':'indate','인입일':'indate','접수일':'indate','클레임인입일':'indate',
         '배송 일자':'shipdate','배송일자':'shipdate','배송일':'shipdate',
         '처리 완료일':'donedate','처리완료일':'donedate','완료일':'donedate',
         '인입 채널':'channel','인입채널':'channel','채널':'channel',
-        '플랫폼':'platform',
-        '주문번호':'orderno','주문 번호':'orderno',
-        '주문자명':'buyer','주문자':'buyer','구매자':'buyer',
+        '플랫폼':'platform','판매처':'platform',
+        '주문번호':'orderno','주문 번호':'orderno','주문no':'orderno',
+        '주문자명':'buyer','주문자':'buyer','구매자':'buyer','고객명':'buyer',
         '상품명':'product','상품 명':'product',
         '옵션명':'option','옵션':'option','옵션 명':'option',
-        '상품 분류':'category','상품분류':'category','분류':'category',
+        '상품 분류':'category','상품분류':'category','분류':'category','제품분류':'category',
         '이슈별 분류':'issue','이슈별분류':'issue','이슈분류':'issue','이슈':'issue',
-        '귀책 주체':'liability','귀책주체':'liability','귀책':'liability',
-        '처리 유형':'type','처리유형':'type','유형':'type','처리유형(교환/반품/CS등)':'type',
-        '클레임 성격':'nature','클레임성격':'nature','성격':'nature',
-        '사유':'reason','클레임사유':'reason','클레임 사유':'reason',
+        '이슈 분류':'issue','이슈유형':'issue','클레임유형':'issue','클레임 유형':'issue',
+        '귀책 주체':'liability','귀책주체':'liability','귀책':'liability','귀책처':'liability',
+        '처리 유형':'type','처리유형':'type','유형':'type',
+        '처리유형(교환/반품/cs등)':'type','처리유형교환반품cs등':'type',
+        '클레임 성격':'nature','클레임성격':'nature','성격':'nature','접수유형':'nature',
+        '사유':'reason','클레임사유':'reason','클레임 사유':'reason','처리사유':'reason',
         '회수 여부':'returnYn','회수여부':'returnYn','회수':'returnYn',
         '재출고 여부':'reshipYn','재출고여부':'reshipYn','재출고':'reshipYn',
-        '사고 접수 여부':'accident','사고접수여부':'accident','사고접수':'accident',
+        '사고 접수 여부':'accident','사고접수여부':'accident','사고접수':'accident','사고여부':'accident',
         '처리 상태':'status','처리상태':'status','상태':'status',
-        '상품 비용':'costP','상품비용':'costP','상품비용(원)':'costP',
-        '회수 비용':'costR','회수비용':'costR','회수비용(원)':'costR',
-        '재출고 비용':'costS','재출고비용':'costS','재출고비용(원)':'costS'};
-      // 정규화된 맵
+        '상품 비용':'costP','상품비용':'costP','상품비용원':'costP','제품비용':'costP',
+        '회수 비용':'costR','회수비용':'costR','회수비용원':'costR',
+        '재출고 비용':'costS','재출고비용':'costS','재출고비용원':'costS',
+        '처리 리드타임':'leadtime','처리리드타임':'leadtime','리드타임':'leadtime',
+        'sla':'sla'
+      };
       const HM={};
       Object.entries(HM_RAW).forEach(([k,v])=>{HM[_norm(k)]=v;});
-      // 인식 안된 헤더 확인
-      const allHeaders=rows.length?Object.keys(rows[0]):[];
+
+      const allHeaders=Object.keys(rows[0]);
       const mappedHeaders=allHeaders.filter(h=>HM[_norm(h)]);
       const unmapped=allHeaders.filter(h=>!HM[_norm(h)]);
-      if(unmapped.length){
-        console.warn('[XLSX import] 매핑 안된 헤더:', unmapped);
-        console.log('[XLSX import] 매핑 성공 헤더:', mappedHeaders);
-      }
+
+      // 이슈별분류 매핑 여부 확인
+      const issueMapped=mappedHeaders.some(h=>HM[_norm(h)]==='issue');
+
+      // 헤더 매핑 결과 항상 표시 (디버그용)
+      const headerReport=
+        '📋 엑셀 컬럼 인식 결과\n\n'+
+        '✅ 매핑됨 ('+mappedHeaders.length+'개):\n'+mappedHeaders.join(', ')+'\n\n'+
+        (unmapped.length?'❌ 매핑 안됨 ('+unmapped.length+'개):\n'+unmapped.join(', ')+'\n\n':'')+
+        (!issueMapped?'⚠️ [이슈별 분류] 컬럼을 찾지 못했습니다.\n엑셀의 실제 컬럼명을 확인해주세요.\n\n':'')+
+        '계속 가져오시겠습니까?\n(기존 데이터는 엑셀 데이터로 전체 교체됩니다)';
+      if(!confirm(headerReport)){input.value='';return;}
 
       const newClaims=[];
       const ts=Date.now();
@@ -2036,31 +2057,37 @@ function importClaimsXLSX(input){
         Object.entries(row).forEach(([h,v])=>{
           const field=HM[_norm(h)];
           if(!field)return;
-          const sv=String(v||'').trim();
-          rec[field]=_XLSX_DATE_FIELDS.has(field)?(_xlsxDateToISO(sv)||sv):sv;
+          let sv=String(v||'').trim();
+          // 날짜 필드: serial 포함 모든 형식 → ISO
+          if(_XLSX_DATE_FIELDS.has(field)){
+            sv=_xlsxDateToISO(v)||sv;
+            // 연도 오류 보정: 2060년 이후는 의심 → 앞 두자리 교정
+            if(/^20[6-9]\d-/.test(sv)){
+              const fixed='20'+sv.slice(2);
+              // e.g. 2062-05-07 → 2026-05-07 (앞 두자리 swap)
+              // 실제론 연도만 교정: 2062→2026
+              const yr=sv.slice(0,4);
+              const corrected='20'+yr[2]+yr[3]+sv.slice(4);
+              if(/^\d{4}-\d{2}-\d{2}$/.test(corrected))sv=corrected;
+            }
+            rec[field]=sv;
+          }else{
+            rec[field]=sv;
+          }
         });
-        // 날짜 추가 안전장치
-        _XLSX_DATE_FIELDS.forEach(f=>{if(rec[f]){const iso=_xlsxDateToISO(rec[f]);if(iso)rec[f]=iso;}});
         if(!rec.option)rec.option='[옵션 지정 불가]';
         ['costP','costR','costS'].forEach(f=>{if(rec[f])rec[f]=String(rec[f]).replace(/[,원\s]/g,'');});
         if(Object.keys(rec).length>1)newClaims.push(rec);
       });
+
       if(!newClaims.length){
-        alert('가져올 데이터가 없습니다.\n\n엑셀 헤더: '+allHeaders.slice(0,8).join(', ')+'\n매핑 안된 헤더: '+unmapped.slice(0,8).join(', '));
+        alert('가져올 데이터가 없습니다.\n\n엑셀 헤더: '+allHeaders.slice(0,8).join(', '));
         input.value='';return;
       }
-      // 미매핑 헤더가 있으면 경고 표시
-      if(unmapped.length>0){
-        const msg='⚠️ 다음 컬럼이 매핑되지 않았습니다:\n'+unmapped.join(', ')+'\n\n매핑된 컬럼: '+mappedHeaders.join(', ')+'\n\n계속 가져오시겠습니까?';
-        if(!confirm(msg)){input.value='';return;}
-      }
-      // 기존 데이터 중 이번 가져오기와 중복 없는 것만 유지 (orderno 기준)
-      // 주문번호 없는 기존 레코드는 항상 유지 (버그 수정)
-      const newOrderNos=new Set(newClaims.map(r=>r.orderno).filter(Boolean));
-      const existing=loadClaims().filter(r=>!r.orderno||!newOrderNos.has(r.orderno));
-      const merged=[...newClaims,...existing];
-      saveClaims(merged)
-        .then(()=>alert(`✅ ${newClaims.length}건 가져오기 완료\n총 ${merged.length}건 저장됨`))
+
+      // 엑셀 데이터로 전체 교체 (기존 데이터 merge 없음)
+      saveClaims(newClaims)
+        .then(()=>alert('✅ '+newClaims.length+'건 가져오기 완료\n엑셀 데이터로 전체 교체되었습니다.'))
         .catch(err=>alert('저장 오류: '+err));
     }catch(err){alert('파일 읽기 오류: '+err);}
     input.value='';
