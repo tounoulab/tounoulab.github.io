@@ -152,6 +152,38 @@ tr:hover td{background:#fafafa;}
 .sd-empty{padding:10px 12px;font-size:12px;color:#aaa;}
 /* claim sheet inline edit */
 #claim-sheet th{text-align:center !important;padding:8px 28px 8px 10px !important;position:sticky;top:0;z-index:3;background:#f6f6f4;user-select:none;white-space:nowrap;}
+/* SLA / 리드타임 테이블 정렬 */
+#sla-table th,#leadtime-table th{text-align:center !important;}
+#sla-table th:first-child,#leadtime-table th:first-child{text-align:left !important;}
+#sla-table,#leadtime-table{table-layout:fixed;width:100%;}
+#sla-table th:first-child,#sla-table td:first-child{width:60px;}
+#sla-table th:not(:first-child),#sla-table td:not(:first-child){width:58px;}
+#leadtime-table th:first-child,#leadtime-table td:first-child{width:160px;}
+#leadtime-table th:not(:first-child),#leadtime-table td:not(:first-child){width:52px;}
+#sla-table td,#leadtime-table td{text-align:center !important;}
+/* 틀 고정 컬럼 (발생월~상품분류) */
+#claim-sheet th[data-col="month"]   {left:0;   min-width:64px; z-index:5;}
+#claim-sheet th[data-col="date"]    {left:64px; min-width:84px; z-index:5;}
+#claim-sheet th[data-col="indate"]  {left:148px;min-width:84px; z-index:5;}
+#claim-sheet th[data-col="donedate"]{left:232px;min-width:96px; z-index:5;}
+#claim-sheet th[data-col="channel"] {left:328px;min-width:80px; z-index:5;}
+#claim-sheet th[data-col="platform"]{left:408px;min-width:80px; z-index:5;}
+#claim-sheet th[data-col="orderno"] {left:488px;min-width:120px;z-index:5;}
+#claim-sheet th[data-col="buyer"]   {left:608px;min-width:68px; z-index:5;}
+#claim-sheet th[data-col="product"] {left:676px;min-width:130px;z-index:5;}
+#claim-sheet th[data-col="option"]  {left:806px;min-width:100px;z-index:5;}
+#claim-sheet th[data-col="category"]{left:906px;min-width:82px; z-index:5;}
+#claim-sheet tbody td[data-field="month"]   {position:sticky;left:0;   z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="date"]    {position:sticky;left:64px; z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="indate"]  {position:sticky;left:148px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="donedate"]{position:sticky;left:232px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="channel"] {position:sticky;left:328px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="platform"]{position:sticky;left:408px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="orderno"] {position:sticky;left:488px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="buyer"]   {position:sticky;left:608px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="product"] {position:sticky;left:676px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="option"]  {position:sticky;left:806px;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="category"]{position:sticky;left:906px;z-index:1;background:inherit;}
 .th-filter-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:4px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;padding:0;z-index:4;}
 .th-filter-btn:hover{background:#e8e8e6;color:#555;}
 .th-filter-btn.active{background:#1a73e8;color:#fff;}
@@ -169,32 +201,43 @@ tr:hover td{background:#fafafa;}
 .col-rz{position:absolute;right:0;top:0;height:100%;width:6px;cursor:col-resize;z-index:2;}
 .col-rz:hover,.col-rz.dragging{background:rgba(26,115,232,0.35);}
 /* ===== 반응형 ===== */
-@media(max-width:1100px){
+@media(max-width:1200px){
   .home-layout{grid-template-columns:1fr;}
-  .gnb-brand{font-size:16px;margin-right:14px;}
+  /* 사이드바 숨김 */
+  .home-layout>div:last-child{display:none;}
+  /* 금일/이번주 카드 세로 1열 */
+  .chart-period-grid{grid-template-columns:1fr!important;}
 }
-@media(max-width:768px){
-  .gnb-inner{padding:0 10px;height:50px;}
-  .gnb-logo{width:26px;height:26px;}
-  .gnb-brand{font-size:14px;margin-right:8px;}
-  .gnb-nav-item{padding:5px 9px;font-size:13px;}
-  .page-inner{padding:10px;}
+@media(max-width:900px){
+  .gnb-brand{font-size:15px;margin-right:10px;}
+  .gnb-nav-item{padding:5px 10px;font-size:13px;}
+  .page-inner{padding:14px;}
   .sub-grid{grid-template-columns:1fr 1fr!important;}
-  .home-layout{gap:10px;}
+  .home-layout{gap:12px;}
+  .status-row{flex-wrap:wrap;}
+  .status-item{flex:1 1 45%;border-right:none!important;border-bottom:1px solid #f0f0ee;}
   .status-item-value{font-size:20px;}
   .grid2{grid-template-columns:1fr;}
   .grid3{grid-template-columns:1fr 1fr;}
   .stats-grid{grid-template-columns:1fr 1fr;}
+  .kpi-row{grid-template-columns:1fr 1fr!important;}
 }
-@media(max-width:480px){
-  .gnb-nav-item{padding:4px 7px;font-size:12px;}
+@media(max-width:600px){
+  .gnb-inner{padding:0 8px;height:48px;}
+  .gnb-logo{width:24px;height:24px;}
+  .gnb-brand{font-size:13px;margin-right:6px;}
+  .gnb-nav-item{padding:4px 8px;font-size:12px;}
+  .page-inner{padding:8px;}
   .sub-grid{grid-template-columns:1fr!important;}
-  .status-row{flex-wrap:wrap;}
-  .status-item{flex:1 1 42%;}
+  .status-item{flex:1 1 100%;}
   .grid3{grid-template-columns:1fr;}
+  .stats-grid{grid-template-columns:1fr;}
+  .kpi-row{grid-template-columns:1fr!important;}
+  .chart-inner-grid{grid-template-columns:1fr!important;}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
@@ -298,7 +341,7 @@ tr:hover td{background:#fafafa;}
           <div id="h-filter-badge" style="display:none;padding:6px 18px 10px;font-size:12px;color:#1a73e8;font-weight:500;"></div>
         </div>
         <!-- 이번 달 KPI -->
-        <div class="sub-grid" style="grid-template-columns:repeat(3,1fr)!important;margin-bottom:16px;">
+        <div class="sub-grid kpi-row" style="grid-template-columns:repeat(3,1fr)!important;margin-bottom:16px;">
           <div class="sub-card">
             <div class="sub-card-title">이번 달 평균 리드타임</div>
             <div style="font-size:26px;font-weight:700;color:#1a1a1a;" id="kpi-leadtime">-</div>
@@ -316,11 +359,11 @@ tr:hover td{background:#fafafa;}
           </div>
         </div>
         <!-- 귀책별/처리유형 (금일 + 이번주, 각 카드 안에서 좌우 배치) -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div class="chart-period-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
           <!-- 금일 -->
           <div class="card" style="margin-bottom:0;">
             <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.05em;margin-bottom:14px;">금일</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="chart-inner-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div>
                 <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">귀책별 현황</div>
                 <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-today"></canvas></div>
@@ -336,7 +379,7 @@ tr:hover td{background:#fafafa;}
           <!-- 이번 주 -->
           <div class="card" style="margin-bottom:0;">
             <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.05em;margin-bottom:14px;">이번 주</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="chart-inner-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div>
                 <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">귀책별 현황</div>
                 <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-week"></canvas></div>
@@ -380,7 +423,7 @@ tr:hover td{background:#fafafa;}
         </div>
         <!-- 처리 유형 월별 평균 리드타임 -->
         <div class="card" style="margin-bottom:16px;">
-          <div class="card-title">처리 유형별 월평균 리드타임 (영업일)</div>
+          <div class="card-title">처리 유형별 월평균 리드타임</div>
           <div class="table-wrap">
             <table id="leadtime-table" style="min-width:700px;">
               <thead>
@@ -674,10 +717,10 @@ tr:hover td{background:#fafafa;}
     <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn-primary" onclick="openClaimModal()">+ 클레임 등록</button>
       <button id="btn-group-order" class="btn-secondary" onclick="toggleGroupByOrder()" title="같은 주문번호를 1건으로 묶어서 표시">주문별 보기</button>
-      <button class="btn-secondary" onclick="exportClaims()">CSV 내보내기</button>
-      <button class="btn-secondary" onclick="document.getElementById('csv-import-input').click()">CSV 가져오기</button>
+      <button class="btn-secondary" onclick="exportClaimsXLSX()">XLSX 내보내기</button>
+      <button class="btn-secondary" onclick="document.getElementById('xlsx-import-input').click()">XLSX 가져오기</button>
       <button class="btn-secondary" onclick="confirmClearClaims()" style="color:#dc2626;border-color:#fecaca;">전체 삭제</button>
-      <input type="file" id="csv-import-input" accept=".csv" style="display:none;" onchange="importClaims(this)"/>
+      <input type="file" id="xlsx-import-input" accept=".xlsx,.xls" style="display:none;" onchange="importClaimsXLSX(this)"/>
     </div>
   </div>
 </div>
@@ -699,6 +742,7 @@ tr:hover td{background:#fafafa;}
         <th data-col="issue" style="border:1px solid #e0e0de;color:#555;font-weight:600;">이슈분류</th>
         <th data-col="liability" style="border:1px solid #e0e0de;color:#555;font-weight:600;">귀책</th>
         <th data-col="type" style="border:1px solid #e0e0de;color:#555;font-weight:600;">처리유형</th>
+        <th data-col="nature" style="border:1px solid #e0e0de;color:#555;font-weight:600;">클레임성격</th>
         <th data-col="reason" style="border:1px solid #e0e0de;color:#555;font-weight:600;">사유</th>
         <th data-col="returnYn" style="border:1px solid #e0e0de;color:#555;font-weight:600;">회수</th>
         <th data-col="reshipYn" style="border:1px solid #e0e0de;color:#555;font-weight:600;">재출고</th>
@@ -843,7 +887,7 @@ function _activePage(){return localStorage.getItem('tuunu_page')||'home';}
 function setupFirebaseListeners(){
   let _claimSnapTimer=null;
   db.collection('claims').onSnapshot(snap=>{
-    _claimsData=snap.docs.map(d=>d.data()).sort((a,b)=>b.id-a.id);
+    _claimsData=snap.docs.map(d=>d.data()).sort((a,b)=>a.id-b.id);
     clearTimeout(_claimSnapTimer);
     _claimSnapTimer=setTimeout(()=>{
       if(_activePage()==='claim')renderClaimTable(true);
@@ -1106,7 +1150,7 @@ function renderSLATable(claims){
   const ls=cs+'font-weight:600;background:#f8f8f6;position:sticky;left:0;z-index:1;';
   tbody.innerHTML=`
     <tr><td style="${ls}">이행</td>${byMonth.map(v=>`<td style="${cs}color:#2e7d32;">${v.ihaeng||'-'}</td>`).join('')}<td style="${cs}font-weight:700;color:#2e7d32;">${ihaengAll||'-'}</td></tr>
-    <tr><td style="${ls}">이달</td>${byMonth.map(v=>`<td style="${cs}">${v.total||'-'}</td>`).join('')}<td style="${cs}font-weight:700;">${totalAll||'-'}</td></tr>
+    <tr><td style="${ls}">이탈</td>${byMonth.map(v=>`<td style="${cs}">${(v.total-(v.ihaeng||0))||'-'}</td>`).join('')}<td style="${cs}font-weight:700;">${(totalAll-ihaengAll)||'-'}</td></tr>
     <tr><td style="${ls}">이행률</td>${byMonth.map(v=>`<td style="${cs}${v.total>0&&v.ihaeng/v.total>=0.7?'color:#2e7d32;':'color:#c62828;'}">${pct(v)}</td>`).join('')}<td style="${cs}font-weight:700;${totalAll>0&&ihaengAll/totalAll>=0.7?'color:#2e7d32;':'color:#c62828;'}">${totalAll>0?(ihaengAll/totalAll*100).toFixed(1)+'%':'-'}</td></tr>`;
 }
 function renderLeadtimeTable(claims){
@@ -1118,7 +1162,7 @@ function renderLeadtimeTable(claims){
   const cs='padding:6px 10px;border:1px solid #f0f0ee;text-align:center;font-size:12px;';
   const ls=cs+'font-weight:500;background:#f8f8f6;text-align:left;white-space:nowrap;position:sticky;left:0;z-index:1;min-width:130px;';
   const avgFor=arr=>{
-    const bds=arr.filter(r=>r.donedate&&r.indate).map(r=>calcBusinessDays(r.indate,r.donedate)).filter(v=>v!==null&&v>=0);
+    const bds=arr.filter(r=>r.donedate&&r.indate).map(r=>{const v=calcBusinessDays(r.indate,r.donedate);return v!==null?v+1:null;}).filter(v=>v!==null);
     return bds.length?(bds.reduce((a,b)=>a+b,0)/bds.length).toFixed(1):'-';
   };
   tbody.innerHTML=allTypes.map(tp=>{
@@ -1246,7 +1290,7 @@ const CF={
   costP:{type:'number'},costR:{type:'number'},costS:{type:'number'},
   leadtime:{type:'number'},vocAmt:{type:'number'},csAmt:{type:'number'}
 };
-const CF_ORDER=['month','date','indate','donedate','channel','platform','orderno','buyer','product','option','category','issue','liability','type','reason','returnYn','reshipYn','accident','status'];
+const CF_ORDER=['month','date','indate','donedate','channel','platform','orderno','buyer','product','option','category','issue','liability','type','nature','reason','returnYn','reshipYn','accident','status'];
 
 function editCell(td,claimId,field,curVal){
   if(td.querySelector('input,select,textarea'))return;
@@ -1432,10 +1476,13 @@ function _doRenderClaimTable(){
       if(key==='orderno'&&r._grpCnt>1)disp+=` <span style="background:#1a73e8;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;">${r._grpCnt}건</span>`;
       cells+=`<td class="tdc${isLeft?' td-left':''}" title="${val||'-'}" data-id="${r.id}" data-field="${key}" data-val="${val.replace(/"/g,'&quot;')}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)">${disp}</td>`;
     });
-    cells+=`<td class="tdc">${bdays!==null?bdays:'-'}</td>`;
+    const leadDisp=bdays===null?(r.leadtime||'-'):bdays+1;
+    cells+=`<td class="tdc">${leadDisp}</td>`;
     cells+=`<td class="tdc" style="font-weight:600;color:${sla.color};">${sla.text}</td>`;
     ['costP','costR','costS'].forEach(key=>{
-      const val=r[key]||'';const disp=val?Number(val).toLocaleString():'-';
+      const val=r[key]||'';
+      const num=val?parseFloat(String(val).replace(/,/g,'')):NaN;
+      const disp=(!isNaN(num)&&val)?num.toLocaleString():'-';
       cells+=`<td class="tdc" data-id="${r.id}" data-field="${key}" data-val="${val}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)">${disp}</td>`;
     });
     cells+=`<td class="tdc"><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
@@ -1579,6 +1626,76 @@ function importClaims(input){
 function exportClaims(){
   const c=loadClaims();if(!c.length){alert('데이터가 없습니다.');return;}
   dlCSV('클레임_누적_'+todayStr()+'.csv',['발생 월','작성일','클레임 인입일','배송 일자','처리 완료일','인입 채널','플랫폼','주문번호','주문자명','상품명','옵션명','상품 분류','이슈별 분류','귀책 주체','처리 유형','클레임 성격','사유','회수 여부','재출고 여부','사고 접수 여부','상품 비용','회수 비용','재출고 비용','처리 리드타임','처리 상태','SLA'],c.map(r=>[r.month,r.date,r.indate,r.shipdate,r.donedate,r.channel,r.platform,r.orderno,r.buyer,r.product,r.option,r.category,r.issue,r.liability,r.type,r.nature,r.reason,r.returnYn,r.reshipYn,r.accident,r.costP,r.costR,r.costS,r.leadtime,r.status,r.sla]));
+}
+function exportClaimsXLSX(){
+  const c=loadClaims();if(!c.length){alert('데이터가 없습니다.');return;}
+  const cols=[
+    ['month','발생 월'],['date','작성일'],['indate','클레임 인입일'],['shipdate','배송 일자'],
+    ['donedate','처리 완료일'],['channel','인입 채널'],['platform','플랫폼'],
+    ['orderno','주문번호'],['buyer','주문자명'],['product','상품명'],['option','옵션명'],
+    ['category','상품 분류'],['issue','이슈별 분류'],['liability','귀책 주체'],
+    ['type','처리 유형'],['nature','클레임 성격'],['reason','사유'],
+    ['returnYn','회수 여부'],['reshipYn','재출고 여부'],['accident','사고 접수 여부'],
+    ['status','처리 상태'],['costP','상품 비용'],['costR','회수 비용'],['costS','재출고 비용']
+  ];
+  const data=c.map(r=>{
+    const row={};
+    cols.forEach(([k,h])=>{row[h]=r[k]||'';});
+    const bds=calcBusinessDays(r.indate,r.donedate);
+    row['처리 리드타임']=bds!==null?bds+1:'';
+    return row;
+  });
+  const ws=XLSX.utils.json_to_sheet(data);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'클레임현황');
+  XLSX.writeFile(wb,'클레임현황_'+todayStr()+'.xlsx');
+}
+function importClaimsXLSX(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!rows.length){alert('데이터가 없습니다.');input.value='';return;}
+      const HM={'발생 월':'month','발생월':'month','작성일':'date',
+        '클레임 인입일':'indate','인입일':'indate','배송 일자':'shipdate','배송일자':'shipdate',
+        '처리 완료일':'donedate','처리완료일':'donedate',
+        '인입 채널':'channel','인입채널':'channel','플랫폼':'platform',
+        '주문번호':'orderno','주문자명':'buyer','주문자':'buyer',
+        '상품명':'product','옵션명':'option',
+        '상품 분류':'category','상품분류':'category',
+        '이슈별 분류':'issue','이슈별분류':'issue','이슈분류':'issue',
+        '귀책 주체':'liability','귀책주체':'liability','귀책':'liability',
+        '처리 유형':'type','처리유형':'type',
+        '클레임 성격':'nature','클레임성격':'nature',
+        '사유':'reason','회수 여부':'returnYn','회수여부':'returnYn',
+        '재출고 여부':'reshipYn','재출고여부':'reshipYn',
+        '사고 접수 여부':'accident','사고접수여부':'accident',
+        '처리 상태':'status','처리상태':'status','상태':'status',
+        '상품 비용':'costP','상품비용':'costP',
+        '회수 비용':'costR','회수비용':'costR',
+        '재출고 비용':'costS','재출고비용':'costS'};
+      const newClaims=[];
+      rows.forEach((row,i)=>{
+        const rec={id:Date.now()+i};
+        Object.entries(row).forEach(([h,v])=>{
+          const field=HM[String(h).trim()];
+          if(field)rec[field]=String(v||'');
+        });
+        if(!rec.option)rec.option='[옵션 지정 불가]';
+        ['costP','costR','costS'].forEach(f=>{if(rec[f])rec[f]=String(rec[f]).replace(/,/g,'');});
+        if(Object.keys(rec).length>1)newClaims.push(rec);
+      });
+      if(!newClaims.length){alert('가져올 데이터가 없습니다.');input.value='';return;}
+      const existing=loadClaims();
+      const merged=[...newClaims,...existing];
+      saveClaims(merged).then(()=>alert('✅ '+newClaims.length+'건을 가져왔습니다.')).catch(err=>alert('오류: '+err));
+    }catch(err){alert('파일 읽기 오류: '+err);}
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
 }
 function exportReturns(){
   const r=loadReturns();if(!r.length){alert('데이터가 없습니다.');return;}
