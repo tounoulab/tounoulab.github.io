@@ -1789,11 +1789,9 @@ function _doRenderClaimTable(){
   const allClaims=loadClaims(),claims=getFilteredClaims();
   const badge=document.getElementById('claim-count-badge');
   const hasFilter=Object.values(claimFilters).some(v=>v instanceof Set?v.size>0:!!v);
-  const uniqCnt=new Set(allClaims.map(r=>r.orderno||String(r.id))).size;
-  const filtUniq=new Set(claims.map(r=>r.orderno||String(r.id))).size;
-  if(badge)badge.textContent=hasFilter||_groupByOrder
-    ?`${filtUniq}건 / 전체 ${uniqCnt}건`
-    :`총 ${uniqCnt}건`;
+  if(badge)badge.textContent=hasFilter
+    ?`${claims.length}건 / 전체 ${allClaims.length}건`
+    :`총 ${allClaims.length}건`;
   if(!claims.length){tbody.innerHTML='';if(empty)empty.style.display='';initColResize();return;}
   if(empty)empty.style.display='none';
   _vsClaims=claims;
