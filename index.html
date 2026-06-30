@@ -168,27 +168,29 @@ tr:hover td{background:#fafafa;}
 .col-rz{position:absolute;right:0;top:0;height:100%;width:6px;cursor:col-resize;z-index:2;}
 .col-rz:hover,.col-rz.dragging{background:rgba(26,115,232,0.35);}
 /* ===== 반응형 ===== */
-@media(max-width:960px){
+@media(max-width:1100px){
   .home-layout{grid-template-columns:1fr;}
-  .sub-grid{grid-template-columns:1fr 1fr;}
-  .gnb-brand{margin-right:14px;font-size:16px;}
-  .gnb-nav-item{padding:6px 11px;font-size:14px;}
-  .page-inner{padding:16px;}
+  .gnb-brand{font-size:16px;margin-right:14px;}
 }
-@media(max-width:680px){
+@media(max-width:768px){
   .gnb-inner{padding:0 10px;height:50px;}
   .gnb-logo{width:26px;height:26px;}
-  .gnb-brand{font-size:15px;margin-right:8px;}
+  .gnb-brand{font-size:14px;margin-right:8px;}
   .gnb-nav-item{padding:5px 9px;font-size:13px;}
   .page-inner{padding:10px;}
-  .sub-grid{grid-template-columns:1fr;}
+  .sub-grid{grid-template-columns:1fr 1fr!important;}
   .home-layout{gap:10px;}
   .status-item-value{font-size:20px;}
-  .status-row{flex-wrap:wrap;}
-  .status-item{flex:1 1 42%;}
   .grid2{grid-template-columns:1fr;}
   .grid3{grid-template-columns:1fr 1fr;}
   .stats-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:480px){
+  .gnb-nav-item{padding:4px 7px;font-size:12px;}
+  .sub-grid{grid-template-columns:1fr!important;}
+  .status-row{flex-wrap:wrap;}
+  .status-item{flex:1 1 42%;}
+  .grid3{grid-template-columns:1fr;}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -294,45 +296,51 @@ tr:hover td{background:#fafafa;}
           </div>
           <div id="h-filter-badge" style="display:none;padding:6px 18px 10px;font-size:12px;color:#1a73e8;font-weight:500;"></div>
         </div>
-        <!-- 이번 달 리드타임/금액 -->
-        <div class="sub-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;" id="monthly-kpi-row">
+        <!-- 이번 달 KPI -->
+        <div class="sub-grid" style="grid-template-columns:repeat(3,1fr)!important;margin-bottom:16px;">
           <div class="sub-card">
             <div class="sub-card-title">이번 달 평균 리드타임</div>
             <div style="font-size:26px;font-weight:700;color:#1a1a1a;" id="kpi-leadtime">-</div>
             <div style="font-size:11px;color:#aaa;margin-top:3px;">일 (영업일 기준)</div>
           </div>
           <div class="sub-card">
-            <div class="sub-card-title">VOC 상품 금액</div>
+            <div class="sub-card-title">상품 비용 합계</div>
             <div style="font-size:22px;font-weight:700;color:#1a1a1a;" id="kpi-vocamt">-</div>
             <div style="font-size:11px;color:#aaa;margin-top:3px;">원 (이번 달 누계)</div>
           </div>
           <div class="sub-card">
-            <div class="sub-card-title">CS 안내 유지 금액</div>
+            <div class="sub-card-title">회수+재출고 비용</div>
             <div style="font-size:22px;font-weight:700;color:#1a1a1a;" id="kpi-csamt">-</div>
             <div style="font-size:11px;color:#aaa;margin-top:3px;">원 (이번 달 누계)</div>
           </div>
         </div>
-        <!-- 서브 그리드 -->
-        <div class="sub-grid">
+        <!-- 귀책별/처리유형 (2열 + 금일/주 토글) -->
+        <div class="sub-grid" style="grid-template-columns:1fr 1fr!important;margin-bottom:16px;">
           <div class="sub-card">
-            <div class="sub-card-title">귀책별 현황 (이번 주)</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div class="sub-card-title" style="margin-bottom:0;" id="lbl-liability">귀책별 현황 (이번 주)</div>
+              <div style="display:flex;gap:4px;">
+                <button onclick="setChartMode('week')" id="btn-lib-week" style="font-size:11px;padding:2px 9px;border-radius:5px;border:none;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;">이번 주</button>
+                <button onclick="setChartMode('today')" id="btn-lib-today" style="font-size:11px;padding:2px 9px;border-radius:5px;border:1px solid #e0e0de;background:#fff;color:#555;cursor:pointer;font-family:inherit;">금일</button>
+              </div>
+            </div>
             <div style="position:relative;height:170px;display:flex;align-items:center;justify-content:center;">
               <canvas id="chart-liability"></canvas>
             </div>
             <div id="h-liability-list" class="chart-legend"></div>
           </div>
           <div class="sub-card">
-            <div class="sub-card-title">처리 유형 (이번 주)</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div class="sub-card-title" style="margin-bottom:0;" id="lbl-type">처리 유형 (이번 주)</div>
+              <div style="display:flex;gap:4px;">
+                <button onclick="setChartMode('week')" id="btn-type-week" style="font-size:11px;padding:2px 9px;border-radius:5px;border:none;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;">이번 주</button>
+                <button onclick="setChartMode('today')" id="btn-type-today" style="font-size:11px;padding:2px 9px;border-radius:5px;border:1px solid #e0e0de;background:#fff;color:#555;cursor:pointer;font-family:inherit;">금일</button>
+              </div>
+            </div>
             <div style="position:relative;height:170px;display:flex;align-items:center;justify-content:center;">
               <canvas id="chart-type"></canvas>
             </div>
             <div id="h-type-list" class="chart-legend"></div>
-          </div>
-          <div class="sub-card">
-            <div class="sub-card-title">반품 입고 현황</div>
-            <div class="sub-row"><span class="sub-row-label">금일 입고</span><span class="sub-row-value" id="h-ret-today">-</span></div>
-            <div class="sub-row"><span class="sub-row-label">이번 주</span><span class="sub-row-value" id="h-ret-week">-</span></div>
-            <div class="sub-row"><span class="sub-row-label">이번 달</span><span class="sub-row-value" id="h-ret-month">-</span></div>
           </div>
         </div>
         <!-- 주간 클레임 추이 -->
@@ -345,23 +353,64 @@ tr:hover td{background:#fafafa;}
             <canvas id="chart-weekly"></canvas>
           </div>
         </div>
-        <!-- 최근 클레임 -->
-        <div class="card">
-          <div style="margin-bottom:16px;">
-            <span class="card-title">최근 클레임</span>
-          </div>
+        <!-- SLA 월별 현황 -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">SLA 월별 현황</div>
           <div class="table-wrap">
-            <table>
-              <thead><tr><th>작성일</th><th>플랫폼</th><th>주문번호</th><th>주문자</th><th>상품명</th><th>이슈분류</th><th>귀책</th><th>처리유형</th><th>상태</th><th></th></tr></thead>
-              <tbody id="home-claim-tbody"></tbody>
+            <table id="sla-table" style="min-width:800px;">
+              <thead>
+                <tr>
+                  <th style="background:#f8f8f6;position:sticky;left:0;z-index:2;">구분</th>
+                  <th>1월</th><th>2월</th><th>3월</th><th>4월</th><th>5월</th><th>6월</th>
+                  <th>7월</th><th>8월</th><th>9월</th><th>10월</th><th>11월</th><th>12월</th>
+                  <th>합계</th>
+                </tr>
+              </thead>
+              <tbody id="sla-tbody"></tbody>
             </table>
-            <div class="empty-msg" id="home-claim-empty">등록된 클레임이 없습니다</div>
+          </div>
+          <div style="font-size:11px;color:#bbb;margin-top:8px;">※ SLA 기준: 클레임 인입일 → 처리 완료일 4 영업일 이내</div>
+        </div>
+        <!-- 처리 유형 월별 평균 리드타임 -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">처리 유형별 월평균 리드타임 (영업일)</div>
+          <div class="table-wrap">
+            <table id="leadtime-table" style="min-width:700px;">
+              <thead>
+                <tr>
+                  <th style="background:#f8f8f6;position:sticky;left:0;z-index:2;text-align:left;">처리 유형</th>
+                  <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th>
+                  <th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th>
+                </tr>
+              </thead>
+              <tbody id="leadtime-tbody"></tbody>
+            </table>
           </div>
         </div>
       </div>
       <!-- 사이드바 -->
       <div>
-        <!-- 노션 바로가기 링크 -->
+        <div class="side-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <span class="side-card-title" style="margin-bottom:0;">공지 사항</span>
+            <button onclick="toggleNoticeForm()" id="btn-notice-add" style="font-size:11px;padding:3px 8px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;display:none;">+ 등록</button>
+          </div>
+          <div id="notice-form" style="display:none;margin-bottom:10px;">
+            <textarea id="notice-input" placeholder="공지 내용을 입력하세요." style="width:100%;padding:8px 10px;border:1px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;resize:vertical;min-height:64px;box-sizing:border-box;outline:none;"></textarea>
+            <input type="url" id="notice-img-input" placeholder="이미지 URL (선택사항)" style="margin-top:6px;width:100%;padding:7px 10px;border:1px solid #e0e0de;border-radius:7px;font-size:12px;box-sizing:border-box;outline:none;"/>
+            <div style="display:flex;gap:6px;margin-top:5px;">
+              <button onclick="addNotice()" style="flex:1;padding:5px;font-size:12px;border:none;border-radius:6px;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;">등록</button>
+              <button onclick="toggleNoticeForm()" style="flex:1;padding:5px;font-size:12px;border:1px solid #ddd;border-radius:6px;background:#f5f5f3;color:#666;cursor:pointer;font-family:inherit;">취소</button>
+            </div>
+          </div>
+          <div id="notice-list" style="font-size:13px;color:#555;"></div>
+        </div>
+        <div class="side-card">
+          <div class="side-card-title">오늘의 현황</div>
+          <div class="sub-row"><span class="sub-row-label">클레임 인입</span><span class="sub-row-value" id="side-today-claim">-</span></div>
+          <div class="sub-row"><span class="sub-row-label">반품 입고</span><span class="sub-row-value" id="side-today-return">-</span></div>
+          <div class="sub-row"><span class="sub-row-label">처리 완료</span><span class="sub-row-value" id="side-today-done">-</span></div>
+        </div>
         <div class="side-card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <span class="side-card-title" style="margin-bottom:0;">🔗 바로가기</span>
@@ -379,35 +428,15 @@ tr:hover td{background:#fafafa;}
         </div>
         <div class="side-card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <span class="side-card-title" style="margin-bottom:0;">공지 사항</span>
-            <button onclick="toggleNoticeForm()" id="btn-notice-add" style="font-size:11px;padding:3px 8px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;display:none;">+ 등록</button>
-          </div>
-          <div id="notice-form" style="display:none;margin-bottom:10px;">
-            <textarea id="notice-input" placeholder="공지 내용을 입력하세요." style="width:100%;padding:8px 10px;border:1px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;resize:vertical;min-height:64px;box-sizing:border-box;outline:none;"></textarea>
-            <div style="display:flex;gap:6px;margin-top:5px;">
-              <button onclick="addNotice()" style="flex:1;padding:5px;font-size:12px;border:none;border-radius:6px;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;">등록</button>
-              <button onclick="toggleNoticeForm()" style="flex:1;padding:5px;font-size:12px;border:1px solid #ddd;border-radius:6px;background:#f5f5f3;color:#666;cursor:pointer;font-family:inherit;">취소</button>
-            </div>
-          </div>
-          <div id="notice-list" style="font-size:13px;color:#555;"></div>
-        </div>
-        <div class="side-card">
-          <div class="side-card-title">오늘의 현황</div>
-          <div class="sub-row"><span class="sub-row-label">클레임 인입</span><span class="sub-row-value" id="side-today-claim">-</span></div>
-          <div class="sub-row"><span class="sub-row-label">반품 입고</span><span class="sub-row-value" id="side-today-return">-</span></div>
-          <div class="sub-row"><span class="sub-row-label">처리 완료</span><span class="sub-row-value" id="side-today-done">-</span></div>
-        </div>
-        <div class="side-card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <span class="side-card-title" style="margin-bottom:0;">최근 반품 입고</span>
             <button class="btn-secondary" style="font-size:12px;padding:4px 10px;" onclick="switchPage('return')">전체보기</button>
           </div>
-          <div id="side-return-list"><div class="empty-msg" style="padding:12px 0;font-size:13px;">입고 내역 없음</div></div>
+          <div id="side-return-list"></div>
         </div>
       </div>
     </div>
   </div>
-</div>
+</div><!-- /page-home -->
 
 <!-- ===== PAGE: 문자 안내 ===== -->
 <div id="page-msg" class="page">
@@ -840,6 +869,23 @@ function normDate(s){
 function countIn(arr,field,from,to){return arr.filter(r=>{const v=normDate(r[field]);return v>=from&&v<=to;}).length;}
 function setTxt(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
 // ===== 홈 대시보드 =====
+let _chartMode='week';
+function setChartMode(mode){
+  _chartMode=mode;
+  const isWeek=mode==='week';
+  const label=isWeek?'이번 주':'금일';
+  const setBtn=(wId,tId,isW)=>{
+    const w=document.getElementById(wId),t=document.getElementById(tId);
+    if(w){w.style.background=isW?'#1a1a1a':'#fff';w.style.color=isW?'#fff':'#555';w.style.border=isW?'none':'1px solid #e0e0de';}
+    if(t){t.style.background=isW?'#fff':'#1a1a1a';t.style.color=isW?'#555':'#fff';t.style.border=isW?'1px solid #e0e0de':'none';}
+  };
+  setBtn('btn-lib-week','btn-lib-today',isWeek);
+  setBtn('btn-type-week','btn-type-today',isWeek);
+  const lblLib=document.getElementById('lbl-liability'),lblType=document.getElementById('lbl-type');
+  if(lblLib)lblLib.textContent='귀책별 현황 ('+label+')';
+  if(lblType)lblType.textContent='처리 유형 ('+label+')';
+  renderHomeDashboard();
+}
 function applyDateFilter(){renderHomeDashboard();}
 function clearDateFilter(){
   const f=document.getElementById('h-filter-from'),t=document.getElementById('h-filter-to');
@@ -956,10 +1002,9 @@ function renderHomeDashboard(){
   const toVal=document.getElementById('h-filter-to')?.value||'';
   const[ws,we]=weekRange(),[ms,me]=monthRange();
   const badge=document.getElementById('h-filter-badge');
-  let wkC;
   const hasRange=fromVal||toVal;
+  let chartClaims;
   if(hasRange){
-    // 기간 조회: from이 없으면 아주 먼 과거, to가 없으면 오늘
     const from=fromVal||'1900-01-01',to=toVal||t;
     setTxt('h-today',countUniq(claims,'date',from,to)+'건');
     setTxt('h-done',countUniq(claims.filter(r=>{const v=normDate(r.donedate);return v>=from&&v<=to;}),'date','1900','9999')+'건');
@@ -967,14 +1012,9 @@ function renderHomeDashboard(){
     setTxt('h-month',countUniq(claims,'date',from,to)+'건');
     const label=(fromVal||'시작')+'  ~  '+(toVal||'오늘');
     if(badge){badge.style.display='';badge.textContent='📅 '+label+' 기간 조회 중';}
-    wkC=claims.filter(r=>{const v=normDate(r.date);return v>=from&&v<=to;});
-    setTxt('h-ret-today',countIn(returns,'date',from,to)+'건');
-    setTxt('h-ret-week',countIn(returns,'date',from,to)+'건');
-    setTxt('h-ret-month',countIn(returns,'date',from,to)+'건');
+    chartClaims=claims.filter(r=>{const v=normDate(r.date);return v>=from&&v<=to;});
     setTxt('side-today-claim',countUniq(claims,'date',from,to)+'건');
     setTxt('side-today-return',countIn(returns,'date',from,to)+'건');
-    // 레이블 업데이트
-    const labels={h_today:'접수 건수',h_week:'기간 접수',h_month:'기간 접수'};
     const todayLbl=document.querySelector('#h-today')?.closest('.status-item')?.querySelector('.status-item-label');
     if(todayLbl)todayLbl.textContent='기간 접수';
     const weekLbl=document.querySelector('#h-week')?.closest('.status-item')?.querySelector('.status-item-label');
@@ -983,42 +1023,40 @@ function renderHomeDashboard(){
     if(monthLbl)monthLbl.textContent='기간 접수(월)';
   } else {
     if(badge)badge.style.display='none';
-    wkC=claims.filter(r=>{const v=normDate(r.date);return v>=ws&&v<=we;});
     setTxt('h-today',countUniq(claims,'date',t,t)+'건');
     setTxt('h-done',countUniq(claims.filter(r=>normDate(r.donedate)===t),'date','1900','9999')+'건');
     setTxt('h-week',countUniq(claims,'date',ws,we)+'건');
     setTxt('h-month',countUniq(claims,'date',ms,me)+'건');
-    setTxt('h-ret-today',countIn(returns,'date',t,t)+'건');
-    setTxt('h-ret-week',countIn(returns,'date',ws,we)+'건');
-    setTxt('h-ret-month',countIn(returns,'date',ms,me)+'건');
     setTxt('side-today-claim',countUniq(claims,'date',t,t)+'건');
     setTxt('side-today-return',countIn(returns,'date',t,t)+'건');
-    // 레이블 원복
     const todayLbl=document.querySelector('#h-today')?.closest('.status-item')?.querySelector('.status-item-label');
     if(todayLbl)todayLbl.textContent='금일 접수';
     const weekLbl=document.querySelector('#h-week')?.closest('.status-item')?.querySelector('.status-item-label');
     if(weekLbl)weekLbl.textContent='이번 주';
     const monthLbl=document.querySelector('#h-month')?.closest('.status-item')?.querySelector('.status-item-label');
     if(monthLbl)monthLbl.textContent='이번 달';
+    chartClaims=_chartMode==='today'
+      ?claims.filter(r=>normDate(r.date)===t)
+      :claims.filter(r=>{const v=normDate(r.date);return v>=ws&&v<=we;});
   }
   setTxt('side-today-done',countUniq(claims.filter(r=>normDate(r.donedate)===t),'donedate','1900','9999')+'건');
-  // 귀책별·처리유형 차트 (이번 주, 중복 주문번호 제외)
-  const wkUniq=[];const seenLib=new Set();
-  wkC.forEach(r=>{const k=r.orderno||String(r.id);if(!seenLib.has(k)){seenLib.add(k);wkUniq.push(r);}});
-  renderDonutChart('chart-liability','h-liability-list',countsByField(wkUniq,'liability'));
-  renderDonutChart('chart-type','h-type-list',countsByField(wkUniq,'type'));
+  const uniqChart=[];const seenChart=new Set();
+  chartClaims.forEach(r=>{const k=r.orderno||String(r.id);if(!seenChart.has(k)){seenChart.add(k);uniqChart.push(r);}});
+  renderDonutChart('chart-liability','h-liability-list',countsByField(uniqChart,'liability'));
+  renderDonutChart('chart-type','h-type-list',countsByField(uniqChart,'type'));
   renderWeeklyTrendChart(claims);
-  renderHomeClaimTable(claims);
   renderSideReturnList(returns.slice(0,5));
-  // 이번 달 KPI
   const monthClaims=claims.filter(r=>{const v=normDate(r.date);return v>=ms&&v<=me;});
-  const ltArr=monthClaims.map(r=>parseFloat(r.leadtime)).filter(v=>!isNaN(v)&&v>0);
+  const completedMonth=monthClaims.filter(r=>r.donedate&&r.indate);
+  const ltArr=completedMonth.map(r=>calcBusinessDays(r.indate,r.donedate)).filter(v=>v!==null&&v>=0);
   const avgLt=ltArr.length?(ltArr.reduce((a,b)=>a+b,0)/ltArr.length).toFixed(2):'-';
-  const sumVoc=monthClaims.reduce((s,r)=>s+(parseFloat(r.vocAmt)||0),0);
-  const sumCs=monthClaims.reduce((s,r)=>s+(parseFloat(r.csAmt)||0),0);
-  setTxt('kpi-leadtime',avgLt==='0.00'?'-':avgLt);
-  setTxt('kpi-vocamt',sumVoc>0?sumVoc.toLocaleString():'-');
-  setTxt('kpi-csamt',sumCs>0?sumCs.toLocaleString():'-');
+  const sumCostP=monthClaims.reduce((s,r)=>s+(parseFloat(r.costP)||0),0);
+  const sumCostRS=monthClaims.reduce((s,r)=>s+(parseFloat(r.costR)||0)+(parseFloat(r.costS)||0),0);
+  setTxt('kpi-leadtime',avgLt);
+  setTxt('kpi-vocamt',sumCostP>0?sumCostP.toLocaleString():'-');
+  setTxt('kpi-csamt',sumCostRS>0?sumCostRS.toLocaleString():'-');
+  renderSLATable(claims);
+  renderLeadtimeTable(claims);
 }
 function renderHomeClaimTable(claims){
   const tbody=document.getElementById('home-claim-tbody'),empty=document.getElementById('home-claim-empty');
@@ -1026,6 +1064,50 @@ function renderHomeClaimTable(claims){
   empty.style.display='none';
   const sorted=[...claims].sort((a,b)=>normDate(b.date).localeCompare(normDate(a.date)));
   tbody.innerHTML=sorted.slice(0,20).map(r=>`<tr><td>${normDate(r.date)||r.date||'-'}</td><td>${r.platform||'-'}</td><td style="font-size:11px;">${r.orderno||'-'}</td><td>${r.buyer||'-'}</td><td>${r.product||'-'}</td><td style="font-size:12px;">${r.issue||'-'}</td><td>${r.liability||'-'}</td><td>${r.type||'-'}</td><td>${r.status?'<span class="badge badge-'+r.status+'">'+r.status+'</span>':'-'}</td><td><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td></tr>`).join('');
+}
+function renderSLATable(claims){
+  const tbody=document.getElementById('sla-tbody');if(!tbody)return;
+  const months=[1,2,3,4,5,6,7,8,9,10,11,12];
+  const year=new Date().getFullYear();
+  const byMonth=months.map(m=>{
+    const ms=year+'-'+String(m).padStart(2,'0')+'-01';
+    const meD=new Date(year,m,0);const me=year+'-'+String(m).padStart(2,'0')+'-'+String(meD.getDate()).padStart(2,'0');
+    const mc=claims.filter(r=>{const v=normDate(r.date);return v>=ms&&v<=me;});
+    const ihaeng=mc.filter(r=>{const bd=calcBusinessDays(r.indate,r.donedate);return bd!==null&&bd<=4;}).length;
+    return{total:mc.length,ihaeng};
+  });
+  const totalAll=byMonth.reduce((s,v)=>s+v.total,0);
+  const ihaengAll=byMonth.reduce((s,v)=>s+v.ihaeng,0);
+  const pct=v=>v.total>0?(v.ihaeng/v.total*100).toFixed(1)+'%':'-';
+  const cs='padding:7px 10px;border:1px solid #f0f0ee;text-align:center;font-size:12px;';
+  const ls=cs+'font-weight:600;background:#f8f8f6;position:sticky;left:0;z-index:1;';
+  tbody.innerHTML=`
+    <tr><td style="${ls}">이행</td>${byMonth.map(v=>`<td style="${cs}color:#2e7d32;">${v.ihaeng||'-'}</td>`).join('')}<td style="${cs}font-weight:700;color:#2e7d32;">${ihaengAll||'-'}</td></tr>
+    <tr><td style="${ls}">이달</td>${byMonth.map(v=>`<td style="${cs}">${v.total||'-'}</td>`).join('')}<td style="${cs}font-weight:700;">${totalAll||'-'}</td></tr>
+    <tr><td style="${ls}">이행률</td>${byMonth.map(v=>`<td style="${cs}${v.total>0&&v.ihaeng/v.total>=0.7?'color:#2e7d32;':'color:#c62828;'}">${pct(v)}</td>`).join('')}<td style="${cs}font-weight:700;${totalAll>0&&ihaengAll/totalAll>=0.7?'color:#2e7d32;':'color:#c62828;'}">${totalAll>0?(ihaengAll/totalAll*100).toFixed(1)+'%':'-'}</td></tr>`;
+}
+function renderLeadtimeTable(claims){
+  const tbody=document.getElementById('leadtime-tbody');if(!tbody)return;
+  const year=new Date().getFullYear();
+  const months=[1,2,3,4,5,6,7,8,9,10,11,12];
+  const types=[...new Set(claims.map(r=>r.type).filter(v=>v))].sort((a,b)=>a.localeCompare(b,'ko'));
+  const allTypes=['(전체 평균)',...types];
+  const cs='padding:6px 10px;border:1px solid #f0f0ee;text-align:center;font-size:12px;';
+  const ls=cs+'font-weight:500;background:#f8f8f6;text-align:left;white-space:nowrap;position:sticky;left:0;z-index:1;min-width:130px;';
+  const avgFor=arr=>{
+    const bds=arr.filter(r=>r.donedate&&r.indate).map(r=>calcBusinessDays(r.indate,r.donedate)).filter(v=>v!==null&&v>=0);
+    return bds.length?(bds.reduce((a,b)=>a+b,0)/bds.length).toFixed(1):'-';
+  };
+  tbody.innerHTML=allTypes.map(tp=>{
+    const rowC=tp==='(전체 평균)'?claims:claims.filter(r=>r.type===tp);
+    const cells=months.map(m=>{
+      const ms=year+'-'+String(m).padStart(2,'0')+'-01';
+      const meD=new Date(year,m,0);const me=year+'-'+String(m).padStart(2,'0')+'-'+String(meD.getDate()).padStart(2,'0');
+      const mc=rowC.filter(r=>{const v=normDate(r.date);return v>=ms&&v<=me;});
+      return`<td style="${cs}${tp==='(전체 평균)'?'font-weight:600;background:#fafaf8;':''}">${avgFor(mc)}</td>`;
+    }).join('');
+    return`<tr><td style="${ls}${tp==='(전체 평균)'?'background:#f0f0ee;font-weight:700;':''}">${tp}</td>${cells}</tr>`;
+  }).join('');
 }
 function renderSideReturnList(returns){
   const el=document.getElementById('side-return-list');if(!el)return;
@@ -1313,6 +1395,24 @@ function renderClaimTable(){
     return`<tr style="background:${bg};">${cells}</tr>`;
   }).join('');
   initColResize();
+  requestAnimationFrame(()=>{
+    const tbl=document.getElementById('claim-sheet');if(!tbl)return;
+    const freezeCount=11;
+    tbl.querySelectorAll('tr').forEach(row=>{
+      const cells=row.querySelectorAll('th,td');
+      let left=0;
+      cells.forEach((cell,i)=>{
+        if(i<freezeCount){
+          cell.style.position='sticky';
+          cell.style.left=left+'px';
+          cell.style.zIndex=cell.tagName==='TH'?'5':'2';
+          if(cell.tagName==='TH')cell.style.background='#f6f6f4';
+          else if(!cell.style.background||cell.style.background==='inherit')cell.style.background='#fff';
+          left+=cell.offsetWidth||90;
+        }
+      });
+    });
+  });
 }
 // ===== 반품 CRUD =====
 function addReturn(){
@@ -1410,25 +1510,26 @@ function importClaims(input){
   reader.onload=e=>{
     const rows=parseCSV(e.target.result);
     if(rows.length<2){alert('데이터가 없습니다.');input.value='';return;}
-    // 첫 행이 헤더인지 확인 (작성일 컬럼에 날짜 형식이 아닌 경우 헤더로 판단)
-    const startRow=rows[0][1]&&/^\d{4}/.test(rows[0][1])?0:1;
+    const hasHeader=!rows[0][1]||!/^\d{4}/.test(rows[0][1]);
+    const startRow=hasHeader?1:0;
+    const HEADER_MAP={'발생 월':'month','발생월':'month','작성일':'date','클레임 인입일':'indate','인입일':'indate','배송 일자':'shipdate','배송일자':'shipdate','처리 완료일':'donedate','처리완료일':'donedate','인입 채널':'channel','인입채널':'channel','플랫폼':'platform','주문번호':'orderno','주문자명':'buyer','상품명':'product','옵션명':'option','상품 분류':'category','상품분류':'category','이슈별 분류':'issue','이슈별분류':'issue','귀책 주체':'liability','귀책주체':'liability','처리 유형':'type','처리유형':'type','클레임 성격':'nature','클레임성격':'nature','사유':'reason','회수 여부':'returnYn','회수여부':'returnYn','재출고 여부':'reshipYn','재출고여부':'reshipYn','사고 접수 여부':'accident','사고접수여부':'accident','처리 상태':'status','처리상태':'status','상품 비용':'costP','상품비용':'costP','회수 비용':'costR','회수비용':'costR','재출고 비용':'costS','재출고비용':'costS','처리 리드타임':'leadtime','처리리드타임':'leadtime','SLA':'sla'};
+    let colMap=null;
+    if(hasHeader){colMap={};rows[0].forEach((h,i)=>{const field=HEADER_MAP[h.trim()];if(field)colMap[i]=field;});}
     const newClaims=[];
     for(let i=startRow;i<rows.length;i++){
       const cols=rows[i];
-      if(cols.every(c=>!c))continue; // 빈 행 건너뜀
+      if(cols.every(c=>!c))continue;
       const rec={id:Date.now()+i};
-      CSV_MAP.forEach((field,idx)=>{
-        if(!field)return;
-        rec[field]=cols[idx]||'';
-      });
-      // 옵션명 없으면 기본값
+      if(colMap){Object.entries(colMap).forEach(([idx,field])=>{rec[field]=cols[+idx]||'';});}
+      else{CSV_MAP.forEach((field,idx)=>{if(!field)return;rec[field]=cols[idx]||'';});}
       if(!rec.option)rec.option='[옵션 지정 불가]';
+      ['costP','costR','costS'].forEach(f=>{if(rec[f])rec[f]=String(rec[f]).replace(/,/g,'');});
       newClaims.push(rec);
     }
     if(!newClaims.length){alert('가져올 데이터가 없습니다.');input.value='';return;}
     const existing=loadClaims();
     const merged=[...newClaims,...existing];
-    saveClaims(merged).then(()=>alert(`✅ ${newClaims.length}건을 가져왔습니다.`)).catch(e=>alert('오류: '+e));
+    saveClaims(merged).then(()=>alert('✅ '+newClaims.length+'건을 가져왔습니다.')).catch(err=>alert('오류: '+err));
     input.value='';
   };
   reader.readAsText(file,'UTF-8');
@@ -2686,8 +2787,9 @@ function toggleNoticeForm(){
 function addNotice(){
   const inp=document.getElementById('notice-input');if(!inp)return;
   const text=inp.value.trim();if(!text)return;
+  const imgUrl=(document.getElementById('notice-img-input')?.value||'').trim();
   const id=Date.now();
-  _fsSet('notices',id,{id,text,date:todayStr()}).catch(e=>console.error(e));
+  _fsSet('notices',id,{id,text,date:todayStr(),imgUrl}).catch(e=>console.error(e));
   toggleNoticeForm();
 }
 function deleteNotice(id){
@@ -2699,12 +2801,15 @@ function renderNotices(){
   const isAdmin=_currentUserId()==='chohee';
   if(!notices.length){el.innerHTML='<div style="color:#bbb;font-size:13px;padding:8px 0;">등록된 공지가 없습니다.</div>';return;}
   el.innerHTML=notices.map(n=>`
-    <div style="padding:9px 0;border-bottom:1px solid #f5f5f3;display:flex;align-items:flex-start;gap:8px;">
-      <div style="flex:1;">
-        <div style="font-size:13px;color:#333;line-height:1.55;white-space:pre-wrap;">${n.text}</div>
-        <div style="font-size:11px;color:#bbb;margin-top:3px;">${n.date}</div>
+    <div style="padding:9px 0;border-bottom:1px solid #f5f5f3;">
+      <div style="display:flex;align-items:flex-start;gap:8px;">
+        <div style="flex:1;">
+          <div style="font-size:13px;color:#333;line-height:1.55;white-space:pre-wrap;">${n.text}</div>
+          ${n.imgUrl?`<img src="${n.imgUrl}" alt="" style="margin-top:8px;max-width:100%;border-radius:8px;cursor:pointer;" onclick="window.open('${n.imgUrl}','_blank')" onerror="this.style.display='none'"/>`:''}
+          <div style="font-size:11px;color:#bbb;margin-top:3px;">${n.date}</div>
+        </div>
+        ${isAdmin?`<button onclick="deleteNotice(${n.id})" style="font-size:11px;padding:2px 6px;border:1px solid #fecaca;border-radius:4px;background:#fff;color:#dc2626;cursor:pointer;flex-shrink:0;">삭제</button>`:''}
       </div>
-      ${isAdmin?`<button onclick="deleteNotice(${n.id})" style="font-size:11px;padding:2px 6px;border:1px solid #fecaca;border-radius:4px;background:#fff;color:#dc2626;cursor:pointer;flex-shrink:0;">삭제</button>`:''}
     </div>`).join('');
 }
 
