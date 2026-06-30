@@ -251,6 +251,7 @@ tr:hover td{background:#fafafa;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -764,6 +765,7 @@ tr:hover td{background:#fafafa;}
         <th data-col="costP" style="border:1px solid #e0e0de;color:#555;font-weight:600;">상품비용</th>
         <th data-col="costR" style="border:1px solid #e0e0de;color:#555;font-weight:600;">회수비용</th>
         <th data-col="costS" style="border:1px solid #e0e0de;color:#555;font-weight:600;">재출고비용</th>
+        <th data-col="_img" style="border:1px solid #e0e0de;color:#555;font-weight:600;">첨부</th>
         <th data-col="_del" style="border:1px solid #e0e0de;color:#555;font-weight:600;">삭제</th>
       </tr>
     </thead>
@@ -876,6 +878,7 @@ window.addEventListener('beforeunload',()=>{
 const firebaseConfig={apiKey:"AIzaSyAREUe2xlsVblUgOCPosfs_QTIm1okVJLA",authDomain:"tounoulab.firebaseapp.com",projectId:"tounoulab",storageBucket:"tounoulab.firebasestorage.app",messagingSenderId:"493309183828",appId:"1:493309183828:web:48be81212472ccce5c2ac1"};
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
+const storage=firebase.storage();
 
 let _claimsData=[],_returnsData=[],_noticesData=[],_linksData=[];
 const loadClaims=()=>_claimsData;
@@ -898,7 +901,12 @@ function _activePage(){return localStorage.getItem('tuunu_page')||'home';}
 function setupFirebaseListeners(){
   let _claimSnapTimer=null;
   db.collection('claims').onSnapshot(snap=>{
-    _claimsData=snap.docs.map(d=>d.data()).sort((a,b)=>a.id-b.id);
+    _claimsData=snap.docs.map(d=>d.data()).sort((a,b)=>{
+      const ka=(normDate(a.date)||normDate(a.indate)||'');
+      const kb=(normDate(b.date)||normDate(b.indate)||'');
+      if(ka&&kb&&ka!==kb)return ka.localeCompare(kb);
+      return a.id-b.id;
+    });
     clearTimeout(_claimSnapTimer);
     _claimSnapTimer=setTimeout(()=>{
       if(_activePage()==='claim')renderClaimTable(true);
@@ -1339,9 +1347,10 @@ function initColResize(){
       const col=th.dataset.col;
       if(col&&col!=='_del'&&col!=='_lead'){
         const fb=document.createElement('button');
-        fb.className='th-filter-btn'+(claimFilters[col]?' active':'');
+        const _fa=claimFilters[col]instanceof Set?claimFilters[col].size>0:!!claimFilters[col];
+        fb.className='th-filter-btn'+(_fa?' active':'');
         fb.title='필터';
-        fb.textContent=claimFilters[col]?'▼':'⌄';
+        fb.textContent=_fa?'▼':'⌄';
         fb.addEventListener('click',e=>{e.stopPropagation();openColFilter(col,fb);});
         th.appendChild(fb);
       }
@@ -1361,7 +1370,7 @@ function initColResize(){
     // 필터 버튼 상태만 업데이트 (DOM 재생성 없이)
     table.querySelectorAll('.th-filter-btn').forEach(fb=>{
       const col=fb.closest('th')?.dataset.col;
-      if(col){fb.className='th-filter-btn'+(claimFilters[col]?' active':'');fb.textContent=claimFilters[col]?'▼':'⌄';}
+      if(col){const _fa2=claimFilters[col]instanceof Set?claimFilters[col].size>0:!!claimFilters[col];fb.className='th-filter-btn'+(_fa2?' active':'');fb.textContent=_fa2?'▼':'⌄';}
     });
   }
 }
@@ -1378,19 +1387,32 @@ function _cfpVals(col){
   if(col==='costP'||col==='costR'||col==='costS'){return[...new Set(claims.map(r=>r[col]||'').filter(v=>v))].sort((a,b)=>Number(a)-Number(b));}
   return[...new Set(claims.map(r=>r[col]||'').filter(v=>v))].sort((a,b)=>a.localeCompare(b,'ko'));
 }
+function _cfpSel(col){return claimFilters[col]instanceof Set?claimFilters[col]:new Set();}
 function _cfpRender(q){
   const list=document.getElementById('cfp-list');if(!list)return;
   const vals=_cfpVals(_cfpCol);
-  const cur=claimFilters[_cfpCol]||'';
+  const sel=_cfpSel(_cfpCol);
   const items=vals.filter(v=>!q||v.toLowerCase().includes(q.toLowerCase()));
+  const allSel=sel.size===0;
   list.innerHTML=[
-    `<div class="cfp-item${!cur?' sel':''}" onclick="_cfpSet('')">(전체)</div>`,
-    ...items.map(v=>`<div class="cfp-item${cur===v?' sel':''}" onclick="_cfpSet('${v.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">${v}</div>`)
+    `<div class="cfp-item${allSel?' sel':''}" onclick="_cfpToggleAll()">${allSel?'☑':'☐'} (전체)</div>`,
+    ...items.map(v=>{
+      const checked=sel.has(v);
+      const esc=v.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return`<div class="cfp-item${checked?' sel':''}" onclick="_cfpToggle('${esc}')">${checked?'☑':'☐'} ${v||'(비어있음)'}</div>`;
+    })
   ].join('');
 }
-function _cfpSet(val){
-  claimFilters[_cfpCol]=val;
-  document.getElementById('cfp').style.display='none';
+function _cfpToggle(val){
+  const sel=_cfpSel(_cfpCol);
+  if(sel.has(val))sel.delete(val);else sel.add(val);
+  if(sel.size===0)delete claimFilters[_cfpCol];else claimFilters[_cfpCol]=sel;
+  _cfpRender(document.getElementById('cfp-q')?.value||'');
+  renderClaimTable();
+}
+function _cfpToggleAll(){
+  delete claimFilters[_cfpCol];
+  _cfpRender(document.getElementById('cfp-q')?.value||'');
   renderClaimTable();
 }
 function openColFilter(col,btn){
@@ -1412,8 +1434,46 @@ function openColFilter(col,btn){
   if(q)q.focus();
 }
 function closeColFilter(){document.getElementById('cfp').style.display='none';_cfpCol=null;}
-function resetColFilter(){if(_cfpCol)claimFilters[_cfpCol]='';closeColFilter();renderClaimTable();}
+function resetColFilter(){if(_cfpCol)delete claimFilters[_cfpCol];closeColFilter();renderClaimTable();}
 function resetAllFilters(){claimFilters={};renderClaimTable();}
+
+// ===== 첨부 이미지 (Firebase Storage) =====
+function attachReasonImg(claimId){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';
+  inp.onchange=async()=>{
+    const file=inp.files[0];if(!file)return;
+    if(file.size>10*1024*1024){alert('10MB 이하 이미지만 첨부 가능합니다.');return;}
+    try{
+      const ref=storage.ref(`claim-images/${claimId}/${Date.now()}_${file.name}`);
+      const snap=await ref.put(file);
+      const url=await snap.ref.getDownloadURL();
+      await _fsUpdate('claims',claimId,{reasonImgUrl:url});
+    }catch(e){alert('업로드 실패: '+e.message);}
+  };
+  inp.click();
+}
+function deleteReasonImg(claimId){
+  if(!confirm('첨부 이미지를 삭제할까요?'))return;
+  _fsUpdate('claims',claimId,{reasonImgUrl:''});
+}
+function viewReasonImg(url){
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+  overlay.onclick=()=>overlay.remove();
+  const img=document.createElement('img');
+  img.src=url;
+  img.style.cssText='max-width:90vw;max-height:88vh;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,0.5);cursor:default;';
+  img.onclick=e=>e.stopPropagation();
+  const bar=document.createElement('div');
+  bar.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:12px;';
+  bar.innerHTML=`<a href="${url}" download target="_blank" style="padding:8px 20px;background:#fff;color:#1a1a1a;border-radius:8px;font-size:13px;text-decoration:none;font-weight:600;" onclick="event.stopPropagation()">⬇ 다운로드</a>
+    <button onclick="document.body.querySelector('.img-overlay').remove()" style="padding:8px 20px;background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;">닫기</button>`;
+  overlay.className='img-overlay';
+  overlay.appendChild(img);
+  overlay.appendChild(bar);
+  document.body.appendChild(overlay);
+}
 
 // 전체 삭제
 function confirmClearClaims(){
@@ -1431,11 +1491,12 @@ function toggleGroupByOrder(){
 function getFilteredClaims(){
   let claims=loadClaims();
   Object.entries(claimFilters).forEach(([key,val])=>{
-    if(!val)return;
+    const sel=val instanceof Set?val:(val?new Set([val]):null);
+    if(!sel||sel.size===0)return;
     if(key==='_sla'){
-      claims=claims.filter(r=>{const bd=calcBusinessDays(r.indate,r.donedate);return calcSLA(bd).text===val;});
+      claims=claims.filter(r=>{const bd=calcBusinessDays(r.indate,r.donedate);return sel.has(calcSLA(bd).text);});
     }else{
-      claims=claims.filter(r=>(r[key]||'').toLowerCase()===val.toLowerCase()||(r[key]||'').includes(val));
+      claims=claims.filter(r=>sel.has(r[key]||''));
     }
   });
   if(_groupByOrder){
@@ -1466,7 +1527,7 @@ function _doRenderClaimTable(){
   if(!tbody)return;
   const allClaims=loadClaims(),claims=getFilteredClaims();
   const badge=document.getElementById('claim-count-badge');
-  const hasFilter=Object.values(claimFilters).some(v=>v);
+  const hasFilter=Object.values(claimFilters).some(v=>v instanceof Set?v.size>0:!!v);
   const uniqCnt=new Set(allClaims.map(r=>r.orderno||String(r.id))).size;
   const filtUniq=new Set(claims.map(r=>r.orderno||String(r.id))).size;
   if(badge)badge.textContent=hasFilter||_groupByOrder
@@ -1497,6 +1558,15 @@ function _doRenderClaimTable(){
       const disp=(!isNaN(num)&&val)?num.toLocaleString():'-';
       cells+=`<td class="tdc" data-id="${r.id}" data-field="${key}" data-val="${val}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)">${disp}</td>`;
     });
+    if(r.reasonImgUrl){
+      cells+=`<td class="tdc" style="white-space:nowrap;">
+        <span style="cursor:pointer;font-size:16px;" title="이미지 보기" onclick="viewReasonImg('${r.reasonImgUrl}')">🖼️</span>
+        <a href="${r.reasonImgUrl}" download style="font-size:11px;color:#1a73e8;text-decoration:none;margin-left:4px;" target="_blank">↓</a>
+        <span style="cursor:pointer;font-size:10px;color:#aaa;margin-left:4px;" title="삭제" onclick="deleteReasonImg(${r.id})">✕</span>
+      </td>`;
+    }else{
+      cells+=`<td class="tdc"><button onclick="attachReasonImg(${r.id})" style="padding:2px 8px;font-size:11px;border:1px solid #d0d0ce;border-radius:5px;background:#fafaf8;cursor:pointer;color:#555;">📎</button></td>`;
+    }
     cells+=`<td class="tdc"><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
     return`<tr style="background:${bg};">${cells}</tr>`;
   }).join('');
@@ -1662,14 +1732,27 @@ function exportClaimsXLSX(){
   XLSX.utils.book_append_sheet(wb,ws,'클레임현황');
   XLSX.writeFile(wb,'클레임현황_'+todayStr()+'.xlsx');
 }
+function _xlsxDateToISO(v){
+  if(!v&&v!==0)return'';
+  if(v instanceof Date){const y=v.getFullYear(),m=v.getMonth()+1,d=v.getDate();return y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');}
+  const n=Number(v);
+  if(!isNaN(n)&&n>10000&&n<100000){
+    // Excel 시리얼 날짜 → ISO 변환
+    const days=n>=60?n-2:n-1;
+    const dt=new Date(Date.UTC(1900,0,1)+days*86400000);
+    return dt.toISOString().slice(0,10);
+  }
+  return String(v||'');
+}
+const _XLSX_DATE_FIELDS=new Set(['date','indate','donedate','shipdate']);
 function importClaimsXLSX(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=e=>{
     try{
-      const wb=XLSX.read(e.target.result,{type:'array'});
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
       const ws=wb.Sheets[wb.SheetNames[0]];
-      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:'',raw:true});
       if(!rows.length){alert('데이터가 없습니다.');input.value='';return;}
       const HM={'발생 월':'month','발생월':'month','작성일':'date',
         '클레임 인입일':'indate','인입일':'indate','배송 일자':'shipdate','배송일자':'shipdate',
@@ -1694,8 +1777,11 @@ function importClaimsXLSX(input){
         const rec={id:Date.now()+i};
         Object.entries(row).forEach(([h,v])=>{
           const field=HM[String(h).trim()];
-          if(field)rec[field]=String(v||'');
+          if(!field)return;
+          rec[field]=_XLSX_DATE_FIELDS.has(field)?_xlsxDateToISO(v):String(v||'');
         });
+        // 날짜 필드 혹시 누락된 경우 재처리
+        _XLSX_DATE_FIELDS.forEach(f=>{if(rec[f])rec[f]=_xlsxDateToISO(rec[f]);});
         if(!rec.option)rec.option='[옵션 지정 불가]';
         ['costP','costR','costS'].forEach(f=>{if(rec[f])rec[f]=String(rec[f]).replace(/,/g,'');});
         if(Object.keys(rec).length>1)newClaims.push(rec);
