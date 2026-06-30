@@ -167,6 +167,29 @@ tr:hover td{background:#fafafa;}
 #claim-sheet td[onclick]:hover{background:rgba(26,115,232,0.06) !important;}
 .col-rz{position:absolute;right:0;top:0;height:100%;width:6px;cursor:col-resize;z-index:2;}
 .col-rz:hover,.col-rz.dragging{background:rgba(26,115,232,0.35);}
+/* ===== 반응형 ===== */
+@media(max-width:960px){
+  .home-layout{grid-template-columns:1fr;}
+  .sub-grid{grid-template-columns:1fr 1fr;}
+  .gnb-brand{margin-right:14px;font-size:16px;}
+  .gnb-nav-item{padding:6px 11px;font-size:14px;}
+  .page-inner{padding:16px;}
+}
+@media(max-width:680px){
+  .gnb-inner{padding:0 10px;height:50px;}
+  .gnb-logo{width:26px;height:26px;}
+  .gnb-brand{font-size:15px;margin-right:8px;}
+  .gnb-nav-item{padding:5px 9px;font-size:13px;}
+  .page-inner{padding:10px;}
+  .sub-grid{grid-template-columns:1fr;}
+  .home-layout{gap:10px;}
+  .status-item-value{font-size:20px;}
+  .status-row{flex-wrap:wrap;}
+  .status-item{flex:1 1 42%;}
+  .grid2{grid-template-columns:1fr;}
+  .grid3{grid-template-columns:1fr 1fr;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -271,6 +294,24 @@ tr:hover td{background:#fafafa;}
           </div>
           <div id="h-filter-badge" style="display:none;padding:6px 18px 10px;font-size:12px;color:#1a73e8;font-weight:500;"></div>
         </div>
+        <!-- 이번 달 리드타임/금액 -->
+        <div class="sub-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;" id="monthly-kpi-row">
+          <div class="sub-card">
+            <div class="sub-card-title">이번 달 평균 리드타임</div>
+            <div style="font-size:26px;font-weight:700;color:#1a1a1a;" id="kpi-leadtime">-</div>
+            <div style="font-size:11px;color:#aaa;margin-top:3px;">일 (영업일 기준)</div>
+          </div>
+          <div class="sub-card">
+            <div class="sub-card-title">VOC 상품 금액</div>
+            <div style="font-size:22px;font-weight:700;color:#1a1a1a;" id="kpi-vocamt">-</div>
+            <div style="font-size:11px;color:#aaa;margin-top:3px;">원 (이번 달 누계)</div>
+          </div>
+          <div class="sub-card">
+            <div class="sub-card-title">CS 안내 유지 금액</div>
+            <div style="font-size:22px;font-weight:700;color:#1a1a1a;" id="kpi-csamt">-</div>
+            <div style="font-size:11px;color:#aaa;margin-top:3px;">원 (이번 달 누계)</div>
+          </div>
+        </div>
         <!-- 서브 그리드 -->
         <div class="sub-grid">
           <div class="sub-card">
@@ -320,6 +361,22 @@ tr:hover td{background:#fafafa;}
       </div>
       <!-- 사이드바 -->
       <div>
+        <!-- 노션 바로가기 링크 -->
+        <div class="side-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <span class="side-card-title" style="margin-bottom:0;">🔗 바로가기</span>
+            <button onclick="toggleLinkForm()" id="btn-link-add" style="font-size:11px;padding:3px 8px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;display:none;">+ 추가</button>
+          </div>
+          <div id="link-form" style="display:none;margin-bottom:10px;">
+            <input type="text" id="link-name-input" placeholder="링크 이름" style="margin-bottom:6px;font-size:13px;padding:7px 10px;border:1px solid #e0e0de;border-radius:7px;width:100%;box-sizing:border-box;outline:none;"/>
+            <input type="url" id="link-url-input" placeholder="https://..." style="margin-bottom:6px;font-size:13px;padding:7px 10px;border:1px solid #e0e0de;border-radius:7px;width:100%;box-sizing:border-box;outline:none;"/>
+            <div style="display:flex;gap:6px;">
+              <button onclick="addLink()" style="flex:1;padding:5px;font-size:12px;border:none;border-radius:6px;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;">추가</button>
+              <button onclick="toggleLinkForm()" style="flex:1;padding:5px;font-size:12px;border:1px solid #ddd;border-radius:6px;background:#f5f5f3;color:#666;cursor:pointer;font-family:inherit;">취소</button>
+            </div>
+          </div>
+          <div id="link-list"></div>
+        </div>
         <div class="side-card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <span class="side-card-title" style="margin-bottom:0;">공지 사항</span>
@@ -560,6 +617,13 @@ tr:hover td{background:#fafafa;}
       <div><label>회수 비용</label><input type="number" id="c-cost-return" min="0"/></div>
       <div><label>재출고 비용</label><input type="number" id="c-cost-reship" min="0"/></div>
     </div>
+    <div class="divider"></div>
+    <div class="section-label">리드타임 / 금액</div>
+    <div class="grid3 form-row">
+      <div><label>리드타임 (일)</label><input type="number" id="c-leadtime" min="0" step="0.1" placeholder="0.0"/></div>
+      <div><label>VOC 상품 금액</label><input type="number" id="c-vocamt" min="0" placeholder="0"/></div>
+      <div><label>CS 안내 유지 금액</label><input type="number" id="c-csamt" min="0" placeholder="0"/></div>
+    </div>
     <div style="display:flex;gap:10px;margin-top:8px;">
       <button class="btn-primary" onclick="addClaim()">등록</button>
       <button class="btn-secondary" onclick="closeClaimModal()">취소</button>
@@ -722,7 +786,7 @@ const firebaseConfig={apiKey:"AIzaSyAREUe2xlsVblUgOCPosfs_QTIm1okVJLA",authDomai
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
-let _claimsData=[],_returnsData=[],_noticesData=[];
+let _claimsData=[],_returnsData=[],_noticesData=[],_linksData=[];
 const loadClaims=()=>_claimsData;
 const loadReturns=()=>_returnsData;
 
@@ -755,6 +819,10 @@ function setupFirebaseListeners(){
     _noticesData=snap.docs.map(d=>d.data()).sort((a,b)=>b.id-a.id);
     renderNotices();
   },err=>console.error('notices listener:',err));
+  db.collection('links').onSnapshot(snap=>{
+    _linksData=snap.docs.map(d=>d.data()).sort((a,b)=>a.id-b.id);
+    renderLinks();
+  },err=>console.error('links listener:',err));
 }
 // ===== 날짜 헬퍼 =====
 function todayStr(){return new Date().toISOString().slice(0,10);}
@@ -942,6 +1010,15 @@ function renderHomeDashboard(){
   renderWeeklyTrendChart(claims);
   renderHomeClaimTable(claims);
   renderSideReturnList(returns.slice(0,5));
+  // 이번 달 KPI
+  const monthClaims=claims.filter(r=>{const v=normDate(r.date);return v>=ms&&v<=me;});
+  const ltArr=monthClaims.map(r=>parseFloat(r.leadtime)).filter(v=>!isNaN(v)&&v>0);
+  const avgLt=ltArr.length?(ltArr.reduce((a,b)=>a+b,0)/ltArr.length).toFixed(2):'-';
+  const sumVoc=monthClaims.reduce((s,r)=>s+(parseFloat(r.vocAmt)||0),0);
+  const sumCs=monthClaims.reduce((s,r)=>s+(parseFloat(r.csAmt)||0),0);
+  setTxt('kpi-leadtime',avgLt==='0.00'?'-':avgLt);
+  setTxt('kpi-vocamt',sumVoc>0?sumVoc.toLocaleString():'-');
+  setTxt('kpi-csamt',sumCs>0?sumCs.toLocaleString():'-');
 }
 function renderHomeClaimTable(claims){
   const tbody=document.getElementById('home-claim-tbody'),empty=document.getElementById('home-claim-empty');
@@ -1016,7 +1093,7 @@ function addClaim(){
   const date=document.getElementById('c-date').value;
   if(!date){alert('작성일을 입력해 주세요.');return;}
   const optionVal=document.getElementById('c-option').value.trim()||'[옵션 지정 불가]';
-  const fields={date,month:document.getElementById('c-month').value||date.slice(0,7),indate:document.getElementById('c-indate').value,shipdate:document.getElementById('c-shipdate').value,channel:document.getElementById('c-channel').value,platform:document.getElementById('c-platform').value,orderno:document.getElementById('c-orderno').value,buyer:document.getElementById('c-buyer').value,product:document.getElementById('c-product').value,option:optionVal,category:document.getElementById('c-category').value,issue:document.getElementById('c-issue').value,liability:document.getElementById('c-liability').value,type:document.getElementById('c-type').value,nature:document.getElementById('c-nature').value,reason:document.getElementById('c-reason').value,returnYn:document.getElementById('c-return-yn').value,reshipYn:document.getElementById('c-reship-yn').value,accident:document.getElementById('c-accident').value,status:document.getElementById('c-status').value,costP:document.getElementById('c-cost-product').value,costR:document.getElementById('c-cost-return').value,costS:document.getElementById('c-cost-reship').value};
+  const fields={date,month:document.getElementById('c-month').value||date.slice(0,7),indate:document.getElementById('c-indate').value,shipdate:document.getElementById('c-shipdate').value,channel:document.getElementById('c-channel').value,platform:document.getElementById('c-platform').value,orderno:document.getElementById('c-orderno').value,buyer:document.getElementById('c-buyer').value,product:document.getElementById('c-product').value,option:optionVal,category:document.getElementById('c-category').value,issue:document.getElementById('c-issue').value,liability:document.getElementById('c-liability').value,type:document.getElementById('c-type').value,nature:document.getElementById('c-nature').value,reason:document.getElementById('c-reason').value,returnYn:document.getElementById('c-return-yn').value,reshipYn:document.getElementById('c-reship-yn').value,accident:document.getElementById('c-accident').value,status:document.getElementById('c-status').value,costP:document.getElementById('c-cost-product').value,costR:document.getElementById('c-cost-return').value,costS:document.getElementById('c-cost-reship').value,leadtime:document.getElementById('c-leadtime').value,vocAmt:document.getElementById('c-vocamt').value,csAmt:document.getElementById('c-csamt').value};
   if(_editClaimId){
     _fsUpdate('claims',_editClaimId,fields).catch(e=>console.error(e));
   }else{
@@ -1034,7 +1111,7 @@ function deleteClaim(id){
   _fsDelete('claims',id).catch(e=>console.error(e));
 }
 function clearClaimForm(){
-  ['c-month','c-indate','c-shipdate','c-channel','c-platform','c-orderno','c-buyer','c-product','c-option','c-category','c-issue','c-liability','c-type','c-nature','c-reason','c-return-yn','c-reship-yn','c-accident','c-status','c-cost-product','c-cost-return','c-cost-reship'].forEach(id=>{
+  ['c-month','c-indate','c-shipdate','c-channel','c-platform','c-orderno','c-buyer','c-product','c-option','c-category','c-issue','c-liability','c-type','c-nature','c-reason','c-return-yn','c-reship-yn','c-accident','c-status','c-cost-product','c-cost-return','c-cost-reship','c-leadtime','c-vocamt','c-csamt'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     el.value='';if(el._sdInput)el._sdInput.value='';
   });
@@ -1056,7 +1133,8 @@ const CF={
   reason:{type:'text'},
   returnYn:{type:'select',opts:['Y','N']},reshipYn:{type:'select',opts:['Y','N']},accident:{type:'select',opts:['Y','N']},
   status:{type:'select',opts:['처리 중','처리 완료']},
-  costP:{type:'number'},costR:{type:'number'},costS:{type:'number'}
+  costP:{type:'number'},costR:{type:'number'},costS:{type:'number'},
+  leadtime:{type:'number'},vocAmt:{type:'number'},csAmt:{type:'number'}
 };
 const CF_ORDER=['month','date','indate','donedate','channel','platform','orderno','buyer','product','option','category','issue','liability','type','reason','returnYn','reshipYn','accident','status'];
 
@@ -2563,6 +2641,38 @@ function initSearchables(){
   ['c-channel','c-platform','c-category','c-issue','c-liability','c-type','c-nature','c-return-yn','c-reship-yn','c-accident','c-status','r-opened'].forEach(makeSearchable);
 }
 
+// ===== 바로가기 링크 =====
+function toggleLinkForm(){
+  const f=document.getElementById('link-form');if(!f)return;
+  const show=f.style.display==='none';
+  f.style.display=show?'':'none';
+  if(show){document.getElementById('link-name-input').value='';document.getElementById('link-url-input').value='';document.getElementById('link-name-input').focus();}
+}
+function addLink(){
+  const name=document.getElementById('link-name-input').value.trim();
+  const url=document.getElementById('link-url-input').value.trim();
+  if(!name||!url){alert('이름과 URL을 모두 입력해 주세요.');return;}
+  const id=Date.now();
+  _fsSet('links',id,{id,name,url}).catch(e=>console.error(e));
+  toggleLinkForm();
+}
+function deleteLink(id){
+  _fsDelete('links',id).catch(e=>console.error(e));
+}
+function renderLinks(){
+  const el=document.getElementById('link-list');if(!el)return;
+  const isAdmin=_currentUserId()==='chohee';
+  if(!_linksData.length){
+    el.innerHTML='<div style="color:#bbb;font-size:13px;padding:4px 0;">등록된 링크가 없습니다.</div>';return;
+  }
+  el.innerHTML=_linksData.map(l=>`
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f5f5f3;">
+      <a href="${l.url}" target="_blank" rel="noopener" style="flex:1;font-size:13px;color:#1a1a1a;text-decoration:none;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${l.url}">
+        <span style="margin-right:4px;">↗</span>${l.name}
+      </a>
+      ${isAdmin?`<button onclick="deleteLink(${l.id})" style="font-size:11px;padding:2px 6px;border:1px solid #fecaca;border-radius:4px;background:#fff;color:#dc2626;cursor:pointer;flex-shrink:0;">삭제</button>`:''}
+    </div>`).join('');
+}
 // ===== 공지 사항 =====
 // ===== 공지 사항 =====
 function loadNotices(){return _noticesData;}
@@ -2624,6 +2734,8 @@ function _updateGnbUser(){
   if(el){el.textContent=u?u.name:'';el.style.display=u?'':'none';}
   var noticeBtn=document.getElementById('btn-notice-add');
   if(noticeBtn)noticeBtn.style.display=(u&&u.id==='chohee')?'':'none';
+  var linkBtn=document.getElementById('btn-link-add');
+  if(linkBtn)linkBtn.style.display=(u&&u.id==='chohee')?'':'none';
 }
 
 function submitLogin(){
