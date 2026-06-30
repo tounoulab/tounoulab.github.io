@@ -110,7 +110,6 @@ textarea{resize:vertical;min-height:60px;}
 /* Table */
 .table-wrap{overflow-x:auto;}
 #claim-scroll-wrap{will-change:scroll-position;-webkit-overflow-scrolling:touch;}
-#claim-sheet{table-layout:fixed;}
 table{width:100%;border-collapse:collapse;font-size:13px;min-width:580px;}
 th{background:#f8f8f6;padding:9px 12px;text-align:left;font-weight:600;color:#888;border-bottom:1px solid #e8e8e6;white-space:nowrap;font-size:12px;}
 td{padding:9px 12px;border-bottom:1px solid #f5f5f3;color:#333;vertical-align:middle;}
@@ -1439,83 +1438,136 @@ function closeColFilter(){document.getElementById('cfp').style.display='none';_c
 function resetColFilter(){if(_cfpCol)delete claimFilters[_cfpCol];closeColFilter();renderClaimTable();}
 function resetAllFilters(){claimFilters={};renderClaimTable();}
 
-// ===== 첨부 이미지 (Firestore base64 압축 저장) =====
+// ===== 첨부 이미지 (다중, Firestore base64 저장) =====
 function _compressImgToBase64(file,maxPx,quality){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
     reader.onload=e=>{
-      const src=e.target.result;
       const imgEl=new Image();
       imgEl.onload=()=>{
         let w=imgEl.width,h=imgEl.height;
-        if(w>maxPx||h>maxPx){
-          if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}
-          else{w=Math.round(w*maxPx/h);h=maxPx;}
-        }
+        if(w>maxPx||h>maxPx){if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}else{w=Math.round(w*maxPx/h);h=maxPx;}}
         const canvas=document.createElement('canvas');
         canvas.width=w;canvas.height=h;
         canvas.getContext('2d').drawImage(imgEl,0,0,w,h);
         resolve(canvas.toDataURL('image/jpeg',quality));
       };
-      imgEl.onerror=reject;
-      imgEl.src=src;
+      imgEl.onerror=reject;imgEl.src=e.target.result;
     };
-    reader.onerror=reject;
-    reader.readAsDataURL(file);
+    reader.onerror=reject;reader.readAsDataURL(file);
   });
+}
+// 클레임의 이미지 배열 반환 (구버전 reasonImgUrl 호환)
+function _getImgUrls(claimId){
+  const r=_claimsData.find(x=>String(x.id)===String(claimId));
+  if(!r)return[];
+  if(Array.isArray(r.reasonImgUrls)&&r.reasonImgUrls.length)return r.reasonImgUrls;
+  if(r.reasonImgUrl)return[r.reasonImgUrl];
+  return[];
 }
 function attachReasonImg(claimId){
   const inp=document.createElement('input');
-  inp.type='file';inp.accept='image/*';
+  inp.type='file';inp.accept='image/*';inp.multiple=true;
   inp.onchange=async()=>{
-    const file=inp.files[0];if(!file)return;
-    if(file.size>30*1024*1024){alert('30MB 이하 이미지만 첨부 가능합니다.');return;}
+    const files=[...inp.files];if(!files.length)return;
+    const oversize=files.find(f=>f.size>30*1024*1024);
+    if(oversize){alert('각 파일은 30MB 이하만 가능합니다.');return;}
     try{
-      // 버튼 상태 표시
-      const btnEls=document.querySelectorAll(`button[onclick="attachReasonImg(${claimId})"]`);
+      const btnEls=document.querySelectorAll(`[data-attach-id="${claimId}"]`);
       btnEls.forEach(b=>{b.textContent='⏳';b.disabled=true;});
-      const b64=await _compressImgToBase64(file,800,0.7);
-      await _fsUpdate('claims',claimId,{reasonImgUrl:b64});
+      const newB64s=await Promise.all(files.map(f=>_compressImgToBase64(f,800,0.7)));
+      const existing=_getImgUrls(claimId);
+      const merged=[...existing,...newB64s];
+      // 구버전 필드 정리 + 새 배열 저장
+      await db.collection('claims').where('id','==',claimId).limit(1).get().then(async snap=>{
+        if(snap.empty)return;
+        await snap.docs[0].ref.update({reasonImgUrls:merged,reasonImgUrl:firebase.firestore.FieldValue.delete()});
+      });
     }catch(e){alert('이미지 저장 실패: '+e.message);console.error(e);}
   };
   inp.click();
 }
-function deleteReasonImg(claimId){
-  if(!confirm('첨부 이미지를 삭제할까요?'))return;
-  _fsUpdate('claims',claimId,{reasonImgUrl:''});
+function deleteReasonImg(claimId,idx){
+  if(!confirm('이미지를 삭제할까요?'))return;
+  const urls=_getImgUrls(claimId);
+  if(idx===undefined){
+    // 전체 삭제
+    db.collection('claims').where('id','==',claimId).limit(1).get().then(snap=>{
+      if(!snap.empty)snap.docs[0].ref.update({reasonImgUrls:[],reasonImgUrl:firebase.firestore.FieldValue.delete()});
+    });
+  }else{
+    urls.splice(idx,1);
+    db.collection('claims').where('id','==',claimId).limit(1).get().then(snap=>{
+      if(!snap.empty)snap.docs[0].ref.update({reasonImgUrls:urls,reasonImgUrl:firebase.firestore.FieldValue.delete()});
+    });
+  }
+  // 열려있는 갤러리 닫기
+  document.querySelector('.img-gallery-overlay')?.remove();
 }
-function _getReasonImgUrl(claimId){
-  const r=_claimsData.find(x=>String(x.id)===String(claimId));
-  return r?.reasonImgUrl||'';
-}
-function downloadReasonImg(claimId){
-  const url=_getReasonImgUrl(claimId);if(!url)return;
-  const a=document.createElement('a');a.href=url;a.download='claim-image.jpg';a.click();
-}
-function viewReasonImg(claimId){
-  const url=_getReasonImgUrl(claimId);if(!url)return;
+function viewReasonImg(claimId,startIdx){
+  const urls=_getImgUrls(claimId);if(!urls.length)return;
+  let cur=startIdx||0;
   const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
-  overlay.onclick=()=>overlay.remove();
+  overlay.className='img-gallery-overlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;';
+  overlay.onclick=e=>{if(e.target===overlay)overlay.remove();};
+
+  const counter=document.createElement('div');
+  counter.style.cssText='color:#fff;font-size:13px;margin-bottom:12px;opacity:0.7;';
+
+  const imgWrap=document.createElement('div');
+  imgWrap.style.cssText='position:relative;display:flex;align-items:center;gap:16px;';
+
   const img=document.createElement('img');
-  img.src=url;
-  img.style.cssText='max-width:90vw;max-height:88vh;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,0.5);cursor:default;';
-  img.onclick=e=>e.stopPropagation();
+  img.style.cssText='max-width:82vw;max-height:78vh;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,0.5);display:block;';
+
+  const btnPrev=document.createElement('button');
+  btnPrev.innerHTML='&#8249;';
+  btnPrev.style.cssText='font-size:36px;color:#fff;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+
+  const btnNext=document.createElement('button');
+  btnNext.innerHTML='&#8250;';
+  btnNext.style.cssText=btnPrev.style.cssText;
+
+  function showImg(i){
+    cur=i;
+    img.src=urls[cur];
+    counter.textContent=`${cur+1} / ${urls.length}장`;
+    btnPrev.style.visibility=cur>0?'visible':'hidden';
+    btnNext.style.visibility=cur<urls.length-1?'visible':'hidden';
+  }
+  btnPrev.onclick=e=>{e.stopPropagation();if(cur>0)showImg(cur-1);};
+  btnNext.onclick=e=>{e.stopPropagation();if(cur<urls.length-1)showImg(cur+1);};
+
+  imgWrap.appendChild(btnPrev);imgWrap.appendChild(img);imgWrap.appendChild(btnNext);
+
   const bar=document.createElement('div');
-  bar.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:12px;';
+  bar.style.cssText='display:flex;gap:10px;margin-top:16px;';
+
   const dlBtn=document.createElement('button');
   dlBtn.textContent='⬇ 다운로드';
-  dlBtn.style.cssText='padding:8px 20px;background:#fff;color:#1a1a1a;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;border:none;';
-  dlBtn.onclick=e=>{e.stopPropagation();downloadReasonImg(claimId);};
+  dlBtn.style.cssText='padding:8px 18px;background:#fff;color:#1a1a1a;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;border:none;';
+  dlBtn.onclick=e=>{e.stopPropagation();const a=document.createElement('a');a.href=urls[cur];a.download=`claim-${claimId}-${cur+1}.jpg`;a.click();};
+
+  const delBtn=document.createElement('button');
+  delBtn.textContent='🗑 이 사진 삭제';
+  delBtn.style.cssText='padding:8px 18px;background:rgba(220,50,50,0.8);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;';
+  delBtn.onclick=e=>{e.stopPropagation();deleteReasonImg(claimId,cur);};
+
+  const addBtn=document.createElement('button');
+  addBtn.textContent='📎 추가 첨부';
+  addBtn.style.cssText='padding:8px 18px;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;';
+  addBtn.onclick=e=>{e.stopPropagation();overlay.remove();attachReasonImg(claimId);};
+
   const closeBtn=document.createElement('button');
   closeBtn.textContent='닫기';
-  closeBtn.style.cssText='padding:8px 20px;background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;';
+  closeBtn.style.cssText='padding:8px 18px;background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;';
   closeBtn.onclick=e=>{e.stopPropagation();overlay.remove();};
-  bar.appendChild(dlBtn);bar.appendChild(closeBtn);
-  overlay.className='img-overlay';
-  overlay.appendChild(img);
-  overlay.appendChild(bar);
+
+  bar.appendChild(dlBtn);bar.appendChild(addBtn);bar.appendChild(delBtn);bar.appendChild(closeBtn);
+  overlay.appendChild(counter);overlay.appendChild(imgWrap);overlay.appendChild(bar);
   document.body.appendChild(overlay);
+  showImg(cur);
 }
 
 // 전체 삭제
@@ -1600,7 +1652,11 @@ function _buildClaimRow(r,i){
   const bg=i%2===0?'#fff':'#fafaf8';
   let cells='';
   CF_ORDER.forEach(key=>{
-    const f=CF[key],val=r[key]||'';
+    const f=CF[key];
+    let raw=r[key]||'';
+    // 날짜 필드: 저장된 값이 시리얼 숫자든 문자열이든 ISO로 변환해서 표시
+    if(_XLSX_DATE_FIELDS&&_XLSX_DATE_FIELDS.has(key)&&raw){raw=_xlsxDateToISO(raw)||raw;}
+    const val=raw;
     const isLeft=f.align==='left';
     let disp=val||'-';
     if(key==='orderno'&&r._grpCnt>1)disp+=` <span style="background:#1a73e8;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;">${r._grpCnt}건</span>`;
@@ -1615,15 +1671,16 @@ function _buildClaimRow(r,i){
     const disp=(!isNaN(num)&&val)?num.toLocaleString():'-';
     cells+=`<td class="tdc" data-id="${r.id}" data-field="${key}" data-val="${val}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)">${disp}</td>`;
   });
-  // 이미지: base64를 onclick에 직접 넣지 않고 ID로 참조 (성능 핵심)
-  if(r.reasonImgUrl){
+  // 이미지: ID로만 참조 (base64 직접 삽입 금지 — 성능 핵심)
+  const _imgCnt=(Array.isArray(r.reasonImgUrls)&&r.reasonImgUrls.length)?r.reasonImgUrls.length:(r.reasonImgUrl?1:0);
+  if(_imgCnt>0){
     cells+=`<td class="tdc" style="white-space:nowrap;">
-      <span style="cursor:pointer;font-size:16px;" title="이미지 보기" onclick="viewReasonImg(${r.id})">🖼️</span>
-      <span style="cursor:pointer;font-size:11px;color:#1a73e8;margin-left:4px;" onclick="downloadReasonImg(${r.id})">↓</span>
-      <span style="cursor:pointer;font-size:10px;color:#aaa;margin-left:4px;" title="삭제" onclick="deleteReasonImg(${r.id})">✕</span>
+      <span style="cursor:pointer;font-size:14px;" title="이미지 보기" onclick="viewReasonImg(${r.id},0)">🖼️${_imgCnt>1?`<sup style="font-size:9px;color:#1a73e8;">${_imgCnt}</sup>`:''}</span>
+      <button data-attach-id="${r.id}" onclick="attachReasonImg(${r.id})" style="padding:1px 6px;font-size:10px;border:1px solid #d0d0ce;border-radius:4px;background:#fafaf8;cursor:pointer;color:#888;margin-left:4px;">+</button>
+      <span style="cursor:pointer;font-size:10px;color:#ccc;margin-left:2px;" title="전체 삭제" onclick="deleteReasonImg(${r.id})">✕</span>
     </td>`;
   }else{
-    cells+=`<td class="tdc"><button onclick="attachReasonImg(${r.id})" style="padding:2px 8px;font-size:11px;border:1px solid #d0d0ce;border-radius:5px;background:#fafaf8;cursor:pointer;color:#555;">📎</button></td>`;
+    cells+=`<td class="tdc"><button data-attach-id="${r.id}" onclick="attachReasonImg(${r.id})" style="padding:2px 8px;font-size:11px;border:1px solid #d0d0ce;border-radius:5px;background:#fafaf8;cursor:pointer;color:#555;">📎</button></td>`;
   }
   cells+=`<td class="tdc"><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
   return`<tr style="background:${bg};">${cells}</tr>`;
