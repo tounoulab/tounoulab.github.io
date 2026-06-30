@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" href="logo.png.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic Neo',sans-serif;background:#f2f3f5;color:#1a1a1a;min-height:100vh;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic Neo',sans-serif;background:#f2f3f5;color:#1a1a1a;min-height:100vh;overflow-x:hidden;}
 /* Login */
 #login-screen{position:fixed;inset:0;background:#f2f3f5;z-index:99999;display:flex;align-items:center;justify-content:center;}
 #login-screen.hidden{display:none;}
@@ -36,16 +36,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic 
 .gnb-auth-btn{font-size:12px;padding:5px 13px;border-radius:7px;border:1.5px solid #e0e0de;background:#fff;cursor:pointer;color:#555;font-weight:500;transition:background 0.12s;}
 .gnb-auth-btn:hover{background:#f2f3f5;}
 /* GNB */
-.gnb{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #e8e8e6;}
-.gnb-inner{max-width:100%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 24px;}
-.gnb-left{display:flex;align-items:center;}
-.gnb-logo{width:32px;height:32px;object-fit:contain;margin-right:8px;}
-.gnb-brand{font-size:18px;font-weight:800;letter-spacing:0.05em;margin-right:28px;white-space:nowrap;}
-.gnb-nav{display:flex;gap:4px;}
-.gnb-nav-item{padding:7px 16px;border-radius:20px;font-size:15px;color:#555;cursor:pointer;font-weight:500;user-select:none;white-space:nowrap;transition:all 0.1s;}
+.gnb{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #e8e8e6;overflow:hidden;}
+.gnb-inner{max-width:100%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 16px;gap:4px;}
+.gnb-left{display:flex;align-items:center;min-width:0;flex:1;}
+.gnb-logo{width:32px;height:32px;object-fit:contain;margin-right:8px;flex-shrink:0;}
+.gnb-brand{font-size:18px;font-weight:800;letter-spacing:0.05em;margin-right:20px;white-space:nowrap;}
+.gnb-nav{display:flex;gap:2px;flex-wrap:nowrap;min-width:0;}
+.gnb-nav-item{padding:7px 14px;border-radius:20px;font-size:14px;color:#555;cursor:pointer;font-weight:500;user-select:none;white-space:nowrap;transition:all 0.1s;}
 .gnb-nav-item:hover{background:#f5f5f3;color:#1a1a1a;}
 .gnb-nav-item.active{background:#1a1a1a;color:#fff;}
-.gnb-right{font-size:14px;color:#aaa;white-space:nowrap;}
+.gnb-right{font-size:13px;color:#aaa;white-space:nowrap;flex-shrink:0;}
 /* 도넛 차트 범례 */
 .chart-legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;}
 .chart-legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#555;}
@@ -154,7 +154,7 @@ tr:hover td{background:#fafafa;}
 #claim-sheet th{text-align:center !important;padding:8px 28px 8px 10px !important;position:sticky;top:0;z-index:3;background:#f6f6f4;user-select:none;white-space:nowrap;}
 /* SLA / 리드타임 테이블 정렬 */
 #sla-table th,#leadtime-table th{text-align:center !important;}
-#sla-table th:first-child,#leadtime-table th:first-child{text-align:left !important;}
+#sla-table th:first-child,#leadtime-table th:first-child{text-align:center !important;}
 #sla-table,#leadtime-table{table-layout:fixed;width:100%;}
 #sla-table th:first-child,#sla-table td:first-child{width:60px;}
 #sla-table th:not(:first-child),#sla-table td:not(:first-child){width:58px;}
@@ -203,17 +203,15 @@ tr:hover td{background:#fafafa;}
 /* ===== 반응형 ===== */
 @media(max-width:1200px){
   .home-layout{grid-template-columns:1fr;}
-  /* 사이드바 숨김 */
   .home-layout>div:last-child{display:none;}
-  /* 금일/이번주 카드 세로 1열 */
   .chart-period-grid{grid-template-columns:1fr!important;}
 }
 @media(max-width:900px){
-  .gnb-brand{font-size:15px;margin-right:10px;}
-  .gnb-nav-item{padding:5px 10px;font-size:13px;}
+  .gnb-brand{font-size:14px;margin-right:10px;}
+  .gnb-nav-item{padding:5px 9px;font-size:13px;}
   .page-inner{padding:14px;}
   .sub-grid{grid-template-columns:1fr 1fr!important;}
-  .home-layout{gap:12px;}
+  .home-layout{gap:10px;}
   .status-row{flex-wrap:wrap;}
   .status-item{flex:1 1 45%;border-right:none!important;border-bottom:1px solid #f0f0ee;}
   .status-item-value{font-size:20px;}
@@ -222,18 +220,31 @@ tr:hover td{background:#fafafa;}
   .stats-grid{grid-template-columns:1fr 1fr;}
   .kpi-row{grid-template-columns:1fr 1fr!important;}
 }
-@media(max-width:600px){
-  .gnb-inner{padding:0 8px;height:48px;}
-  .gnb-logo{width:24px;height:24px;}
-  .gnb-brand{font-size:13px;margin-right:6px;}
+@media(max-width:720px){
+  .gnb-inner{height:48px;padding:0 10px;}
+  .gnb-brand{font-size:13px;margin-right:8px;}
   .gnb-nav-item{padding:4px 8px;font-size:12px;}
+  .gnb-logo{width:26px;height:26px;}
+  .page-inner{padding:10px;}
+  .card{padding:14px;}
+  .kpi-row{grid-template-columns:1fr 1fr!important;}
+  .chart-inner-grid{grid-template-columns:1fr!important;}
+  .status-item-value{font-size:18px;}
+}
+@media(max-width:560px){
+  .gnb-inner{height:44px;padding:0 8px;}
+  .gnb-brand{display:none;}
+  .gnb-nav-item{padding:4px 7px;font-size:11px;}
+  .gnb-logo{width:24px;height:24px;margin-right:6px;}
   .page-inner{padding:8px;}
+  .card{padding:10px;}
   .sub-grid{grid-template-columns:1fr!important;}
   .status-item{flex:1 1 100%;}
   .grid3{grid-template-columns:1fr;}
   .stats-grid{grid-template-columns:1fr;}
   .kpi-row{grid-template-columns:1fr!important;}
-  .chart-inner-grid{grid-template-columns:1fr!important;}
+  .chart-period-grid{grid-template-columns:1fr!important;}
+  .chart-inner-grid{grid-template-columns:1fr 1fr!important;}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -1136,11 +1147,12 @@ function renderSLATable(claims){
   const tbody=document.getElementById('sla-tbody');if(!tbody)return;
   const months=[1,2,3,4,5,6,7,8,9,10,11,12];
   const year=new Date().getFullYear();
+  const dedup=arr=>{const seen=new Set(),res=[];arr.forEach(r=>{const k=r.orderno||String(r.id);if(!seen.has(k)){seen.add(k);res.push(r);}});return res;};
   const byMonth=months.map(m=>{
     const ms=year+'-'+String(m).padStart(2,'0')+'-01';
     const meD=new Date(year,m,0);const me=year+'-'+String(m).padStart(2,'0')+'-'+String(meD.getDate()).padStart(2,'0');
-    const mc=claims.filter(r=>{const v=normDate(r.date);return v>=ms&&v<=me;});
-    const ihaeng=mc.filter(r=>{const bd=calcBusinessDays(r.indate,r.donedate);return bd!==null&&bd<=4;}).length;
+    const mc=dedup(claims.filter(r=>{const v=normDate(r.date);return v>=ms&&v<=me;}));
+    const ihaeng=mc.filter(r=>{const bd=calcBusinessDays(r.indate,r.donedate);return bd!==null&&bd<=3;}).length;
     return{total:mc.length,ihaeng};
   });
   const totalAll=byMonth.reduce((s,v)=>s+v.total,0);
@@ -1160,7 +1172,7 @@ function renderLeadtimeTable(claims){
   const types=[...new Set(claims.map(r=>r.type).filter(v=>v))].sort((a,b)=>a.localeCompare(b,'ko'));
   const allTypes=['(전체 평균)',...types];
   const cs='padding:6px 10px;border:1px solid #f0f0ee;text-align:center;font-size:12px;';
-  const ls=cs+'font-weight:500;background:#f8f8f6;text-align:left;white-space:nowrap;position:sticky;left:0;z-index:1;min-width:130px;';
+  const ls=cs+'font-weight:500;background:#f8f8f6;text-align:center;white-space:nowrap;position:sticky;left:0;z-index:1;min-width:130px;';
   const avgFor=arr=>{
     const bds=arr.filter(r=>r.donedate&&r.indate).map(r=>{const v=calcBusinessDays(r.indate,r.donedate);return v!==null?v+1:null;}).filter(v=>v!==null);
     return bds.length?(bds.reduce((a,b)=>a+b,0)/bds.length).toFixed(1):'-';
@@ -1207,7 +1219,7 @@ function calcBusinessDays(start,end){
   while(cur<=e){const dow=cur.getDay(),ds=cur.toISOString().slice(0,10);if(dow!==0&&dow!==6&&!KR_HOLIDAYS.has(ds))count++;cur.setDate(cur.getDate()+1);}
   return(_bdCache[key]=count);
 }
-function calcSLA(days){if(days===null)return{text:'-',color:'#bbb'};return days<=4?{text:'준수',color:'#2e7d32'}:{text:'초과',color:'#c62828'};}
+function calcSLA(days){if(days===null)return{text:'-',color:'#bbb'};return days<=3?{text:'준수',color:'#2e7d32'}:{text:'초과',color:'#c62828'};}
 let _editClaimId=null;
 function updateDoneDate(id,value){
   const claims=loadClaims(),idx=claims.findIndex(r=>r.id===id);
