@@ -323,7 +323,7 @@ tr:hover td{background:#fafafa;}
         <div class="side-card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <span class="side-card-title" style="margin-bottom:0;">공지 사항</span>
-            <button onclick="toggleNoticeForm()" id="btn-notice-add" style="font-size:11px;padding:3px 8px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;">+ 등록</button>
+            <button onclick="toggleNoticeForm()" id="btn-notice-add" style="font-size:11px;padding:3px 8px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;display:none;">+ 등록</button>
           </div>
           <div id="notice-form" style="display:none;margin-bottom:10px;">
             <textarea id="notice-input" placeholder="공지 내용을 입력하세요." style="width:100%;padding:8px 10px;border:1px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;resize:vertical;min-height:64px;box-sizing:border-box;outline:none;"></textarea>
@@ -866,9 +866,10 @@ function renderWeeklyTrendChart(claims){
       labels:dayNames.slice(0,days.length),
       datasets:[{
         label:'접수 건수',data:counts,
-        backgroundColor:counts.map(v=>v>0?'rgba(26,115,232,0.18)':'rgba(200,200,200,0.1)'),
-        borderColor:counts.map(v=>v>0?'#1a73e8':'#ddd'),
-        borderWidth:2,borderRadius:6,borderSkipped:false
+        backgroundColor:counts.map(v=>v>0?'rgba(26,26,26,0.82)':'rgba(200,200,200,0.15)'),
+        borderColor:counts.map(v=>v>0?'#1a1a1a':'#ddd'),
+        borderWidth:0,borderRadius:5,borderSkipped:false,
+        barPercentage:0.5,categoryPercentage:0.6
       }]
     },
     options:{
@@ -932,7 +933,7 @@ function renderHomeDashboard(){
     const monthLbl=document.querySelector('#h-month')?.closest('.status-item')?.querySelector('.status-item-label');
     if(monthLbl)monthLbl.textContent='이번 달';
   }
-  setTxt('side-today-done',claims.filter(r=>normDate(r.donedate)===t).length+'건');
+  setTxt('side-today-done',countUniq(claims.filter(r=>normDate(r.donedate)===t),'donedate','1900','9999')+'건');
   // 귀책별·처리유형 차트 (이번 주, 중복 주문번호 제외)
   const wkUniq=[];const seenLib=new Set();
   wkC.forEach(r=>{const k=r.orderno||String(r.id);if(!seenLib.has(k)){seenLib.add(k);wkUniq.push(r);}});
@@ -2585,6 +2586,7 @@ function deleteNotice(id){
 function renderNotices(){
   const el=document.getElementById('notice-list');if(!el)return;
   const notices=_noticesData;
+  const isAdmin=_currentUserId()==='chohee';
   if(!notices.length){el.innerHTML='<div style="color:#bbb;font-size:13px;padding:8px 0;">등록된 공지가 없습니다.</div>';return;}
   el.innerHTML=notices.map(n=>`
     <div style="padding:9px 0;border-bottom:1px solid #f5f5f3;display:flex;align-items:flex-start;gap:8px;">
@@ -2592,7 +2594,7 @@ function renderNotices(){
         <div style="font-size:13px;color:#333;line-height:1.55;white-space:pre-wrap;">${n.text}</div>
         <div style="font-size:11px;color:#bbb;margin-top:3px;">${n.date}</div>
       </div>
-      <button onclick="deleteNotice(${n.id})" style="font-size:11px;padding:2px 6px;border:1px solid #fecaca;border-radius:4px;background:#fff;color:#dc2626;cursor:pointer;flex-shrink:0;">삭제</button>
+      ${isAdmin?`<button onclick="deleteNotice(${n.id})" style="font-size:11px;padding:2px 6px;border:1px solid #fecaca;border-radius:4px;background:#fff;color:#dc2626;cursor:pointer;flex-shrink:0;">삭제</button>`:''}
     </div>`).join('');
 }
 
@@ -2620,6 +2622,8 @@ function _updateGnbUser(){
   var u=_currentUser();
   var el=document.getElementById('gnb-username');
   if(el){el.textContent=u?u.name:'';el.style.display=u?'':'none';}
+  var noticeBtn=document.getElementById('btn-notice-add');
+  if(noticeBtn)noticeBtn.style.display=(u&&u.id==='chohee')?'':'none';
 }
 
 function submitLogin(){
