@@ -735,12 +735,12 @@ tr:hover td{background:#fafafa;}
     <span style="font-size:18px;font-weight:700;">클레임 현황</span>
     <span id="claim-count-badge" style="font-size:13px;color:#888;font-weight:400;"></span>
     <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
-      <input id="claim-search-input" type="text" placeholder="🔍 주문번호·구매자·상품명 검색" oninput="_applyClaimSearch(this.value)" style="height:34px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:13px;width:220px;outline:none;"/>
-      <button class="btn-primary" onclick="openClaimModal()">+ 클레임 등록</button>
-      <button id="btn-group-order" class="btn-secondary" onclick="toggleGroupByOrder()" title="같은 주문번호를 1건으로 묶어서 표시">주문별 보기</button>
-      <button class="btn-secondary" onclick="exportClaimsXLSX()">XLSX 내보내기</button>
-      <button class="btn-secondary" onclick="document.getElementById('xlsx-import-input').click()">XLSX 가져오기</button>
-      <button class="btn-secondary" onclick="confirmClearClaims()" style="color:#dc2626;border-color:#fecaca;">전체 삭제</button>
+      <input id="claim-search-input" type="text" placeholder="🔍 주문번호·구매자·상품명 검색" oninput="_applyClaimSearch(this.value)" style="height:32px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:13px;width:200px;outline:none;box-sizing:border-box;"/>
+      <button onclick="openClaimModal()" style="height:32px;padding:0 14px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">+ 클레임 등록</button>
+      <button id="btn-group-order" class="btn-secondary" onclick="toggleGroupByOrder()" title="같은 주문번호를 1건으로 묶어서 표시" style="height:32px;white-space:nowrap;">주문별 보기</button>
+      <button class="btn-secondary" onclick="exportClaimsXLSX()" style="height:32px;white-space:nowrap;">XLSX 내보내기</button>
+      <button class="btn-secondary" onclick="document.getElementById('xlsx-import-input').click()" style="height:32px;white-space:nowrap;">XLSX 가져오기</button>
+      <button class="btn-secondary" onclick="confirmClearClaims()" style="height:32px;color:#dc2626;border-color:#fecaca;white-space:nowrap;">전체 삭제</button>
       <input type="file" id="xlsx-import-input" accept=".xlsx,.xls" style="display:none;" onchange="importClaimsXLSX(this)"/>
     </div>
   </div>
@@ -754,7 +754,7 @@ tr:hover td{background:#fafafa;}
       <col data-col="issue"><col data-col="liability"><col data-col="type"><col data-col="nature">
       <col data-col="_img"><col data-col="reason"><col data-col="returnYn"><col data-col="reshipYn">
       <col data-col="accident"><col data-col="costP"><col data-col="costR"><col data-col="costS">
-      <col data-col="_lead"><col data-col="status"><col data-col="_sla"><col data-col="_del">
+      <col data-col="_lead"><col data-col="status"><col data-col="_sla"><col data-col="_ticket"><col data-col="_del">
     </colgroup>
     <thead>
       <tr style="background:#f6f6f4;">
@@ -786,6 +786,7 @@ tr:hover td{background:#fafafa;}
         <th data-col="_lead" style="border:1px solid #e0e0de;">리드타임</th>
         <th data-col="status" style="border:1px solid #e0e0de;">처리 상태</th>
         <th data-col="_sla" style="border:1px solid #e0e0de;">SLA</th>
+        <th data-col="_ticket" style="border:1px solid #e0e0de;">티켓번호</th>
         <th data-col="_del" style="border:1px solid #e0e0de;">복사/삭제</th>
       </tr>
     </thead>
@@ -1212,6 +1213,15 @@ function renderHomeDashboard(){
     }
   },400);
 }
+const _TICKET_BASE_URL='https://talk.tounou.co.kr/dashboard';
+function goToClaimByOrder(orderno){
+  if(!orderno)return;
+  switchPage('claim');
+  setTimeout(()=>{
+    const inp=document.getElementById('claim-search-input');
+    if(inp){inp.value=orderno;_applyClaimSearch(orderno);}
+  },150);
+}
 function _renderLongClaims(claims){
   const countEl=document.getElementById('kpi-long-count');
   const listEl=document.getElementById('kpi-long-list');
@@ -1235,7 +1245,7 @@ function _renderLongClaims(claims){
   countEl.textContent=uniq.length+'건';
   listEl.innerHTML=uniq.slice(0,6).map(r=>
     `<div style="padding:1px 0;border-bottom:1px solid #f5f5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">`+
-    `<span style="color:#c62828;font-weight:600;">${r.orderno||'-'}</span>`+
+    `<span style="color:#c62828;font-weight:600;cursor:pointer;text-decoration:underline;" title="클레임 현황에서 보기" onclick="goToClaimByOrder('${(r.orderno||'').replace(/'/g,"\\'")}')">${r.orderno||'-'}</span>`+
     ` / ${r.buyer||'-'}</div>`
   ).join('')+(uniq.length>6?`<div style="color:#aaa;font-size:10px;padding-top:2px;">외 ${uniq.length-6}건</div>`:'');
 }
@@ -1528,9 +1538,10 @@ const CF={
   returnYn:{type:'select',opts:['Y','N']},reshipYn:{type:'select',opts:['Y','N']},accident:{type:'select',opts:['Y','N']},
   status:{type:'select',opts:['처리 중','처리 완료']},
   costP:{type:'number'},costR:{type:'number'},costS:{type:'number'},
-  leadtime:{type:'number'},vocAmt:{type:'number'},csAmt:{type:'number'}
+  leadtime:{type:'number'},vocAmt:{type:'number'},csAmt:{type:'number'},
+  ticketNo:{type:'text'}
 };
-const CF_ORDER=['month','date','indate','shipdate','donedate','channel','platform','orderno','buyer','product','option','category','issue','liability','type','nature','_img','reason','returnYn','reshipYn','accident','costP','costR','costS','_lead','status','_sla'];
+const CF_ORDER=['month','date','indate','shipdate','donedate','channel','platform','orderno','buyer','product','option','category','issue','liability','type','nature','_img','reason','returnYn','reshipYn','accident','costP','costR','costS','_lead','status','_sla','_ticket'];
 
 function editCell(td,claimId,field,curVal){
   if(td.querySelector('input,select,textarea'))return;
@@ -1618,6 +1629,7 @@ const _colDefaults={
   _drag:28,
   month:64,date:84,indate:84,shipdate:84,donedate:96,
   channel:80,platform:80,orderno:120,buyer:68,product:130,option:100,category:82,
+  _ticket:90,
   issue:110,liability:70,type:120,nature:80,_img:70,
   reason:140,returnYn:50,reshipYn:50,accident:60,status:70,
   _lead:65,_sla:55,costP:80,costR:80,costS:80,_del:90
@@ -2064,6 +2076,17 @@ function _buildClaimRow(r,i){
     }
     if(key==='_sla'){
       cells+=`<td class="tdc" style="font-weight:600;color:${sla.color};${_colW('_sla')}">${sla.text}</td>`;
+      return;
+    }
+    if(key==='_ticket'){
+      const tno=String(r.ticketNo||'');
+      let tdisp;
+      if(tno){
+        tdisp=`<span style="color:#333;cursor:text;" data-id="${r.id}" data-field="ticketNo" data-val="${tno}" onclick="editCell(this.parentElement,+this.dataset.id,this.dataset.field,this.dataset.val);event.stopPropagation();">${tno}</span><a href="${_TICKET_BASE_URL}" target="_blank" title="티켓 사이트 열기" onclick="event.stopPropagation();" style="margin-left:4px;color:#1a73e8;text-decoration:none;font-size:12px;">🔗</a>`;
+      }else{
+        tdisp=`<span style="color:#ccc;">-</span>`;
+      }
+      cells+=`<td class="tdc" data-id="${r.id}" data-field="ticketNo" data-val="${tno}" onclick="editCell(this,+this.dataset.id,'ticketNo',this.dataset.val)" style="${_colW('_ticket')}">${tdisp}</td>`;
       return;
     }
     const f=CF[key];if(!f)return;
