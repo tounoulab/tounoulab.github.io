@@ -677,15 +677,15 @@ tr:hover td{background:#fafafa;}
     <div class="grid2 form-row">
       <div><label>이슈별 분류</label>
         <select id="c-issue"><option value="">선택</option>
+          <optgroup label="고객 요청"><option>[고객 요청] 사이즈</option><option>[고객 요청] 디자인</option><option>[고객 요청] 냄새</option><option>[고객 요청] 해상도</option><option>[고객 요청] 색상/색감</option><option>[고객 요청] 두께</option><option>[고객 요청] 소재</option><option>[고객 요청] 이염(색 번짐/물 빠짐)</option><option>[고객 요청] 오염(얼룩/먼지/이물질)</option><option>[고객 요청] 정책 불만</option><option>[고객 요청] 포장 불만족</option><option>[고객 요청] 서비스 불만족</option><option>[고객 요청] 상품 정보 상이</option><option>[고객 요청] 안전성 우려</option><option>[고객 요청] 생각한 상품이 아님</option><option>[고객 요청] 주문 오류</option><option>[고객 요청] 기타(사유 미확인 포함)</option><option>[고객 요청] 불량 오인지</option><option>[고객 요청] 할인 소급</option></optgroup>
           <optgroup label="제품"><option>[제품] 파손/훼손</option><option>[제품] 품질(원단/프린팅/해상도/지퍼/디자인/사이즈)</option><option>[제품] 품질(원단)</option><option>[제품] 품질(프린팅)</option><option>[제품] 품질(해상도)</option><option>[제품] 품질(지퍼)</option><option>[제품] 품질(디자인)</option><option>[제품] 품질(사이즈)</option><option>[제품] 품질(오염)</option><option>[제품] 품질(기타)</option></optgroup>
           <optgroup label="발주/주문"><option>[발주] 발주 누락</option><option>[주문] 매칭 오류</option><option>[주문] 수집 누락</option><option>[주문] 전체 누락</option><option>[주문] 부분 누락</option><option>[주문] 과출고</option><option>[주문] 발주 누락</option><option>[주문] 상품 추가 누락</option><option>[주문] 상품 정보 상이</option></optgroup>
           <optgroup label="출고"><option>[출고] 전체 누락</option><option>[출고] 부분 누락</option><option>[출고] 과출고</option><option>[출고] 오출고</option><option>[출고] 출고 지연</option></optgroup>
           <optgroup label="배송"><option>[배송] 파손/훼손</option><option>[배송] 분실</option><option>[배송] 오배송</option><option>[배송] 배송완료 미수령</option><option>[배송] 분실 접수 후 배송완료</option></optgroup>
-          <optgroup label="고객 요청"><option>[고객 요청] 사이즈</option><option>[고객 요청] 디자인</option><option>[고객 요청] 냄새</option><option>[고객 요청] 해상도</option><option>[고객 요청] 색상/색감</option><option>[고객 요청] 두께</option><option>[고객 요청] 소재</option><option>[고객 요청] 이염(색 번짐/물 빠짐)</option><option>[고객 요청] 오염(얼룩/먼지/이물질)</option><option>[고객 요청] 정책 불만</option><option>[고객 요청] 포장 불만족</option><option>[고객 요청] 서비스 불만족</option><option>[고객 요청] 상품 정보 상이</option><option>[고객 요청] 안전성 우려</option><option>[고객 요청] 생각한 상품이 아님</option><option>[고객 요청] 주문 오류</option><option>[고객 요청] 기타(사유 미확인 포함)</option><option>[고객 요청] 불량 오인지</option><option>[고객 요청] 할인 소급</option></optgroup>
           <optgroup label="기타"><option>[3PL] 상품 추가 누락</option><option>[3PL] 상품 과등록</option><option>[타부서] 오발주</option><option>[배송사] 반송</option><option>[고객] 오출고 오인지</option></optgroup>
         </select>
       </div>
-      <div><label>귀책 주체</label><select id="c-liability"><option value="">선택</option><option>CS</option><option>재고</option><option>발주</option><option>주문</option><option>검수</option><option>출고</option><option>입고</option><option>공급처</option><option>배송사</option><option>3PL</option><option>고객</option><option>뚜누</option><option>알수없음</option><option>타부서</option></select></div>
+      <div><label>귀책 주체</label><select id="c-liability"><option value="">선택</option><option>고객</option><option>CS</option><option>재고</option><option>발주</option><option>주문</option><option>검수</option><option>출고</option><option>입고</option><option>공급처</option><option>배송사</option><option>3PL</option><option>뚜누</option><option>알수없음</option><option>타부서</option></select></div>
     </div>
     <div class="grid2 form-row">
       <div><label>처리 유형</label>
@@ -734,7 +734,16 @@ tr:hover td{background:#fafafa;}
   </div>
 </div>
 <div id="claim-scroll-wrap" style="overflow:auto;max-height:calc(100vh - 190px);padding:0 24px 24px;">
-  <table id="claim-sheet" style="border-collapse:collapse;font-size:13px;min-width:2400px;background:#fff;border:1px solid #e0e0de;border-radius:8px;">
+  <table id="claim-sheet" style="table-layout:fixed;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid #e0e0de;border-radius:8px;">
+    <colgroup id="claim-colgroup">
+      <col data-col="month"><col data-col="date"><col data-col="indate"><col data-col="shipdate">
+      <col data-col="donedate"><col data-col="channel"><col data-col="platform"><col data-col="orderno">
+      <col data-col="buyer"><col data-col="product"><col data-col="option"><col data-col="category">
+      <col data-col="issue"><col data-col="liability"><col data-col="type"><col data-col="nature">
+      <col data-col="_img"><col data-col="reason"><col data-col="returnYn"><col data-col="reshipYn">
+      <col data-col="accident"><col data-col="costP"><col data-col="costR"><col data-col="costS">
+      <col data-col="_lead"><col data-col="status"><col data-col="_sla"><col data-col="_del">
+    </colgroup>
     <thead>
       <tr style="background:#f6f6f4;">
         <th data-col="month" style="border:1px solid #e0e0de;">발생 월</th>
@@ -865,7 +874,7 @@ function switchPage(name){
   if(name==='home')renderHomeDashboard();
   if(name==='voc'){renderVocStats();renderVocCharts();_restoreScroll('voc');}
   if(name==='return'){renderReturnStats();renderReturnTable();_restoreScroll('return');}
-  if(name==='claim'){_vsScrollRestored=false;renderClaimTable(true);}
+  if(name==='claim'){_vsScrollRestored=false;_scrollRestoreRunning=false;renderClaimTable(true);_doScrollRestore();}
 }
 // 새로고침 전 스크롤 저장
 window.addEventListener('beforeunload',()=>{
@@ -1269,7 +1278,10 @@ function openClaimModal(){
   document.querySelector('#claim-modal span[style*="17px"]').textContent='신규 클레임 등록';
   document.querySelector('#claim-modal .btn-primary').textContent='등록';
   const c=document.getElementById('c-products-container');
-  if(c&&!c.querySelector('.product-item')){c.innerHTML=_makeProductItemHTML(true);}
+  if(c&&!c.querySelector('.product-item')){
+    c.innerHTML=_makeProductItemHTML(true);
+    makeSearchable(c.querySelector('.pi-category'));
+  }
   document.getElementById('claim-modal').style.display='block';document.body.style.overflow='hidden';
 }
 function openEditModal(id){
@@ -1295,7 +1307,11 @@ function openEditModal(id){
     const pi=c.querySelector('.product-item');
     pi.querySelector('.pi-product').value=r.product||'';
     pi.querySelector('.pi-option').value=(r.option==='[옵션 지정 불가]'?'':r.option)||'';
-    pi.querySelector('.pi-category').value=r.category||'';
+    const catSel=pi.querySelector('.pi-category');
+    catSel.value=r.category||'';
+    makeSearchable(catSel);
+    // searchable 적용 후 input 값도 동기화
+    if(catSel._sdInput)catSel._sdInput.value=r.category||'';
     pi.querySelector('.pi-costP').value=r.costP||'';
   }
   document.getElementById('claim-modal').style.display='block';document.body.style.overflow='hidden';
@@ -1340,6 +1356,7 @@ function addClaim(){
     productItems.forEach((pi,i)=>{
       const id=baseId+i;
       const rec={id,donedate:'',...shared,
+        reason:i===0?shared.reason:'', // 사유는 첫 번째 상품 행에만
         product:pi.querySelector('.pi-product').value,
         option:pi.querySelector('.pi-option').value.trim()||'[옵션 지정 불가]',
         category:pi.querySelector('.pi-category').value,
@@ -1402,6 +1419,10 @@ function addProductItem(){
   if(!c)return;
   c.insertAdjacentHTML('beforeend',_makeProductItemHTML(false));
   _syncProductDelBtns();
+  // 새로 추가된 상품 항목의 category select에 검색 기능 적용
+  const items=c.querySelectorAll('.product-item');
+  const newItem=items[items.length-1];
+  if(newItem)makeSearchable(newItem.querySelector('.pi-category'));
 }
 
 function removeProductItem(btn){
@@ -1426,8 +1447,8 @@ const CF={
   orderno:{type:'text'},buyer:{type:'text'},
   product:{type:'text',align:'left'},option:{type:'text'},
   category:{type:'select',opts:['쿠션 커버','미니 쿠션 커버','파우치','패브릭 포스터','쉬폰 패브릭 포스터','베개 커버','담요','니트블랭킷','티셔츠','테이블매트','파자마','에코백','극세사 발매트','극세사 주방매트','러그','이불','규조토 발매트','규조토 주방매트','포스터','포스터+액자','핸드타월','타월 발매트','액자 세트','캔버스 액자','액자 단품','컵','플레이트','양말','테크류','부자재(꼭꼬핀, 논슬립 등)','PVC 주방매트','사은품','매트리스 커버','침대 패드','쿠션 커버+쿠션 솜','쿠션 커버+방석 솜','베개 커버+베개 솜','미니 쿠션 커버+미니 쿠션 솜','냉감 침대패드','냉감 이불']},
-  issue:{type:'select',opts:['[제품] 파손/훼손','[제품] 품질(원단/프린팅/해상도/지퍼/디자인/사이즈)','[제품] 품질(원단)','[제품] 품질(프린팅)','[제품] 품질(해상도)','[제품] 품질(지퍼)','[제품] 품질(디자인)','[제품] 품질(사이즈)','[제품] 품질(오염)','[제품] 품질(기타)','[발주] 발주 누락','[주문] 매칭 오류','[주문] 수집 누락','[주문] 전체 누락','[주문] 부분 누락','[주문] 과출고','[주문] 발주 누락','[주문] 상품 추가 누락','[주문] 상품 정보 상이','[출고] 전체 누락','[출고] 부분 누락','[출고] 과출고','[출고] 오출고','[출고] 출고 지연','[배송] 파손/훼손','[배송] 분실','[배송] 오배송','[배송] 배송완료 미수령','[배송] 분실 접수 후 배송완료','[고객 요청] 사이즈','[고객 요청] 디자인','[고객 요청] 냄새','[고객 요청] 해상도','[고객 요청] 색상/색감','[고객 요청] 두께','[고객 요청] 소재','[고객 요청] 이염(색 번짐/물 빠짐)','[고객 요청] 오염(얼룩/먼지/이물질)','[고객 요청] 정책 불만','[고객 요청] 포장 불만족','[고객 요청] 서비스 불만족','[고객 요청] 상품 정보 상이','[고객 요청] 안전성 우려','[고객 요청] 생각한 상품이 아님','[고객 요청] 주문 오류','[고객 요청] 기타(사유 미확인 포함)','[고객 요청] 불량 오인지','[고객 요청] 할인 소급','[3PL] 상품 추가 누락','[3PL] 상품 과등록','[타부서] 오발주','[배송사] 반송','[고객] 오출고 오인지']},
-  liability:{type:'select',opts:['CS','재고','발주','주문','검수','출고','입고','공급처','배송사','3PL','고객','뚜누','알수없음','타부서']},
+  issue:{type:'select',opts:['[고객 요청] 사이즈','[고객 요청] 디자인','[고객 요청] 냄새','[고객 요청] 해상도','[고객 요청] 색상/색감','[고객 요청] 두께','[고객 요청] 소재','[고객 요청] 이염(색 번짐/물 빠짐)','[고객 요청] 오염(얼룩/먼지/이물질)','[고객 요청] 정책 불만','[고객 요청] 포장 불만족','[고객 요청] 서비스 불만족','[고객 요청] 상품 정보 상이','[고객 요청] 안전성 우려','[고객 요청] 생각한 상품이 아님','[고객 요청] 주문 오류','[고객 요청] 기타(사유 미확인 포함)','[고객 요청] 불량 오인지','[고객 요청] 할인 소급','[제품] 파손/훼손','[제품] 품질(원단/프린팅/해상도/지퍼/디자인/사이즈)','[제품] 품질(원단)','[제품] 품질(프린팅)','[제품] 품질(해상도)','[제품] 품질(지퍼)','[제품] 품질(디자인)','[제품] 품질(사이즈)','[제품] 품질(오염)','[제품] 품질(기타)','[발주] 발주 누락','[주문] 매칭 오류','[주문] 수집 누락','[주문] 전체 누락','[주문] 부분 누락','[주문] 과출고','[주문] 발주 누락','[주문] 상품 추가 누락','[주문] 상품 정보 상이','[출고] 전체 누락','[출고] 부분 누락','[출고] 과출고','[출고] 오출고','[출고] 출고 지연','[배송] 파손/훼손','[배송] 분실','[배송] 오배송','[배송] 배송완료 미수령','[배송] 분실 접수 후 배송완료','[3PL] 상품 추가 누락','[3PL] 상품 과등록','[타부서] 오발주','[배송사] 반송','[고객] 오출고 오인지']},
+  liability:{type:'select',opts:['고객','CS','재고','발주','주문','검수','출고','입고','공급처','배송사','3PL','뚜누','알수없음','타부서']},
   type:{type:'select',opts:['오출고 교환','불량 교환','단순변심 교환','파손/훼손 교환','분실 교환','반송 교환','누락 교환','미회수/교환','불량 반품','오출고 반품','단순변심 반품','파손/훼손 반품','분실 반품','반송 반품','누락 반품','미회수/반품','제작 발주 및 수집','과출고 회수','클레임 철회','CS안내(품절/단순/예약발송)','차액 환불','상품가 결제 완료']},
   nature:{type:'select',opts:['VOC','일반 접수','내부 점검','CS','배송사']},
   reason:{type:'text',align:'left'},
@@ -1525,6 +1546,27 @@ const _colWidths=(()=>{
 function _saveColWidths(){try{localStorage.setItem('tuunu_colWidths',JSON.stringify(_colWidths));}catch(e){}}
 function _colW(key){const w=_colWidths[key];return w?`min-width:${w}px;max-width:${w}px;width:${w}px;`:'';}
 
+// colgroup 너비 + sticky left 위치 동적 적용 (table-layout:fixed 전제)
+const _STICKY_KEYS=['month','date','indate','shipdate','donedate','channel','platform','orderno','buyer','product','option','category'];
+function _applyColWidths(){
+  const cg=document.getElementById('claim-colgroup');
+  if(cg)cg.querySelectorAll('col[data-col]').forEach(c=>{
+    const w=_colWidths[c.dataset.col]||80;
+    c.style.width=w+'px';
+  });
+  // sticky left 위치 동적 계산
+  let css='',cum=0;
+  _STICKY_KEYS.forEach(k=>{
+    const w=_colWidths[k]||80;
+    css+=`#claim-sheet th[data-col="${k}"]{left:${cum}px !important;}#claim-sheet tbody td[data-field="${k}"]{left:${cum}px !important;}\n`;
+    cum+=w;
+  });
+  let el=document.getElementById('dyn-sticky-css');
+  if(!el){el=document.createElement('style');el.id='dyn-sticky-css';document.head.appendChild(el);}
+  el.textContent=css;
+}
+_applyColWidths(); // 스크립트 로드 시 즉시 적용
+
 let _colResizeReady=false;
 function initColResize(){
   const table=document.getElementById('claim-sheet');if(!table)return;
@@ -1533,7 +1575,7 @@ function initColResize(){
     table.querySelectorAll('th').forEach(th=>{
       // 초기 너비 적용
       const col=th.dataset.col;
-      if(_colWidths[col]){th.style.minWidth=_colWidths[col]+'px';th.style.maxWidth=_colWidths[col]+'px';}
+      if(_colWidths[col]){th.style.minWidth=_colWidths[col]+'px';th.style.maxWidth=_colWidths[col]+'px';th.style.width=_colWidths[col]+'px';}
       // 필터 버튼
       if(col&&col!=='_del'&&col!=='_lead'&&col!=='_img'){
         const fb=document.createElement('button');
@@ -1558,6 +1600,7 @@ function initColResize(){
           h.classList.remove('dragging');document.body.style.cursor='';
           document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);
           _saveColWidths(); // localStorage에 너비 저장
+          _applyColWidths(); // colgroup + sticky 위치 갱신
           _vsRender();
         };
         document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
@@ -1565,6 +1608,7 @@ function initColResize(){
       });
       th.appendChild(h);
     });
+    _applyColWidths(); // colgroup + sticky left 초기 적용
   } else {
     // 필터 버튼 상태만 업데이트 (DOM 재생성 없이)
     table.querySelectorAll('.th-filter-btn').forEach(fb=>{
@@ -1816,6 +1860,28 @@ function renderClaimTable(){
 // ===== 가상 스크롤 (Virtual Scroll) =====
 const VS_ROW_H=36,VS_BUF=60;
 let _vsClaims=[],_vsRafId=null,_vsWrap=null,_vsScrollBound=false,_vsScrollRestored=false;
+let _scrollRestoreRunning=false;
+function _doScrollRestore(){
+  if(_scrollRestoreRunning)return;
+  const saved=parseInt(localStorage.getItem('sc_claim')||'0');
+  if(!saved||saved<=0)return;
+  _scrollRestoreRunning=true;
+  let n=0;
+  const go=()=>{
+    const w=_vsWrap||document.getElementById('claim-scroll-wrap');
+    if(w&&_vsClaims.length>0){
+      w.scrollTop=saved;
+      if(Math.abs(w.scrollTop-saved)<=30){
+        _vsRender();
+        _scrollRestoreRunning=false;
+        return;
+      }
+    }
+    if(n++<20)setTimeout(go,150);
+    else _scrollRestoreRunning=false;
+  };
+  setTimeout(go,80);
+}
 function _vsInit(){
   const wrap=document.getElementById('claim-scroll-wrap');
   if(!wrap)return;
@@ -1908,19 +1974,7 @@ function _doRenderClaimTable(){
   _vsRender();
   initColResize();
   // 스크롤 위치 복원 — 세션당 최초 1회만
-  if(!_vsScrollRestored){
-    _vsScrollRestored=true;
-    const saved=parseInt(localStorage.getItem('sc_claim')||'0');
-    if(saved>0){
-      setTimeout(()=>{
-        const w=document.getElementById('claim-scroll-wrap');
-        if(!w)return;
-        w.scrollTop=saved;
-        _vsRender();
-        setTimeout(()=>{if(w.scrollTop<saved-10){w.scrollTop=saved;_vsRender();}},250);
-      },150);
-    }
-  }
+  if(!_vsScrollRestored){_vsScrollRestored=true;_doScrollRestore();}
 }
 function _updateLoadMore(){}
 // ===== 반품 CRUD =====
@@ -3353,7 +3407,7 @@ function sdMatch(q,text){
   return false;
 }
 function makeSearchable(selectId){
-  const sel=document.getElementById(selectId);
+  const sel=typeof selectId==='string'?document.getElementById(selectId):selectId;
   if(!sel||sel._sd)return;
   sel._sd=true;
 
