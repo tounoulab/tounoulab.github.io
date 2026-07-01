@@ -788,7 +788,6 @@ tr:hover td{background:#fafafa;}
         <th data-col="_lead" style="border:1px solid #e0e0de;">리드타임</th>
         <th data-col="status" style="border:1px solid #e0e0de;">처리 상태</th>
         <th data-col="_sla" style="border:1px solid #e0e0de;">SLA</th>
-        <th data-col="_ticket" style="border:1px solid #e0e0de;">티켓번호</th>
         <th data-col="_del" style="border:1px solid #e0e0de;">복사/삭제</th>
       </tr>
     </thead>
@@ -1996,10 +1995,12 @@ function _vsRender(scrollTopOverride){
   const endRow=Math.min(total,Math.ceil((scrollTop+viewH)/VS_ROW_H)+VS_BUF);
   const topH=startRow*VS_ROW_H,botH=(total-endRow)*VS_ROW_H;
   let html='';
-  if(topH>0)html+=`<tr style="height:${topH}px"><td colspan="31" style="padding:0;border:none;"></td></tr>`;
+  if(topH>0)html+=`<tr style="height:${topH}px"><td colspan="32" style="padding:0;border:none;"></td></tr>`;
   html+=_vsClaims.slice(startRow,endRow).map((r,i)=>_buildClaimRow(r,startRow+i)).join('');
-  if(botH>0)html+=`<tr style="height:${botH}px"><td colspan="31" style="padding:0;border:none;"></td></tr>`;
+  if(botH>0)html+=`<tr style="height:${botH}px"><td colspan="32" style="padding:0;border:none;"></td></tr>`;
+  const savedTop=wrap.scrollTop;
   tbody.innerHTML=html;
+  if(scrollTopOverride===undefined&&Math.abs(wrap.scrollTop-savedTop)>1)wrap.scrollTop=savedTop;
   _attachDragEvents();
 }
 
