@@ -1656,7 +1656,8 @@ function _applyColWidths(){
   _STICKY_KEYS.forEach(k=>{
     const w=_colWidths[k]||80;
     const tdKey=_TD_FIELD[k]||k;
-    css+=`#claim-sheet th[data-col="${k}"]{left:${cum}px !important;}#claim-sheet tbody td[data-field="${tdKey}"]{left:${cum}px !important;}\n`;
+    css+=`#claim-sheet th[data-col="${k}"]{left:${cum}px !important;}\n`;
+    css+=`#claim-sheet tbody td[data-field="${tdKey}"]{left:${cum}px !important;border-right:1px solid #e8e8e6 !important;border-left:1px solid #e8e8e6 !important;}\n`;
     cum+=w;
   });
   let el=document.getElementById('dyn-sticky-css');
