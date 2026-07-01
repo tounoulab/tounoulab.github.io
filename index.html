@@ -152,7 +152,7 @@ tr:hover td{background:#fafafa;}
 .sd-item:hover,.sd-item.focused{background:#f0f4ff;color:#1a1a1a;}
 .sd-empty{padding:10px 12px;font-size:12px;color:#aaa;}
 /* claim sheet inline edit */
-#claim-sheet th{text-align:center !important;padding:8px 28px !important;position:sticky;top:0;z-index:3;background:#f6f6f4;user-select:none;white-space:nowrap;font-size:15px !important;font-weight:700 !important;color:#333 !important;}
+#claim-sheet th{text-align:center !important;padding:8px 6px !important;position:sticky;top:0;z-index:3;background:#f6f6f4;user-select:none;white-space:nowrap;overflow:hidden;font-size:15px !important;font-weight:700 !important;color:#333 !important;}
 /* SLA / 리드타임 테이블 정렬 */
 #sla-table th,#leadtime-table th{text-align:center !important;}
 #sla-table th:first-child,#leadtime-table th:first-child{text-align:center !important;}
@@ -1383,13 +1383,20 @@ function editCell(td,claimId,field,curVal){
   }
   td.innerHTML='';td.appendChild(el);el.focus();
   if(el.select&&type!=='date')el.select();
+  let _saved=false;
   const save=()=>{
-    const upd={[field]:el.value};
-    if(field==='donedate'&&el.value)upd.status='처리 완료';
+    if(_saved)return;_saved=true;
+    const val=el.value;
+    // TD 즉시 복원 → _vsRender 가드 해제 + 파란줄 제거
+    let disp=val||'-';
+    if(['costP','costR','costS'].includes(field)){const n=parseFloat(String(val).replace(/,/g,''));disp=!isNaN(n)&&val?n.toLocaleString():'-';}
+    td.innerHTML=disp;
+    const upd={[field]:val};
+    if(field==='donedate'&&val)upd.status='처리 완료';
     _fsUpdate('claims',claimId,upd).catch(e=>console.error(e));
   };
   el.addEventListener('blur',save);
-  el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el.blur();}if(e.key==='Escape')renderClaimTable();});
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el.blur();}if(e.key==='Escape'){_saved=true;td.innerHTML=curVal||'-';}});
   if(type==='select')el.addEventListener('change',()=>el.blur());
 }
 
@@ -1427,14 +1434,19 @@ function _openSearchSelect(td,claimId,field,curVal,opts){
   setTimeout(()=>document.addEventListener('mousedown',function close(e){if(!pop.contains(e.target)){pop.remove();document.removeEventListener('mousedown',close);}},true),100);
 }
 
-// ===== 컬럼 너비 관리 =====
-const _colWidths={
+// ===== 컬럼 너비 관리 (localStorage 저장/복원) =====
+const _colDefaults={
   month:64,date:84,indate:84,shipdate:84,donedate:96,
   channel:80,platform:80,orderno:120,buyer:68,product:130,option:100,category:82,
   issue:110,liability:70,type:120,nature:80,_img:70,
   reason:140,returnYn:50,reshipYn:50,accident:60,status:70,
   _lead:65,_sla:55,costP:80,costR:80,costS:80,_del:90
 };
+const _colWidths=(()=>{
+  try{const s=localStorage.getItem('tuunu_colWidths');if(s){const p=JSON.parse(s);return Object.assign({..._colDefaults},p);}}catch(e){}
+  return{..._colDefaults};
+})();
+function _saveColWidths(){try{localStorage.setItem('tuunu_colWidths',JSON.stringify(_colWidths));}catch(e){}}
 function _colW(key){const w=_colWidths[key];return w?`min-width:${w}px;max-width:${w}px;width:${w}px;`:'';}
 
 let _colResizeReady=false;
@@ -1469,7 +1481,7 @@ function initColResize(){
         const up=()=>{
           h.classList.remove('dragging');document.body.style.cursor='';
           document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);
-          // 너비 변경 반영하여 tbody 재렌더
+          _saveColWidths(); // localStorage에 너비 저장
           _vsRender();
         };
         document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
@@ -1819,13 +1831,19 @@ function _doRenderClaimTable(){
   _vsInit();
   _vsRender();
   initColResize();
-  // 스크롤 위치 복원 — 세션당 최초 1회만 (새로고침 후 마지막 위치로)
+  // 스크롤 위치 복원 — 세션당 최초 1회만, retry로 확실하게
   if(!_vsScrollRestored){
     _vsScrollRestored=true;
-    const wrap=document.getElementById('claim-scroll-wrap');
-    if(wrap){
-      const saved=parseInt(localStorage.getItem('sc_claim')||'0');
-      if(saved>0)requestAnimationFrame(()=>{ wrap.scrollTop=saved; });
+    const saved=parseInt(localStorage.getItem('sc_claim')||'0');
+    if(saved>0){
+      const _tryScroll=(n=0)=>{
+        const w=document.getElementById('claim-scroll-wrap');
+        if(!w)return;
+        w.scrollTop=saved;
+        // 높이가 부족해 반영 안된 경우 재시도 (최대 5회)
+        if(w.scrollTop<saved-10&&n<5)setTimeout(()=>_tryScroll(n+1),120);
+      };
+      requestAnimationFrame(()=>_tryScroll());
     }
   }
 }
