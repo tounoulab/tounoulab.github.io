@@ -861,9 +861,9 @@ function _restoreScroll(page){
   });
 }
 function switchPage(name){
-  // 현재 페이지 스크롤 저장
+  // 현재 페이지 스크롤 저장 (다른 페이지로 이동할 때만 — 같은 페이지 새로고침 시 덮어쓰기 방지)
   const cur=localStorage.getItem('tuunu_page')||'';
-  if(cur)_saveScroll(cur);
+  if(cur&&cur!==name)_saveScroll(cur);
   localStorage.setItem('tuunu_page','');
   document.querySelectorAll('.gnb-nav-item').forEach(b=>b.classList.remove('active'));
   const nav=document.querySelector('.gnb-nav-item[data-page="'+name+'"]');
@@ -1290,6 +1290,7 @@ function openClaimModal(){
     if(!c.querySelector('.product-item'))c.innerHTML=_makeProductItemHTML(true);
     // 아직 makeSearchable이 안 된 항목에만 적용 (sel._sd가 없는 것)
     c.querySelectorAll('.pi-category').forEach(sel=>{if(!sel._sd)makeSearchable(sel);});
+    c.querySelectorAll('.pi-option').forEach(sel=>{if(!sel._sd)makeSearchable(sel);});
   }
   document.getElementById('claim-modal').style.display='block';document.body.style.overflow='hidden';
 }
@@ -1315,11 +1316,14 @@ function openEditModal(id){
     c.innerHTML=_makeProductItemHTML(true);
     const pi=c.querySelector('.product-item');
     pi.querySelector('.pi-product').value=r.product||'';
-    pi.querySelector('.pi-option').value=(r.option==='[옵션 지정 불가]'?'':r.option)||'';
+    const optSel=pi.querySelector('.pi-option');
+    const optVal=(r.option==='[옵션 지정 불가]'?'':r.option)||'';
+    makeSearchable(optSel);
+    optSel.value=optVal;
+    if(optSel._sdInput)optSel._sdInput.value=optVal;
     const catSel=pi.querySelector('.pi-category');
     catSel.value=r.category||'';
     makeSearchable(catSel);
-    // searchable 적용 후 input 값도 동기화
     if(catSel._sdInput)catSel._sdInput.value=r.category||'';
     pi.querySelector('.pi-costP').value=r.costP||'';
   }
@@ -1415,15 +1419,17 @@ function clearClaimForm(){
   const c=document.getElementById('c-products-container');
   if(c){
     c.innerHTML=_makeProductItemHTML(true);
-    makeSearchable(c.querySelector('.pi-category')); // 최초 상품 항목 검색 기능 적용
+    makeSearchable(c.querySelector('.pi-category'));
+    makeSearchable(c.querySelector('.pi-option'));
   }
 }
 // ===== 인라인 편집 필드 정의 =====
+const _OPTION_OPTS=`<option value="">선택 또는 검색</option><option>발매트</option><option>주방매트</option><option>[40x40cm 쿠션 커버]</option><option>[50x50cm 쿠션 커버]</option><option>[40x40cm 쿠션솜]</option><option>[50x50cm 쿠션솜]</option><option>[40x40cm 방석솜]</option><option>[50x50cm 방석솜]</option><option>[40x40cm 쿠션 커버+40x40cm 쿠션 솜]</option><option>[40x40cm 쿠션 커버+40x40cm 방석 솜]</option><option>[40x40cm 쿠션 커버+50x50cm 방석 솜]</option><option>[50x50cm 쿠션 커버+50x50cm 쿠션 솜]</option><option>[50x50cm 쿠션 커버+50x50cm 방석 솜]</option><option>[S]</option><option>[M]</option><option>[L]</option><option>[S(400X400mm) 포스터]</option><option>[M(500X500mm) 포스터]</option><option>[500X700mm 포스터]</option><option>[A1 포스터]</option><option>[A2 포스터]</option><option>[A3 포스터]</option><option>[A4 포스터]</option><option>[그린 프레임]</option><option>[레드 프레임]</option><option>[블랙 프레임]</option><option>[블루 프레임]</option><option>[우드 프레임]</option><option>[옐로우 프레임]</option><option>[화이트 프레임]</option><option>[핑크 프레임]</option><option>[S (poster + frame 20.5x74.5cm) / 블랙]</option><option>[S (poster + frame 20.5x74.5cm) / 오크우드]</option><option>[S (poster + frame 20.5x74.5cm) / 화이트]</option><option>[S (poster + frame 20.5x74.5cm) / 실버]</option><option>[M (poster + frame 25.5x75.5cm) / 블랙]</option><option>[M (poster + frame 25.5x75.5cm) / 오크우드]</option><option>[M (poster + frame 25.5x75.5cm) / 화이트]</option><option>[M (poster + frame 25.5x75.5cm) / 실버]</option><option>[SS 차렵이불]</option><option>:FREE</option><option>[Q 차렵이불]</option><option>[(남녀공용 M)]</option><option>[(남녀공용 L)]</option><option>[S (50x70cm)]</option><option>[M (85x120cm)]</option><option>[L (130x150cm)]</option><option>[30x40]</option><option>[40x56]</option><option>[50x70]</option><option>[59.4x84.1]</option><option>[M (88x140cm)]</option><option>[L (140x225cm)]</option><option>[레귤러핏 (148)-블랙-S]</option><option>[레귤러핏 (148)-블랙-M]</option><option>[레귤러핏 (148)-블랙-L]</option><option>[레귤러핏 (148)-블랙-XL]</option><option>[레귤러핏 (148)-화이트-S]</option><option>[레귤러핏 (148)-화이트-M]</option><option>[레귤러핏 (148)-화이트-L]</option><option>[레귤러핏 (148)-화이트-XL]</option><option>[오버핏 (113)-블랙-S]</option><option>[오버핏 (113)-블랙-M]</option><option>[오버핏 (113)-블랙-L]</option><option>[오버핏 (113)-블랙-XL]</option><option>[오버핏 (113)-화이트-S]</option><option>[오버핏 (113)-화이트-M]</option><option>[오버핏 (113)-화이트-L]</option><option>[오버핏 (113)-화이트-XL]</option><option>[화이트 M]</option><option>[A1+그린 프레임]</option><option>[A1+레드 프레임]</option><option>[A1+블랙 프레임]</option><option>[A1+블루 프레임]</option><option>[A1+얠로우 프레임]</option><option>[A1+우드 프레임]</option><option>[A1+핑크 프레임]</option><option>[A1+화이트 프레임]</option><option>[A2+그린 프레임]</option><option>[A2+레드 프레임]</option><option>[A2+블랙 프레임]</option><option>[A2+블루 프레임]</option><option>[A2+옐로우 프레임]</option><option>[A2+우드 프레임]</option><option>[A2+핑크 프레임]</option><option>[A2+화이트 프레임]</option><option>[A3+그린 프레임]</option><option>[A3+레드 프레임]</option><option>[A3+블랙 프레임]</option><option>[A3+블루 프레임]</option><option>[A3+옐로우 프레임]</option><option>[A3+우드 프레임]</option><option>[A3+핑크 프레임]</option><option>[A3+화이트 프레임]</option><option>[A4+그린 프레임]</option><option>[A4+레드 프레임]</option><option>[A4+블랙 프레임]</option><option>[A4+블루 프레임]</option><option>[A4+옐로우 프레임]</option><option>[A4+우드 프레임]</option><option>[A4+핑크 프레임]</option><option>[A4+화이트 프레임]</option><option>[M(500X500mm)+그린 프레임]</option><option>[M(500X500mm)+레드 프레임]</option><option>[M(500X500mm)+블랙 프레임]</option><option>[M(500X500mm)+블루 프레임]</option><option>[M(500X500mm)+옐로우 프레임]</option><option>[M(500X500mm)+우드 프레임]</option><option>[M(500X500mm)+핑크 프레임]</option><option>[M(500X500mm)+화이트 프레임]</option><option>[S(400X400mm)+그린 프레임]</option><option>[S(400X400mm)+레드 프레임]</option><option>[S(400X400mm)+블랙 프레임]</option><option>[S(400X400mm)+블루 프레임]</option><option>[S(400X400mm)+옐로우 프레임]</option><option>[S(400X400mm)+우드 프레임]</option><option>[S(400X400mm)+핑크 프레임]</option><option>[S(400X400mm)+화이트 프레임]</option><option>[(500X700mm)+우드 프레임]</option><option>[(500X700mm)+화이트 프레임]</option><option>[(500X700mm)+블랙 프레임]</option><option>[테이블매트 1p]</option><option>블랙</option>`;
 const _CATEGORY_OPTS=`<option value="">선택</option><option>쿠션 커버</option><option>미니 쿠션 커버</option><option>파우치</option><option>패브릭 포스터</option><option>쉬폰 패브릭 포스터</option><option>베개 커버</option><option>담요</option><option>니트블랭킷</option><option>티셔츠</option><option>테이블매트</option><option>파자마</option><option>에코백</option><option>극세사 발매트</option><option>극세사 주방매트</option><option>러그</option><option>이불</option><option>규조토 발매트</option><option>규조토 주방매트</option><option>포스터</option><option>포스터+액자</option><option>핸드타월</option><option>타월 발매트</option><option>액자 세트</option><option>캔버스 액자</option><option>액자 단품</option><option>컵</option><option>플레이트</option><option>양말</option><option>테크류</option><option>부자재(꼭꼬핀, 논슬립 등)</option><option>PVC 주방매트</option><option>사은품</option><option>매트리스 커버</option><option>침대 패드</option><option>쿠션 커버+쿠션 솜</option><option>쿠션 커버+방석 솜</option><option>베개 커버+베개 솜</option><option>미니 쿠션 커버+미니 쿠션 솜</option><option>냉감 침대패드</option><option>냉감 이불</option>`;
 
 function _makeProductItemHTML(isFirst){
   const delBtn=isFirst?`<button type="button" onclick="removeProductItem(this)" style="display:none;position:absolute;top:8px;right:8px;background:none;border:none;color:#aaa;font-size:20px;line-height:1;cursor:pointer;" title="상품 삭제">×</button>`:`<button type="button" onclick="removeProductItem(this)" style="position:absolute;top:8px;right:8px;background:none;border:none;color:#aaa;font-size:20px;line-height:1;cursor:pointer;" title="상품 삭제">×</button>`;
-  return`<div class="product-item" style="border:1px solid #e0e0de;border-radius:8px;padding:12px 12px 8px;margin-bottom:10px;position:relative;">${delBtn}<div class="grid2 form-row"><div><label>상품명</label><input type="text" class="pi-product"/></div><div><label>옵션명</label><input type="text" class="pi-option" placeholder="없으면 [옵션 지정 불가] 자동 입력"/></div></div><div class="grid2 form-row"><div><label>상품 분류</label><select class="pi-category">${_CATEGORY_OPTS}</select></div><div><label>상품 비용</label><input type="number" class="pi-costP" min="0"/></div></div></div>`;
+  return`<div class="product-item" style="border:1px solid #e0e0de;border-radius:8px;padding:12px 12px 8px;margin-bottom:10px;position:relative;">${delBtn}<div class="grid2 form-row"><div><label>상품명</label><input type="text" class="pi-product"/></div><div><label>옵션명</label><select class="pi-option">${_OPTION_OPTS}</select></div></div><div class="grid2 form-row"><div><label>상품 분류</label><select class="pi-category">${_CATEGORY_OPTS}</select></div><div><label>상품 비용</label><input type="number" class="pi-costP" min="0"/></div></div></div>`;
 }
 
 function addProductItem(){
@@ -1434,7 +1440,7 @@ function addProductItem(){
   // 새로 추가된 상품 항목의 category select에 검색 기능 적용
   const items=c.querySelectorAll('.product-item');
   const newItem=items[items.length-1];
-  if(newItem)makeSearchable(newItem.querySelector('.pi-category'));
+  if(newItem){makeSearchable(newItem.querySelector('.pi-category'));makeSearchable(newItem.querySelector('.pi-option'));}
 }
 
 function removeProductItem(btn){
@@ -3471,7 +3477,7 @@ function makeSearchable(selectId){
     items[focusIdx].scrollIntoView({block:'nearest'});
   }
 
-  inp.addEventListener('focus',()=>{renderList(inp.value);list.classList.add('open');});
+  inp.addEventListener('focus',()=>{inp.select();renderList('');list.classList.add('open');});
   inp.addEventListener('input',()=>{renderList(inp.value);list.classList.add('open');sel.value=inp.value;});
   inp.addEventListener('keydown',e=>{
     if(e.key==='ArrowDown'){e.preventDefault();moveFocus(1);}
