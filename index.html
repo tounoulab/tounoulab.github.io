@@ -1887,12 +1887,12 @@ function _vsOnScroll(){
   if(_vsRafId)cancelAnimationFrame(_vsRafId);
   _vsRafId=requestAnimationFrame(()=>_vsRender());
 }
-function _vsRender(){
+function _vsRender(scrollTopOverride){
   const wrap=_vsWrap,tbody=document.getElementById('claim-tbody');
   if(!wrap||!tbody||!_vsClaims.length)return;
   // 인라인 에디터 열려 있으면 렌더 중단 (편집 내용 보호)
   if(tbody.querySelector('input,select,textarea'))return;
-  const scrollTop=wrap.scrollTop,viewH=wrap.clientHeight||600;
+  const scrollTop=scrollTopOverride!==undefined?scrollTopOverride:wrap.scrollTop,viewH=wrap.clientHeight||600;
   const total=_vsClaims.length;
   const startRow=Math.max(0,Math.floor(scrollTop/VS_ROW_H)-VS_BUF);
   const endRow=Math.min(total,Math.ceil((scrollTop+viewH)/VS_ROW_H)+VS_BUF);
@@ -1960,11 +1960,17 @@ function _doRenderClaimTable(){
   if(empty)empty.style.display='none';
   _vsClaims=claims;
   _vsInit();
-  // _vsRender 전에 scrollTop을 설정 → 첫 렌더가 저장된 위치에서 시작
+  // 스크롤 복원: tbody가 비어있을 때는 scrollTop이 클램핑되므로
+  // _vsRender(sc)로 먼저 올바른 위치의 행을 렌더한 뒤 scrollTop을 설정
   if(!_vsScrollRestored){
     _vsScrollRestored=true;
     const sc=+localStorage.getItem('sc_claim')||0;
-    if(sc>0&&_vsWrap)_vsWrap.scrollTop=sc;
+    if(sc>0&&_vsWrap){
+      _vsRender(sc);       // spacer 포함 전체 높이 확보 후 목표 위치 렌더
+      _vsWrap.scrollTop=sc; // 이제 콘텐츠 높이가 충분하므로 클램핑 없음
+      initColResize();
+      return;
+    }
   }
   _vsRender();
   initColResize();
