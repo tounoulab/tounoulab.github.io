@@ -713,13 +713,6 @@ tr:hover td{background:#fafafa;}
       <div><label>회수 비용</label><input type="number" id="c-cost-return" min="0"/></div>
       <div><label>재출고 비용</label><input type="number" id="c-cost-reship" min="0"/></div>
     </div>
-    <div class="divider"></div>
-    <div class="section-label">리드타임 / 금액</div>
-    <div class="grid3 form-row">
-      <div><label>리드타임 (일)</label><input type="number" id="c-leadtime" min="0" step="0.1" placeholder="0.0"/></div>
-      <div><label>VOC 상품 금액</label><input type="number" id="c-vocamt" min="0" placeholder="0"/></div>
-      <div><label>CS 안내 유지 금액</label><input type="number" id="c-csamt" min="0" placeholder="0"/></div>
-    </div>
     <div style="display:flex;gap:10px;margin-top:8px;">
       <button class="btn-primary" onclick="addClaim()">등록</button>
       <button class="btn-secondary" onclick="closeClaimModal()">취소</button>
@@ -772,7 +765,7 @@ tr:hover td{background:#fafafa;}
         <th data-col="_lead" style="border:1px solid #e0e0de;">리드타임</th>
         <th data-col="status" style="border:1px solid #e0e0de;">처리 상태</th>
         <th data-col="_sla" style="border:1px solid #e0e0de;">SLA</th>
-        <th data-col="_del" style="border:1px solid #e0e0de;">삭제</th>
+        <th data-col="_del" style="border:1px solid #e0e0de;">복사/삭제</th>
       </tr>
     </thead>
     <tbody id="claim-tbody"></tbody>
@@ -873,7 +866,7 @@ function switchPage(name){
   if(name==='home')renderHomeDashboard();
   if(name==='voc'){renderVocStats();renderVocCharts();_restoreScroll('voc');}
   if(name==='return'){renderReturnStats();renderReturnTable();_restoreScroll('return');}
-  if(name==='claim'){renderClaimTable(true);_restoreScroll('claim');}
+  if(name==='claim'){_vsScrollRestored=false;renderClaimTable(true);}
 }
 // 새로고침 전 스크롤 저장
 window.addEventListener('beforeunload',()=>{
@@ -1301,7 +1294,7 @@ function addClaim(){
   const date=document.getElementById('c-date').value;
   if(!date){alert('작성일을 입력해 주세요.');return;}
   const optionVal=document.getElementById('c-option').value.trim()||'[옵션 지정 불가]';
-  const fields={date,month:document.getElementById('c-month').value||date.slice(0,7),indate:document.getElementById('c-indate').value,shipdate:document.getElementById('c-shipdate').value,channel:document.getElementById('c-channel').value,platform:document.getElementById('c-platform').value,orderno:document.getElementById('c-orderno').value,buyer:document.getElementById('c-buyer').value,product:document.getElementById('c-product').value,option:optionVal,category:document.getElementById('c-category').value,issue:document.getElementById('c-issue').value,liability:document.getElementById('c-liability').value,type:document.getElementById('c-type').value,nature:document.getElementById('c-nature').value,reason:document.getElementById('c-reason').value,returnYn:document.getElementById('c-return-yn').value,reshipYn:document.getElementById('c-reship-yn').value,accident:document.getElementById('c-accident').value,status:document.getElementById('c-status').value,costP:document.getElementById('c-cost-product').value,costR:document.getElementById('c-cost-return').value,costS:document.getElementById('c-cost-reship').value,leadtime:document.getElementById('c-leadtime').value,vocAmt:document.getElementById('c-vocamt').value,csAmt:document.getElementById('c-csamt').value};
+  const fields={date,month:document.getElementById('c-month').value||date.slice(0,7),indate:document.getElementById('c-indate').value,shipdate:document.getElementById('c-shipdate').value,channel:document.getElementById('c-channel').value,platform:document.getElementById('c-platform').value,orderno:document.getElementById('c-orderno').value,buyer:document.getElementById('c-buyer').value,product:document.getElementById('c-product').value,option:optionVal,category:document.getElementById('c-category').value,issue:document.getElementById('c-issue').value,liability:document.getElementById('c-liability').value,type:document.getElementById('c-type').value,nature:document.getElementById('c-nature').value,reason:document.getElementById('c-reason').value,returnYn:document.getElementById('c-return-yn').value,reshipYn:document.getElementById('c-reship-yn').value,accident:document.getElementById('c-accident').value,status:document.getElementById('c-status').value,costP:document.getElementById('c-cost-product').value,costR:document.getElementById('c-cost-return').value,costS:document.getElementById('c-cost-reship').value};
   if(_editClaimId){
     _fsUpdate('claims',_editClaimId,fields).catch(e=>console.error(e));
   }else{
@@ -1318,8 +1311,31 @@ function deleteClaim(id){
   if(!confirm('삭제하시겠습니까?'))return;
   _fsDelete('claims',id).catch(e=>console.error(e));
 }
+function duplicateClaim(id){
+  const src=_claimsData.find(r=>String(r.id)===String(id));
+  if(!src){alert('원본 데이터를 찾을 수 없습니다.');return;}
+  const newId=Date.now();
+  // 원본 그대로 복사 (id만 새로 발급, 이미지 제외)
+  const copy={...src,id:newId,reasonImgUrl:'',reasonImgUrls:[]};
+  _fsSet('claims',newId,copy)
+    .then(()=>{
+      // 복사된 행으로 스크롤 (맨 아래 or 원본 근처 — 정렬 기준에 따라 위치 다름)
+      // 사용자가 확인할 수 있도록 잠깐 하이라이트
+      setTimeout(()=>{
+        const rows=document.querySelectorAll('#claim-tbody tr');
+        rows.forEach(tr=>{
+          if(tr.querySelector(`[data-id="${newId}"]`)){
+            tr.style.outline='2px solid #1a73e8';
+            tr.scrollIntoView({block:'nearest'});
+            setTimeout(()=>{tr.style.outline='';},1500);
+          }
+        });
+      },300);
+    })
+    .catch(e=>console.error(e));
+}
 function clearClaimForm(){
-  ['c-month','c-indate','c-shipdate','c-channel','c-platform','c-orderno','c-buyer','c-product','c-option','c-category','c-issue','c-liability','c-type','c-nature','c-reason','c-return-yn','c-reship-yn','c-accident','c-status','c-cost-product','c-cost-return','c-cost-reship','c-leadtime','c-vocamt','c-csamt'].forEach(id=>{
+  ['c-month','c-indate','c-shipdate','c-channel','c-platform','c-orderno','c-buyer','c-product','c-option','c-category','c-issue','c-liability','c-type','c-nature','c-reason','c-return-yn','c-reship-yn','c-accident','c-status','c-cost-product','c-cost-return','c-cost-reship'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     el.value='';if(el._sdInput)el._sdInput.value='';
   });
@@ -1417,7 +1433,7 @@ const _colWidths={
   channel:80,platform:80,orderno:120,buyer:68,product:130,option:100,category:82,
   issue:110,liability:70,type:120,nature:80,_img:70,
   reason:140,returnYn:50,reshipYn:50,accident:60,status:70,
-  _lead:65,_sla:55,costP:80,costR:80,costS:80,_del:45
+  _lead:65,_sla:55,costP:80,costR:80,costS:80,_del:90
 };
 function _colW(key){const w=_colWidths[key];return w?`min-width:${w}px;max-width:${w}px;width:${w}px;`:'';}
 
@@ -1711,7 +1727,7 @@ function renderClaimTable(){
 
 // ===== 가상 스크롤 (Virtual Scroll) =====
 const VS_ROW_H=36,VS_BUF=60;
-let _vsClaims=[],_vsRafId=null,_vsWrap=null,_vsScrollBound=false;
+let _vsClaims=[],_vsRafId=null,_vsWrap=null,_vsScrollBound=false,_vsScrollRestored=false;
 function _vsInit(){
   const wrap=document.getElementById('claim-scroll-wrap');
   if(!wrap)return;
@@ -1731,6 +1747,8 @@ function _vsOnScroll(){
 function _vsRender(){
   const wrap=_vsWrap,tbody=document.getElementById('claim-tbody');
   if(!wrap||!tbody||!_vsClaims.length)return;
+  // 인라인 에디터 열려 있으면 렌더 중단 (편집 내용 보호)
+  if(tbody.querySelector('input,select,textarea'))return;
   const scrollTop=wrap.scrollTop,viewH=wrap.clientHeight||600;
   const total=_vsClaims.length;
   const startRow=Math.max(0,Math.floor(scrollTop/VS_ROW_H)-VS_BUF);
@@ -1782,7 +1800,7 @@ function _buildClaimRow(r,i){
     }
     cells+=`<td class="tdc${isLeft?' td-left':''}" title="${val||'-'}" data-id="${r.id}" data-field="${key}" data-val="${val.replace(/"/g,'&quot;')}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)" style="${_colW(key)}">${disp}</td>`;
   });
-  cells+=`<td class="tdc"><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
+  cells+=`<td class="tdc" style="white-space:nowrap;${_colW('_del')}"><button style="padding:2px 7px;font-size:11px;border:1px solid #c5cae9;border-radius:4px;background:#f3f4fd;cursor:pointer;color:#3949ab;margin-right:3px;" onclick="duplicateClaim(${r.id})" title="이 행 복사">복사</button><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
   return`<tr style="background:${bg};">${cells}</tr>`;
 }
 
@@ -1801,11 +1819,14 @@ function _doRenderClaimTable(){
   _vsInit();
   _vsRender();
   initColResize();
-  // 스크롤 위치 복원 (새로고침 후 마지막 위치로)
-  const wrap=document.getElementById('claim-scroll-wrap');
-  if(wrap){
-    const saved=parseInt(localStorage.getItem('sc_claim')||'0');
-    if(saved>0)requestAnimationFrame(()=>{wrap.scrollTop=saved;});
+  // 스크롤 위치 복원 — 세션당 최초 1회만 (새로고침 후 마지막 위치로)
+  if(!_vsScrollRestored){
+    _vsScrollRestored=true;
+    const wrap=document.getElementById('claim-scroll-wrap');
+    if(wrap){
+      const saved=parseInt(localStorage.getItem('sc_claim')||'0');
+      if(saved>0)requestAnimationFrame(()=>{ wrap.scrollTop=saved; });
+    }
   }
 }
 function _updateLoadMore(){}
