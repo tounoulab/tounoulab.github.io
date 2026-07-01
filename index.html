@@ -667,11 +667,11 @@ tr:hover td{background:#fafafa;}
     </div>
     <div class="grid2 form-row"><div><label>주문번호</label><input type="text" id="c-orderno"/></div><div><label>주문자명</label><input type="text" id="c-buyer"/></div></div>
     <div class="divider"></div>
-    <div class="section-label">상품 정보</div>
-    <div class="grid2 form-row"><div><label>상품명</label><input type="text" id="c-product"/></div><div><label>옵션명</label><input type="text" id="c-option" placeholder="없으면 [옵션 지정 불가] 자동 입력"/></div></div>
-    <div class="form-row"><label>상품 분류</label>
-      <select id="c-category"><option value="">선택</option><option>쿠션 커버</option><option>미니 쿠션 커버</option><option>파우치</option><option>패브릭 포스터</option><option>쉬폰 패브릭 포스터</option><option>베개 커버</option><option>담요</option><option>니트블랭킷</option><option>티셔츠</option><option>테이블매트</option><option>파자마</option><option>에코백</option><option>극세사 발매트</option><option>극세사 주방매트</option><option>러그</option><option>이불</option><option>규조토 발매트</option><option>규조토 주방매트</option><option>포스터</option><option>포스터+액자</option><option>핸드타월</option><option>타월 발매트</option><option>액자 세트</option><option>캔버스 액자</option><option>액자 단품</option><option>컵</option><option>플레이트</option><option>양말</option><option>테크류</option><option>부자재(꼭꼬핀, 논슬립 등)</option><option>PVC 주방매트</option><option>사은품</option><option>매트리스 커버</option><option>침대 패드</option><option>쿠션 커버+쿠션 솜</option><option>쿠션 커버+방석 솜</option><option>베개 커버+베개 솜</option><option>미니 쿠션 커버+미니 쿠션 솜</option><option>냉감 침대패드</option><option>냉감 이불</option></select>
+    <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span>상품 정보</span>
+      <button type="button" onclick="addProductItem()" style="font-size:12px;padding:3px 10px;border:1px solid #1a73e8;border-radius:6px;background:#f0f6ff;color:#1a73e8;cursor:pointer;font-weight:600;">+ 상품 추가</button>
     </div>
+    <div id="c-products-container"></div>
     <div class="divider"></div>
     <div class="section-label">클레임 분류</div>
     <div class="grid2 form-row">
@@ -708,8 +708,7 @@ tr:hover td{background:#fafafa;}
     <div class="form-row"><label>처리 상태</label><select id="c-status"><option value="">선택</option><option>처리 중</option><option>처리 완료</option></select></div>
     <div class="divider"></div>
     <div class="section-label">비용</div>
-    <div class="grid3 form-row">
-      <div><label>상품 비용</label><input type="number" id="c-cost-product" min="0"/></div>
+    <div class="grid2 form-row">
       <div><label>회수 비용</label><input type="number" id="c-cost-return" min="0"/></div>
       <div><label>재출고 비용</label><input type="number" id="c-cost-reship" min="0"/></div>
     </div>
@@ -735,7 +734,7 @@ tr:hover td{background:#fafafa;}
   </div>
 </div>
 <div id="claim-scroll-wrap" style="overflow:auto;max-height:calc(100vh - 190px);padding:0 24px 24px;">
-  <table id="claim-sheet" style="width:100%;border-collapse:collapse;font-size:13px;min-width:1400px;background:#fff;border:1px solid #e0e0de;border-radius:8px;">
+  <table id="claim-sheet" style="border-collapse:collapse;font-size:13px;min-width:2400px;background:#fff;border:1px solid #e0e0de;border-radius:8px;">
     <thead>
       <tr style="background:#f6f6f4;">
         <th data-col="month" style="border:1px solid #e0e0de;">발생 월</th>
@@ -756,8 +755,8 @@ tr:hover td{background:#fafafa;}
         <th data-col="nature" style="border:1px solid #e0e0de;">클레임성격</th>
         <th data-col="_img" style="border:1px solid #e0e0de;">첨부</th>
         <th data-col="reason" style="border:1px solid #e0e0de;">사유</th>
-        <th data-col="returnYn" style="border:1px solid #e0e0de;">회수 여부</th>
-        <th data-col="reshipYn" style="border:1px solid #e0e0de;">재출고 여부</th>
+        <th data-col="returnYn" style="border:1px solid #e0e0de;">회수</th>
+        <th data-col="reshipYn" style="border:1px solid #e0e0de;">재출고</th>
         <th data-col="accident" style="border:1px solid #e0e0de;">사고 접수</th>
         <th data-col="costP" style="border:1px solid #e0e0de;">상품비용</th>
         <th data-col="costR" style="border:1px solid #e0e0de;">회수비용</th>
@@ -871,6 +870,7 @@ function switchPage(name){
 // 새로고침 전 스크롤 저장
 window.addEventListener('beforeunload',()=>{
   _saveScroll(localStorage.getItem('tuunu_page')||'');
+  if(_vsWrap)localStorage.setItem('sc_claim',String(_vsWrap.scrollTop));
 });
 // ===== 스토리지 =====
 // ===== FIREBASE =====
@@ -1268,6 +1268,8 @@ function openClaimModal(){
   _editClaimId=null;
   document.querySelector('#claim-modal span[style*="17px"]').textContent='신규 클레임 등록';
   document.querySelector('#claim-modal .btn-primary').textContent='등록';
+  const c=document.getElementById('c-products-container');
+  if(c&&!c.querySelector('.product-item')){c.innerHTML=_makeProductItemHTML(true);}
   document.getElementById('claim-modal').style.display='block';document.body.style.overflow='hidden';
 }
 function openEditModal(id){
@@ -1282,30 +1284,71 @@ function openEditModal(id){
   };
   set('c-date',r.date);set('c-month',r.month);set('c-indate',r.indate);set('c-shipdate',r.shipdate);
   set('c-channel',r.channel);set('c-platform',r.platform);set('c-orderno',r.orderno);set('c-buyer',r.buyer);
-  set('c-product',r.product);set('c-option',r.option==='[옵션 지정 불가]'?'':r.option);
-  set('c-category',r.category);set('c-issue',r.issue);set('c-liability',r.liability);
+  set('c-issue',r.issue);set('c-liability',r.liability);
   set('c-type',r.type);set('c-nature',r.nature);set('c-reason',r.reason);
   set('c-return-yn',r.returnYn);set('c-reship-yn',r.reshipYn);set('c-accident',r.accident);
-  set('c-status',r.status);set('c-cost-product',r.costP);set('c-cost-return',r.costR);set('c-cost-reship',r.costS);
+  set('c-status',r.status);set('c-cost-return',r.costR);set('c-cost-reship',r.costS);
+  // 상품 항목 1개로 채우기
+  const c=document.getElementById('c-products-container');
+  if(c){
+    c.innerHTML=_makeProductItemHTML(true);
+    const pi=c.querySelector('.product-item');
+    pi.querySelector('.pi-product').value=r.product||'';
+    pi.querySelector('.pi-option').value=(r.option==='[옵션 지정 불가]'?'':r.option)||'';
+    pi.querySelector('.pi-category').value=r.category||'';
+    pi.querySelector('.pi-costP').value=r.costP||'';
+  }
   document.getElementById('claim-modal').style.display='block';document.body.style.overflow='hidden';
 }
 function closeClaimModal(){document.getElementById('claim-modal').style.display='none';document.body.style.overflow='';_editClaimId=null;}
 function addClaim(){
   const date=document.getElementById('c-date').value;
   if(!date){alert('작성일을 입력해 주세요.');return;}
-  const optionVal=document.getElementById('c-option').value.trim()||'[옵션 지정 불가]';
-  const fields={date,month:document.getElementById('c-month').value||date.slice(0,7),indate:document.getElementById('c-indate').value,shipdate:document.getElementById('c-shipdate').value,channel:document.getElementById('c-channel').value,platform:document.getElementById('c-platform').value,orderno:document.getElementById('c-orderno').value,buyer:document.getElementById('c-buyer').value,product:document.getElementById('c-product').value,option:optionVal,category:document.getElementById('c-category').value,issue:document.getElementById('c-issue').value,liability:document.getElementById('c-liability').value,type:document.getElementById('c-type').value,nature:document.getElementById('c-nature').value,reason:document.getElementById('c-reason').value,returnYn:document.getElementById('c-return-yn').value,reshipYn:document.getElementById('c-reship-yn').value,accident:document.getElementById('c-accident').value,status:document.getElementById('c-status').value,costP:document.getElementById('c-cost-product').value,costR:document.getElementById('c-cost-return').value,costS:document.getElementById('c-cost-reship').value};
+  const shared={
+    date,
+    month:document.getElementById('c-month').value||date.slice(0,7),
+    indate:document.getElementById('c-indate').value,
+    shipdate:document.getElementById('c-shipdate').value,
+    channel:document.getElementById('c-channel').value,
+    platform:document.getElementById('c-platform').value,
+    orderno:document.getElementById('c-orderno').value,
+    buyer:document.getElementById('c-buyer').value,
+    issue:document.getElementById('c-issue').value,
+    liability:document.getElementById('c-liability').value,
+    type:document.getElementById('c-type').value,
+    nature:document.getElementById('c-nature').value,
+    reason:document.getElementById('c-reason').value,
+    returnYn:document.getElementById('c-return-yn').value,
+    reshipYn:document.getElementById('c-reship-yn').value,
+    accident:document.getElementById('c-accident').value,
+    status:document.getElementById('c-status').value,
+    costR:document.getElementById('c-cost-return').value,
+    costS:document.getElementById('c-cost-reship').value,
+  };
+  const productItems=document.querySelectorAll('#c-products-container .product-item');
   if(_editClaimId){
+    const pi=productItems[0];
+    const fields={...shared,
+      product:pi?pi.querySelector('.pi-product').value:'',
+      option:(pi&&pi.querySelector('.pi-option').value.trim())||'[옵션 지정 불가]',
+      category:pi?pi.querySelector('.pi-category').value:'',
+      costP:pi?pi.querySelector('.pi-costP').value:'',
+    };
     _fsUpdate('claims',_editClaimId,fields).catch(e=>console.error(e));
   }else{
-    const id=Date.now();
-    _fsSet('claims',id,{id,donedate:'',...fields}).catch(e=>console.error(e));
+    let baseId=Date.now();
+    productItems.forEach((pi,i)=>{
+      const id=baseId+i;
+      const rec={id,donedate:'',...shared,
+        product:pi.querySelector('.pi-product').value,
+        option:pi.querySelector('.pi-option').value.trim()||'[옵션 지정 불가]',
+        category:pi.querySelector('.pi-category').value,
+        costP:pi.querySelector('.pi-costP').value,
+      };
+      _fsSet('claims',id,rec).catch(e=>console.error(e));
+    });
   }
   clearClaimForm();closeClaimModal();
-  requestAnimationFrame(()=>{
-    const wrap=document.querySelector('#page-claim [style*="overflow:auto"]');
-    if(wrap)wrap.scrollTop=0;
-  });
 }
 function deleteClaim(id){
   if(!confirm('삭제하시겠습니까?'))return;
@@ -1335,14 +1378,47 @@ function duplicateClaim(id){
     .catch(e=>console.error(e));
 }
 function clearClaimForm(){
-  ['c-month','c-indate','c-shipdate','c-channel','c-platform','c-orderno','c-buyer','c-product','c-option','c-category','c-issue','c-liability','c-type','c-nature','c-reason','c-return-yn','c-reship-yn','c-accident','c-status','c-cost-product','c-cost-return','c-cost-reship'].forEach(id=>{
+  ['c-month','c-indate','c-shipdate','c-channel','c-platform','c-orderno','c-buyer',
+   'c-issue','c-liability','c-type','c-nature','c-reason','c-return-yn','c-reship-yn',
+   'c-accident','c-status','c-cost-return','c-cost-reship'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     el.value='';if(el._sdInput)el._sdInput.value='';
   });
   document.getElementById('c-date').value=todayStr();
   const d=new Date();document.getElementById('c-month').value=String(d.getMonth()+1);
+  const c=document.getElementById('c-products-container');
+  if(c){c.innerHTML=_makeProductItemHTML(true);}
 }
 // ===== 인라인 편집 필드 정의 =====
+const _CATEGORY_OPTS=`<option value="">선택</option><option>쿠션 커버</option><option>미니 쿠션 커버</option><option>파우치</option><option>패브릭 포스터</option><option>쉬폰 패브릭 포스터</option><option>베개 커버</option><option>담요</option><option>니트블랭킷</option><option>티셔츠</option><option>테이블매트</option><option>파자마</option><option>에코백</option><option>극세사 발매트</option><option>극세사 주방매트</option><option>러그</option><option>이불</option><option>규조토 발매트</option><option>규조토 주방매트</option><option>포스터</option><option>포스터+액자</option><option>핸드타월</option><option>타월 발매트</option><option>액자 세트</option><option>캔버스 액자</option><option>액자 단품</option><option>컵</option><option>플레이트</option><option>양말</option><option>테크류</option><option>부자재(꼭꼬핀, 논슬립 등)</option><option>PVC 주방매트</option><option>사은품</option><option>매트리스 커버</option><option>침대 패드</option><option>쿠션 커버+쿠션 솜</option><option>쿠션 커버+방석 솜</option><option>베개 커버+베개 솜</option><option>미니 쿠션 커버+미니 쿠션 솜</option><option>냉감 침대패드</option><option>냉감 이불</option>`;
+
+function _makeProductItemHTML(isFirst){
+  const delBtn=isFirst?`<button type="button" onclick="removeProductItem(this)" style="display:none;position:absolute;top:8px;right:8px;background:none;border:none;color:#aaa;font-size:20px;line-height:1;cursor:pointer;" title="상품 삭제">×</button>`:`<button type="button" onclick="removeProductItem(this)" style="position:absolute;top:8px;right:8px;background:none;border:none;color:#aaa;font-size:20px;line-height:1;cursor:pointer;" title="상품 삭제">×</button>`;
+  return`<div class="product-item" style="border:1px solid #e0e0de;border-radius:8px;padding:12px 12px 8px;margin-bottom:10px;position:relative;">${delBtn}<div class="grid2 form-row"><div><label>상품명</label><input type="text" class="pi-product"/></div><div><label>옵션명</label><input type="text" class="pi-option" placeholder="없으면 [옵션 지정 불가] 자동 입력"/></div></div><div class="grid2 form-row"><div><label>상품 분류</label><select class="pi-category">${_CATEGORY_OPTS}</select></div><div><label>상품 비용</label><input type="number" class="pi-costP" min="0"/></div></div></div>`;
+}
+
+function addProductItem(){
+  const c=document.getElementById('c-products-container');
+  if(!c)return;
+  c.insertAdjacentHTML('beforeend',_makeProductItemHTML(false));
+  _syncProductDelBtns();
+}
+
+function removeProductItem(btn){
+  const c=document.getElementById('c-products-container');
+  if(!c||c.querySelectorAll('.product-item').length<=1)return;
+  btn.closest('.product-item').remove();
+  _syncProductDelBtns();
+}
+
+function _syncProductDelBtns(){
+  const items=document.querySelectorAll('#c-products-container .product-item');
+  items.forEach(item=>{
+    const b=item.querySelector('button[onclick*="removeProductItem"]');
+    if(b)b.style.display=items.length<=1?'none':'';
+  });
+}
+
 const CF={
   month:{type:'select',opts:['1','2','3','4','5','6','7','8','9','10','11','12']},date:{type:'date'},indate:{type:'date'},shipdate:{type:'date'},donedate:{type:'date'},
   channel:{type:'select',opts:['채팅','일반 접수건','게시판','CS 메모','유선 인입','CS 확인','내부 점검(타부서)','이메일','헬프센터','리뷰 대응']},
@@ -1354,7 +1430,7 @@ const CF={
   liability:{type:'select',opts:['CS','재고','발주','주문','검수','출고','입고','공급처','배송사','3PL','고객','뚜누','알수없음','타부서']},
   type:{type:'select',opts:['오출고 교환','불량 교환','단순변심 교환','파손/훼손 교환','분실 교환','반송 교환','누락 교환','미회수/교환','불량 반품','오출고 반품','단순변심 반품','파손/훼손 반품','분실 반품','반송 반품','누락 반품','미회수/반품','제작 발주 및 수집','과출고 회수','클레임 철회','CS안내(품절/단순/예약발송)','차액 환불','상품가 결제 완료']},
   nature:{type:'select',opts:['VOC','일반 접수','내부 점검','CS','배송사']},
-  reason:{type:'text'},
+  reason:{type:'text',align:'left'},
   returnYn:{type:'select',opts:['Y','N']},reshipYn:{type:'select',opts:['Y','N']},accident:{type:'select',opts:['Y','N']},
   status:{type:'select',opts:['처리 중','처리 완료']},
   costP:{type:'number'},costR:{type:'number'},costS:{type:'number'},
@@ -1831,19 +1907,18 @@ function _doRenderClaimTable(){
   _vsInit();
   _vsRender();
   initColResize();
-  // 스크롤 위치 복원 — 세션당 최초 1회만, retry로 확실하게
+  // 스크롤 위치 복원 — 세션당 최초 1회만
   if(!_vsScrollRestored){
     _vsScrollRestored=true;
     const saved=parseInt(localStorage.getItem('sc_claim')||'0');
     if(saved>0){
-      const _tryScroll=(n=0)=>{
+      setTimeout(()=>{
         const w=document.getElementById('claim-scroll-wrap');
         if(!w)return;
         w.scrollTop=saved;
-        // 높이가 부족해 반영 안된 경우 재시도 (최대 5회)
-        if(w.scrollTop<saved-10&&n<5)setTimeout(()=>_tryScroll(n+1),120);
-      };
-      requestAnimationFrame(()=>_tryScroll());
+        _vsRender();
+        setTimeout(()=>{if(w.scrollTop<saved-10){w.scrollTop=saved;_vsRender();}},250);
+      },150);
     }
   }
 }
@@ -3359,7 +3434,7 @@ function makeSearchable(selectId){
 }
 
 function initSearchables(){
-  ['c-channel','c-platform','c-category','c-issue','c-liability','c-type','c-nature','c-return-yn','c-reship-yn','c-accident','c-status','r-opened'].forEach(makeSearchable);
+  ['c-channel','c-platform','c-issue','c-liability','c-type','c-nature','c-return-yn','c-reship-yn','c-accident','c-status','r-opened'].forEach(makeSearchable);
 }
 
 // ===== 바로가기 링크 =====
