@@ -183,6 +183,7 @@ tr:hover td{background:#fafafa;}
 #claim-sheet th[data-col="option"]  {left:890px;min-width:100px;z-index:5;}
 #claim-sheet th[data-col="category"]{left:990px;min-width:82px; z-index:5;}
 #claim-sheet tbody td[data-field="month"]   {position:sticky;left:0px;  z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="ticketNo"]{position:sticky;z-index:1;background:inherit;}
 #claim-sheet tbody td[data-field="date"]    {position:sticky;left:64px; z-index:1;background:inherit;}
 #claim-sheet tbody td[data-field="indate"]  {position:sticky;left:148px;z-index:1;background:inherit;}
 #claim-sheet tbody td[data-field="shipdate"]{position:sticky;left:232px;z-index:1;background:inherit;}
@@ -1650,11 +1651,13 @@ function _applyColWidths(){
     const w=_colWidths[c.dataset.col]||80;
     c.style.width=w+'px';
   });
-  // sticky left 위치 동적 계산
+  // sticky left 위치 동적 계산 (_ticket 키는 data-field="ticketNo"에 매핑)
+  const _TD_FIELD={_ticket:'ticketNo'};
   let css='',cum=0;
   _STICKY_KEYS.forEach(k=>{
     const w=_colWidths[k]||80;
-    css+=`#claim-sheet th[data-col="${k}"]{left:${cum}px !important;}#claim-sheet tbody td[data-field="${k}"]{left:${cum}px !important;}\n`;
+    const tdKey=_TD_FIELD[k]||k;
+    css+=`#claim-sheet th[data-col="${k}"]{left:${cum}px !important;}#claim-sheet tbody td[data-field="${tdKey}"]{left:${cum}px !important;}\n`;
     cum+=w;
   });
   let el=document.getElementById('dyn-sticky-css');
