@@ -874,7 +874,15 @@ function switchPage(name){
   if(name==='home')renderHomeDashboard();
   if(name==='voc'){renderVocStats();renderVocCharts();_restoreScroll('voc');}
   if(name==='return'){renderReturnStats();renderReturnTable();_restoreScroll('return');}
-  if(name==='claim'){_vsScrollRestored=false;_scrollRestoreRunning=false;renderClaimTable(true);_doScrollRestore();}
+  if(name==='claim'){
+    _vsScrollRestored=false;
+    renderClaimTable(true);
+    // 페이지가 display:none이었을 경우 scrollTop이 안 먹혔을 수 있으므로 200ms 후 재확인
+    setTimeout(()=>{
+      const sc=+localStorage.getItem('sc_claim')||0;
+      if(sc>0&&_vsWrap&&Math.abs(_vsWrap.scrollTop-sc)>20){_vsWrap.scrollTop=sc;_vsRender();}
+    },200);
+  }
 }
 // 새로고침 전 스크롤 저장
 window.addEventListener('beforeunload',()=>{
@@ -1278,9 +1286,10 @@ function openClaimModal(){
   document.querySelector('#claim-modal span[style*="17px"]').textContent='신규 클레임 등록';
   document.querySelector('#claim-modal .btn-primary').textContent='등록';
   const c=document.getElementById('c-products-container');
-  if(c&&!c.querySelector('.product-item')){
-    c.innerHTML=_makeProductItemHTML(true);
-    makeSearchable(c.querySelector('.pi-category'));
+  if(c){
+    if(!c.querySelector('.product-item'))c.innerHTML=_makeProductItemHTML(true);
+    // 아직 makeSearchable이 안 된 항목에만 적용 (sel._sd가 없는 것)
+    c.querySelectorAll('.pi-category').forEach(sel=>{if(!sel._sd)makeSearchable(sel);});
   }
   document.getElementById('claim-modal').style.display='block';document.body.style.overflow='hidden';
 }
@@ -1404,7 +1413,10 @@ function clearClaimForm(){
   document.getElementById('c-date').value=todayStr();
   const d=new Date();document.getElementById('c-month').value=String(d.getMonth()+1);
   const c=document.getElementById('c-products-container');
-  if(c){c.innerHTML=_makeProductItemHTML(true);}
+  if(c){
+    c.innerHTML=_makeProductItemHTML(true);
+    makeSearchable(c.querySelector('.pi-category')); // 최초 상품 항목 검색 기능 적용
+  }
 }
 // ===== 인라인 편집 필드 정의 =====
 const _CATEGORY_OPTS=`<option value="">선택</option><option>쿠션 커버</option><option>미니 쿠션 커버</option><option>파우치</option><option>패브릭 포스터</option><option>쉬폰 패브릭 포스터</option><option>베개 커버</option><option>담요</option><option>니트블랭킷</option><option>티셔츠</option><option>테이블매트</option><option>파자마</option><option>에코백</option><option>극세사 발매트</option><option>극세사 주방매트</option><option>러그</option><option>이불</option><option>규조토 발매트</option><option>규조토 주방매트</option><option>포스터</option><option>포스터+액자</option><option>핸드타월</option><option>타월 발매트</option><option>액자 세트</option><option>캔버스 액자</option><option>액자 단품</option><option>컵</option><option>플레이트</option><option>양말</option><option>테크류</option><option>부자재(꼭꼬핀, 논슬립 등)</option><option>PVC 주방매트</option><option>사은품</option><option>매트리스 커버</option><option>침대 패드</option><option>쿠션 커버+쿠션 솜</option><option>쿠션 커버+방석 솜</option><option>베개 커버+베개 솜</option><option>미니 쿠션 커버+미니 쿠션 솜</option><option>냉감 침대패드</option><option>냉감 이불</option>`;
@@ -1860,28 +1872,6 @@ function renderClaimTable(){
 // ===== 가상 스크롤 (Virtual Scroll) =====
 const VS_ROW_H=36,VS_BUF=60;
 let _vsClaims=[],_vsRafId=null,_vsWrap=null,_vsScrollBound=false,_vsScrollRestored=false;
-let _scrollRestoreRunning=false;
-function _doScrollRestore(){
-  if(_scrollRestoreRunning)return;
-  const saved=parseInt(localStorage.getItem('sc_claim')||'0');
-  if(!saved||saved<=0)return;
-  _scrollRestoreRunning=true;
-  let n=0;
-  const go=()=>{
-    const w=_vsWrap||document.getElementById('claim-scroll-wrap');
-    if(w&&_vsClaims.length>0){
-      w.scrollTop=saved;
-      if(Math.abs(w.scrollTop-saved)<=30){
-        _vsRender();
-        _scrollRestoreRunning=false;
-        return;
-      }
-    }
-    if(n++<20)setTimeout(go,150);
-    else _scrollRestoreRunning=false;
-  };
-  setTimeout(go,80);
-}
 function _vsInit(){
   const wrap=document.getElementById('claim-scroll-wrap');
   if(!wrap)return;
@@ -1892,11 +1882,10 @@ function _vsInit(){
   }
 }
 function _vsOnScroll(){
+  // scrollTop 즉시 저장 (rAF 밖에서 — refresh 직전에도 유실 없음)
+  if(_vsWrap)localStorage.setItem('sc_claim',_vsWrap.scrollTop|0);
   if(_vsRafId)cancelAnimationFrame(_vsRafId);
-  _vsRafId=requestAnimationFrame(()=>{
-    _vsRender();
-    if(_vsWrap)localStorage.setItem('sc_claim',String(_vsWrap.scrollTop));
-  });
+  _vsRafId=requestAnimationFrame(()=>_vsRender());
 }
 function _vsRender(){
   const wrap=_vsWrap,tbody=document.getElementById('claim-tbody');
@@ -1971,10 +1960,14 @@ function _doRenderClaimTable(){
   if(empty)empty.style.display='none';
   _vsClaims=claims;
   _vsInit();
+  // _vsRender 전에 scrollTop을 설정 → 첫 렌더가 저장된 위치에서 시작
+  if(!_vsScrollRestored){
+    _vsScrollRestored=true;
+    const sc=+localStorage.getItem('sc_claim')||0;
+    if(sc>0&&_vsWrap)_vsWrap.scrollTop=sc;
+  }
   _vsRender();
   initColResize();
-  // 스크롤 위치 복원 — 세션당 최초 1회만
-  if(!_vsScrollRestored){_vsScrollRestored=true;_doScrollRestore();}
 }
 function _updateLoadMore(){}
 // ===== 반품 CRUD =====
