@@ -1214,7 +1214,7 @@ function renderHomeDashboard(){
     }
   },400);
 }
-const _TICKET_BASE_URL='https://talk.tounou.co.kr/dashboard';
+const _TICKET_BASE_URL='https://talk.tounou.co.kr/tickets/native/';
 function goToClaimByOrder(orderno){
   if(!orderno)return;
   switchPage('claim');
@@ -2083,7 +2083,10 @@ function _buildClaimRow(r,i){
       const tno=String(r.ticketNo||'');
       let tdisp;
       if(tno){
-        tdisp=`<span style="color:#333;cursor:text;" data-id="${r.id}" data-field="ticketNo" data-val="${tno}" onclick="editCell(this.parentElement,+this.dataset.id,this.dataset.field,this.dataset.val);event.stopPropagation();">${tno}</span><a href="${_TICKET_BASE_URL}" target="_blank" title="티켓 사이트 열기" onclick="event.stopPropagation();" style="margin-left:4px;color:#1a73e8;text-decoration:none;font-size:12px;">🔗</a>`;
+        const num=parseInt(tno.replace(/[^0-9]/g,''),10);
+        const ticketUrl=isNaN(num)?'':`${_TICKET_BASE_URL}${num+17812}`;
+        const linkHtml=ticketUrl?`<a href="${ticketUrl}" target="_blank" title="티켓 열기" onclick="event.stopPropagation();" style="margin-left:4px;color:#1a73e8;text-decoration:none;font-size:12px;">🔗</a>`:'';
+        tdisp=`<span style="color:#333;cursor:text;" data-id="${r.id}" data-field="ticketNo" data-val="${tno}" onclick="editCell(this.parentElement,+this.dataset.id,this.dataset.field,this.dataset.val);event.stopPropagation();">${tno}</span>${linkHtml}`;
       }else{
         tdisp=`<span style="color:#ccc;">-</span>`;
       }
