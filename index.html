@@ -151,6 +151,11 @@ tr:hover td{background:#fafafa;}
 .sd-item{padding:8px 12px;font-size:13px;cursor:pointer;color:#222;}
 .sd-item:hover,.sd-item.focused{background:#f0f4ff;color:#1a1a1a;}
 .sd-empty{padding:10px 12px;font-size:12px;color:#aaa;}
+/* drag handle */
+#claim-sheet td[data-field="_drag"]{cursor:grab;color:#ccc;font-size:15px;text-align:center;user-select:none;padding:0 2px;}
+#claim-sheet td[data-field="_drag"]:hover{color:#999;}
+#claim-sheet tr.dragging{opacity:0.4;}
+#claim-sheet tr.drag-over td{border-top:2px solid #1a73e8!important;}
 /* claim sheet inline edit */
 #claim-sheet th{text-align:center !important;padding:8px 6px !important;position:sticky;top:0;z-index:3;background:#f6f6f4;user-select:none;white-space:nowrap;overflow:hidden;font-size:15px !important;font-weight:700 !important;color:#333 !important;}
 /* SLA / 리드타임 테이블 정렬 */
@@ -318,7 +323,7 @@ tr:hover td{background:#fafafa;}
         <div class="gnb-nav-item" data-page="claim" onclick="switchPage('claim')">📋 클레임 현황</div>
         <div class="gnb-nav-item" data-page="voc" onclick="switchPage('voc')">📊 VOC 통계</div>
         <div class="gnb-nav-item" data-page="return" onclick="switchPage('return')">📦 반품 입고</div>
-        <div class="gnb-nav-item" data-page="msg" onclick="switchPage('msg')">✉ 문자 안내</div>
+        <div class="gnb-nav-item" data-page="msg" onclick="switchPage('msg')">✉️ 문자 안내</div>
       </div>
     </div>
     <div class="gnb-right" style="display:flex;align-items:center;gap:8px;">
@@ -358,7 +363,7 @@ tr:hover td{background:#fafafa;}
           <div id="h-filter-badge" style="display:none;padding:6px 18px 10px;font-size:12px;color:#1a73e8;font-weight:500;"></div>
         </div>
         <!-- 이번 달 KPI -->
-        <div class="sub-grid kpi-row" style="grid-template-columns:repeat(3,1fr)!important;margin-bottom:16px;">
+        <div class="sub-grid kpi-row" style="grid-template-columns:repeat(4,1fr)!important;gap:10px!important;margin-bottom:16px;">
           <div class="sub-card">
             <div class="sub-card-title">이번 달 평균 리드타임</div>
             <div style="font-size:26px;font-weight:700;color:#1a1a1a;" id="kpi-leadtime">-</div>
@@ -373,6 +378,11 @@ tr:hover td{background:#fafafa;}
             <div class="sub-card-title">VOC 운임</div>
             <div style="font-size:22px;font-weight:700;color:#1a1a1a;" id="kpi-csamt">-</div>
             <div style="font-size:11px;color:#aaa;margin-top:3px;">원 (이번 달 누계)</div>
+          </div>
+          <div class="sub-card" style="min-height:0;">
+            <div class="sub-card-title">장기 미처리건 <span style="font-size:10px;color:#bbb;font-weight:400;">(인입일 기준 7영업일↑)</span></div>
+            <div style="font-size:26px;font-weight:700;color:#c62828;" id="kpi-long-count">-</div>
+            <div id="kpi-long-list" style="font-size:11px;color:#555;margin-top:5px;max-height:72px;overflow-y:auto;line-height:1.6;"></div>
           </div>
         </div>
         <!-- 귀책별/처리유형 (금일 + 이번주, 각 카드 안에서 좌우 배치) -->
@@ -736,7 +746,7 @@ tr:hover td{background:#fafafa;}
 <div id="claim-scroll-wrap" style="overflow:auto;max-height:calc(100vh - 190px);padding:0 24px 24px;">
   <table id="claim-sheet" style="table-layout:fixed;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid #e0e0de;border-radius:8px;">
     <colgroup id="claim-colgroup">
-      <col data-col="month"><col data-col="date"><col data-col="indate"><col data-col="shipdate">
+      <col data-col="_drag"><col data-col="month"><col data-col="date"><col data-col="indate"><col data-col="shipdate">
       <col data-col="donedate"><col data-col="channel"><col data-col="platform"><col data-col="orderno">
       <col data-col="buyer"><col data-col="product"><col data-col="option"><col data-col="category">
       <col data-col="issue"><col data-col="liability"><col data-col="type"><col data-col="nature">
@@ -746,6 +756,7 @@ tr:hover td{background:#fafafa;}
     </colgroup>
     <thead>
       <tr style="background:#f6f6f4;">
+        <th data-col="_drag" style="border:1px solid #e0e0de;position:sticky;left:0;z-index:5;background:#f6f6f4;"></th>
         <th data-col="month" style="border:1px solid #e0e0de;">발생 월</th>
         <th data-col="date" style="border:1px solid #e0e0de;">작성일</th>
         <th data-col="indate" style="border:1px solid #e0e0de;">인입일</th>
@@ -943,12 +954,18 @@ function setupFirebaseListeners(){
     return r;
   };
   db.collection('claims').onSnapshot(snap=>{
-    _claimsData=snap.docs.map(d=>_normClaimDates({...d.data()})).sort((a,b)=>{
+    // 1단계: 날짜 기준 기본 정렬
+    const _rawDocs=snap.docs.map(d=>_normClaimDates({...d.data()}));
+    _rawDocs.sort((a,b)=>{
       const ka=(normDate(a.date)||normDate(a.indate)||'');
       const kb=(normDate(b.date)||normDate(b.indate)||'');
       if(ka&&kb&&ka!==kb)return ka.localeCompare(kb);
       return a.id-b.id;
     });
+    // 2단계: _rowOrder 없는 행은 날짜 순서 기반 proxy 부여 후 혼합 정렬
+    _rawDocs.forEach((r,i)=>{r._ro=(r._rowOrder!=null)?r._rowOrder:i*1000;});
+    _rawDocs.sort((a,b)=>a._ro-b._ro);
+    _claimsData=_rawDocs;
     clearTimeout(_claimSnapTimer);
     _claimSnapTimer=setTimeout(()=>{
       if(_activePage()==='claim')renderClaimTable(true);
@@ -1166,17 +1183,24 @@ function renderHomeDashboard(){
   renderDonutChart('chart-liability-week','h-liability-week-list',countsByField(weekC,'liability'));
   renderDonutChart('chart-type-week','h-type-week-list',countsByField(weekC,'type'));
   renderWeeklyTrendChart(claims);
+  _renderLongClaims(claims);
   renderSideReturnList(returns.slice(0,5));
   const monthClaims=claims.filter(r=>{const v=normDate(r.date);return v>=ms&&v<=me;});
-  const completedMonth=monthClaims.filter(r=>r.donedate&&r.indate);
-  const ltArr=completedMonth.map(r=>calcBusinessDays(r.indate,r.donedate)).filter(v=>v!==null&&v>=0);
-  const avgLt=ltArr.length?(ltArr.reduce((a,b)=>a+b,0)/ltArr.length).toFixed(2):'-';
+  // 리드타임: 이번 달에 처리 완료(donedate)된 건 기준
   const n=v=>parseFloat(String(v||'0').replace(/,/g,''))||0;
-  const sumCostP=monthClaims.reduce((s,r)=>s+n(r.costP),0);
-  const sumCostRS=monthClaims.reduce((s,r)=>s+n(r.costR)+n(r.costS),0);
-  setTxt('kpi-leadtime',avgLt);
-  setTxt('kpi-vocamt',sumCostP>0?sumCostP.toLocaleString():'-');
-  setTxt('kpi-csamt',sumCostRS>0?sumCostRS.toLocaleString():'-');
+  const completedMonth=claims.filter(r=>{const d=normDate(r.donedate);return r.donedate&&r.indate&&d>=ms&&d<=me;});
+  const ltArr=completedMonth.map(r=>calcBusinessDays(r.indate,r.donedate)).filter(v=>v!==null&&v>=0);
+  const avgLt=ltArr.length?(ltArr.reduce((a,b)=>a+b,0)/ltArr.length).toFixed(1):'-';
+  // VOC 상품 비용: nature=VOC, 이번 달 작성일 기준, costP 합산 (orderno별 모든 상품 비용 합산)
+  const vocMonth=monthClaims.filter(r=>r.nature==='VOC');
+  const sumVocCostP=vocMonth.reduce((s,r)=>s+n(r.costP),0);
+  // VOC 운임: orderno 중복 제거 후 1건 처리 (costR+costS는 주문당 1회)
+  const vocOrderRS=new Map();
+  vocMonth.forEach(r=>{const k=r.orderno||String(r.id);if(!vocOrderRS.has(k))vocOrderRS.set(k,n(r.costR)+n(r.costS));});
+  const sumVocCostRS=[...vocOrderRS.values()].reduce((s,v)=>s+v,0);
+  setTxt('kpi-leadtime',avgLt==='−'?'-':avgLt);
+  setTxt('kpi-vocamt',sumVocCostP>0?sumVocCostP.toLocaleString():'-');
+  setTxt('kpi-csamt',sumVocCostRS>0?sumVocCostRS.toLocaleString():'-');
   // SLA/리드타임 테이블은 무거우므로 홈 탭 활성 시에만 + 디바운스
   clearTimeout(window._heavyTimer);
   window._heavyTimer=setTimeout(()=>{
@@ -1185,6 +1209,33 @@ function renderHomeDashboard(){
       renderLeadtimeTable(claims);
     }
   },400);
+}
+function _renderLongClaims(claims){
+  const countEl=document.getElementById('kpi-long-count');
+  const listEl=document.getElementById('kpi-long-list');
+  if(!countEl||!listEl)return;
+  const today=todayStr();
+  // 처리 미완료 + 인입일 기준 7영업일 초과
+  const long=claims.filter(r=>{
+    if(r.status==='처리 완료')return false;
+    if(!r.indate)return false;
+    const bd=calcBusinessDays(r.indate,today);
+    return bd!==null&&bd>=7;
+  });
+  // 중복 주문번호 제거
+  const seen=new Set();
+  const uniq=long.filter(r=>{
+    const k=r.orderno||String(r.id);
+    if(seen.has(k))return false;
+    seen.add(k);return true;
+  });
+  if(!uniq.length){countEl.textContent='-';listEl.innerHTML='';return;}
+  countEl.textContent=uniq.length+'건';
+  listEl.innerHTML=uniq.slice(0,6).map(r=>
+    `<div style="padding:1px 0;border-bottom:1px solid #f5f5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">`+
+    `<span style="color:#c62828;font-weight:600;">${r.orderno||'-'}</span>`+
+    ` / ${r.buyer||'-'}</div>`
+  ).join('')+(uniq.length>6?`<div style="color:#aaa;font-size:10px;padding-top:2px;">외 ${uniq.length-6}건</div>`:'');
 }
 function renderHomeClaimTable(claims){
   const tbody=document.getElementById('home-claim-tbody'),empty=document.getElementById('home-claim-empty');
@@ -1370,6 +1421,8 @@ function addClaim(){
       const id=baseId+i;
       const rec={id,donedate:'',...shared,
         reason:i===0?shared.reason:'', // 사유는 첫 번째 상품 행에만
+        costR:i===0?shared.costR:'',   // 회수 비용은 첫 번째 상품 행에만
+        costS:i===0?shared.costS:'',   // 재출고 비용은 첫 번째 상품 행에만
         product:pi.querySelector('.pi-product').value,
         option:pi.querySelector('.pi-option').value.trim()||'[옵션 지정 불가]',
         category:pi.querySelector('.pi-category').value,
@@ -1500,9 +1553,11 @@ function editCell(td,claimId,field,curVal){
   if(el.select&&type!=='date')el.select();
   let _saved=false;
   const save=()=>{
-    if(_saved)return;_saved=true;
+    if(_saved)return;
     const val=el.value;
-    // TD 즉시 복원 → _vsRender 가드 해제 + 파란줄 제거
+    // 날짜 필드: 빈 값이면 저장하지 않고 원래 값 복원 (피커 열기만 해도 blur 발생 가능)
+    if(type==='date'&&!val){td.innerHTML=curVal||'-';return;}
+    _saved=true;
     let disp=val||'-';
     if(['costP','costR','costS'].includes(field)){const n=parseFloat(String(val).replace(/,/g,''));disp=!isNaN(n)&&val?n.toLocaleString():'-';}
     td.innerHTML=disp;
@@ -1513,6 +1568,7 @@ function editCell(td,claimId,field,curVal){
   el.addEventListener('blur',save);
   el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el.blur();}if(e.key==='Escape'){_saved=true;td.innerHTML=curVal||'-';}});
   if(type==='select')el.addEventListener('change',()=>el.blur());
+  if(type==='date')el.addEventListener('change',()=>el.blur()); // 날짜 선택 즉시 저장
 }
 
 function _openSearchSelect(td,claimId,field,curVal,opts){
@@ -1551,6 +1607,7 @@ function _openSearchSelect(td,claimId,field,curVal,opts){
 
 // ===== 컬럼 너비 관리 (localStorage 저장/복원) =====
 const _colDefaults={
+  _drag:28,
   month:64,date:84,indate:84,shipdate:84,donedate:96,
   channel:80,platform:80,orderno:120,buyer:68,product:130,option:100,category:82,
   issue:110,liability:70,type:120,nature:80,_img:70,
@@ -1565,7 +1622,7 @@ function _saveColWidths(){try{localStorage.setItem('tuunu_colWidths',JSON.string
 function _colW(key){const w=_colWidths[key];return w?`min-width:${w}px;max-width:${w}px;width:${w}px;`:'';}
 
 // colgroup 너비 + sticky left 위치 동적 적용 (table-layout:fixed 전제)
-const _STICKY_KEYS=['month','date','indate','shipdate','donedate','channel','platform','orderno','buyer','product','option','category'];
+const _STICKY_KEYS=['_drag','month','date','indate','shipdate','donedate','channel','platform','orderno','buyer','product','option','category'];
 function _applyColWidths(){
   const cg=document.getElementById('claim-colgroup');
   if(cg)cg.querySelectorAll('col[data-col]').forEach(c=>{
@@ -1904,12 +1961,62 @@ function _vsRender(scrollTopOverride){
   const endRow=Math.min(total,Math.ceil((scrollTop+viewH)/VS_ROW_H)+VS_BUF);
   const topH=startRow*VS_ROW_H,botH=(total-endRow)*VS_ROW_H;
   let html='';
-  if(topH>0)html+=`<tr style="height:${topH}px"><td colspan="30" style="padding:0;border:none;"></td></tr>`;
+  if(topH>0)html+=`<tr style="height:${topH}px"><td colspan="31" style="padding:0;border:none;"></td></tr>`;
   html+=_vsClaims.slice(startRow,endRow).map((r,i)=>_buildClaimRow(r,startRow+i)).join('');
-  if(botH>0)html+=`<tr style="height:${botH}px"><td colspan="30" style="padding:0;border:none;"></td></tr>`;
+  if(botH>0)html+=`<tr style="height:${botH}px"><td colspan="31" style="padding:0;border:none;"></td></tr>`;
   tbody.innerHTML=html;
+  _attachDragEvents();
 }
 
+// ===== 드래그 & 드롭 순서 변경 =====
+let _dragClaimId=null;
+function _attachDragEvents(){
+  const tbody=document.getElementById('claim-tbody');
+  if(!tbody)return;
+  tbody.querySelectorAll('tr[data-cid]').forEach(tr=>{
+    tr.addEventListener('dragstart',e=>{
+      _dragClaimId=+tr.dataset.cid;
+      e.dataTransfer.effectAllowed='move';
+      setTimeout(()=>tr.classList.add('dragging'),0);
+    });
+    tr.addEventListener('dragend',()=>{
+      _dragClaimId=null;
+      tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('dragging','drag-over'));
+    });
+    tr.addEventListener('dragover',e=>{
+      e.preventDefault();e.dataTransfer.dropEffect='move';
+      if(+tr.dataset.cid!==_dragClaimId){
+        tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));
+        tr.classList.add('drag-over');
+      }
+    });
+    tr.addEventListener('drop',e=>{
+      e.preventDefault();
+      const toId=+tr.dataset.cid;
+      tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));
+      if(_dragClaimId&&toId&&_dragClaimId!==toId)_handleClaimDrop(_dragClaimId,toId);
+    });
+  });
+}
+async function _handleClaimDrop(fromId,toId){
+  const claims=_vsClaims;
+  const fromIdx=claims.findIndex(r=>r.id===fromId);
+  const toIdx=claims.findIndex(r=>r.id===toId);
+  if(fromIdx===-1||toIdx===-1)return;
+  const getOrder=r=>r._ro;
+  let prevOrder,nextOrder;
+  if(fromIdx<toIdx){
+    // 아래로 이동: toIdx 다음으로
+    prevOrder=getOrder(claims[toIdx]);
+    nextOrder=toIdx<claims.length-1?getOrder(claims[toIdx+1]):getOrder(claims[toIdx])+2000;
+  }else{
+    // 위로 이동: toIdx 앞으로
+    prevOrder=toIdx>0?getOrder(claims[toIdx-1]):getOrder(claims[toIdx])-2000;
+    nextOrder=getOrder(claims[toIdx]);
+  }
+  const newOrder=(prevOrder+nextOrder)/2;
+  await _fsUpdate('claims',fromId,{_rowOrder:newOrder}).catch(e=>console.error(e));
+}
 function _buildClaimRow(r,i){
   const bdays=calcBusinessDays(r.indate,r.donedate);
   const sla=calcSLA(bdays);
@@ -1950,7 +2057,8 @@ function _buildClaimRow(r,i){
     cells+=`<td class="tdc${isLeft?' td-left':''}" title="${val||'-'}" data-id="${r.id}" data-field="${key}" data-val="${val.replace(/"/g,'&quot;')}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)" style="${_colW(key)}">${disp}</td>`;
   });
   cells+=`<td class="tdc" style="white-space:nowrap;${_colW('_del')}"><button style="padding:2px 7px;font-size:11px;border:1px solid #c5cae9;border-radius:4px;background:#f3f4fd;cursor:pointer;color:#3949ab;margin-right:3px;" onclick="duplicateClaim(${r.id})" title="이 행 복사">복사</button><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
-  return`<tr style="background:${bg};">${cells}</tr>`;
+  const dragTd=`<td class="tdc" data-field="_drag" style="position:sticky;left:0;background:${bg};z-index:2;${_colW('_drag')}">⠿</td>`;
+  return`<tr draggable="true" data-cid="${r.id}" style="background:${bg};">${dragTd}${cells}</tr>`;
 }
 
 function _doRenderClaimTable(){
