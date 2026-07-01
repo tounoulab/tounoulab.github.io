@@ -42,7 +42,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic 
 .gnb-logo{width:32px;height:32px;object-fit:contain;margin-right:8px;flex-shrink:0;}
 .gnb-brand{font-size:18px;font-weight:800;letter-spacing:0.05em;margin-right:20px;white-space:nowrap;}
 .gnb-nav{display:flex;gap:2px;flex-wrap:nowrap;min-width:0;}
-.gnb-nav-item{padding:7px 14px;border-radius:20px;font-size:14px;color:#555;cursor:pointer;font-weight:500;user-select:none;white-space:nowrap;transition:all 0.1s;}
+.gnb-nav-item{padding:7px 14px;border-radius:20px;font-size:14px;color:#555;cursor:pointer;font-weight:500;user-select:none;white-space:nowrap;transition:all 0.1s;display:inline-flex;align-items:center;line-height:1;}
 .gnb-nav-item:hover{background:#f5f5f3;color:#1a1a1a;}
 .gnb-nav-item.active{background:#1a1a1a;color:#fff;}
 .gnb-right{font-size:13px;color:#aaa;white-space:nowrap;flex-shrink:0;}
@@ -153,9 +153,10 @@ tr:hover td{background:#fafafa;}
 .sd-empty{padding:10px 12px;font-size:12px;color:#aaa;}
 /* drag handle */
 #claim-sheet td[data-field="_drag"]{cursor:grab;color:#ccc;font-size:15px;text-align:center;user-select:none;padding:0 2px;}
-#claim-sheet td[data-field="_drag"]:hover{color:#999;}
-#claim-sheet tr.dragging{opacity:0.4;}
-#claim-sheet tr.drag-over td{border-top:2px solid #1a73e8!important;}
+#claim-sheet td[data-field="_drag"]:hover{color:#1a73e8;}
+#claim-sheet tr.dragging td{background:#dbeafe!important;border-top:2px solid #1a73e8!important;border-bottom:2px solid #1a73e8!important;opacity:0.7;}
+#claim-sheet tr.drag-over td{border-top:3px solid #1a73e8!important;}
+#claim-sheet tr.drag-over td:first-child::before{content:'▶';position:absolute;left:-2px;color:#1a73e8;font-size:10px;}
 /* claim sheet inline edit */
 #claim-sheet th{text-align:center !important;padding:8px 6px !important;position:sticky;top:0;z-index:3;background:#f6f6f4;user-select:none;white-space:nowrap;overflow:hidden;font-size:15px !important;font-weight:700 !important;color:#333 !important;}
 /* SLA / 리드타임 테이블 정렬 */
@@ -734,6 +735,7 @@ tr:hover td{background:#fafafa;}
     <span style="font-size:18px;font-weight:700;">클레임 현황</span>
     <span id="claim-count-badge" style="font-size:13px;color:#888;font-weight:400;"></span>
     <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+      <input id="claim-search-input" type="text" placeholder="🔍 주문번호·구매자·상품명 검색" oninput="_applyClaimSearch(this.value)" style="height:34px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:13px;width:220px;outline:none;"/>
       <button class="btn-primary" onclick="openClaimModal()">+ 클레임 등록</button>
       <button id="btn-group-order" class="btn-secondary" onclick="toggleGroupByOrder()" title="같은 주문번호를 1건으로 묶어서 표시">주문별 보기</button>
       <button class="btn-secondary" onclick="exportClaimsXLSX()">XLSX 내보내기</button>
@@ -1551,12 +1553,13 @@ function editCell(td,claimId,field,curVal){
   }
   td.innerHTML='';td.appendChild(el);el.focus();
   if(el.select&&type!=='date')el.select();
-  let _saved=false;
+  let _saved=false,_dateUserEdited=false;
   const save=()=>{
     if(_saved)return;
     const val=el.value;
-    // 날짜 필드: 빈 값이면 저장하지 않고 원래 값 복원 (피커 열기만 해도 blur 발생 가능)
-    if(type==='date'&&!val){td.innerHTML=curVal||'-';return;}
+    // 날짜 필드: 사용자가 직접 편집하지 않은 채 blur → 원래 값 복원 (피커 오픈만 한 경우)
+    // 직접 삭제(backspace 등)했으면 _dateUserEdited=true → 빈값 저장 허용
+    if(type==='date'&&!val&&!_dateUserEdited){td.innerHTML=curVal||'-';return;}
     _saved=true;
     let disp=val||'-';
     if(['costP','costR','costS'].includes(field)){const n=parseFloat(String(val).replace(/,/g,''));disp=!isNaN(n)&&val?n.toLocaleString():'-';}
@@ -1566,9 +1569,14 @@ function editCell(td,claimId,field,curVal){
     _fsUpdate('claims',claimId,upd).catch(e=>console.error(e));
   };
   el.addEventListener('blur',save);
-  el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el.blur();}if(e.key==='Escape'){_saved=true;td.innerHTML=curVal||'-';}});
+  el.addEventListener('keydown',e=>{
+    _dateUserEdited=true; // 키 입력 = 의도적 편집
+    if(e.key==='Enter'){e.preventDefault();el.blur();}
+    if(e.key==='Escape'){_saved=true;td.innerHTML=curVal||'-';}
+  });
+  el.addEventListener('input',()=>{_dateUserEdited=true;});
   if(type==='select')el.addEventListener('change',()=>el.blur());
-  if(type==='date')el.addEventListener('change',()=>el.blur()); // 날짜 선택 즉시 저장
+  if(type==='date')el.addEventListener('change',()=>{_dateUserEdited=true;el.blur();});
 }
 
 function _openSearchSelect(td,claimId,field,curVal,opts){
@@ -1697,6 +1705,11 @@ function initColResize(){
 
 // ===== 컬럼 헤더 필터 (구글시트 스타일) =====
 let claimFilters={};
+let _claimSearchQ='';
+function _applyClaimSearch(q){
+  _claimSearchQ=(q||'').trim().toLowerCase();
+  renderClaimTable();
+}
 let _cfpCol=null;
 
 function _cfpVals(col){
@@ -1911,6 +1924,12 @@ function getFilteredClaims(){
       claims=claims.filter(r=>sel.has(r[key]||''));
     }
   });
+  // 전체 텍스트 검색
+  if(_claimSearchQ){
+    const q=_claimSearchQ;
+    const _SEARCH_FIELDS=['orderno','buyer','product','option','category','issue','liability','type','nature','reason','channel','platform','status'];
+    claims=claims.filter(r=>_SEARCH_FIELDS.some(f=>String(r[f]||'').toLowerCase().includes(q)));
+  }
   if(_groupByOrder){
     const seen=new Set(),grouped=[];
     claims.forEach(r=>{
@@ -1975,6 +1994,8 @@ function _attachDragEvents(){
   if(!tbody)return;
   tbody.querySelectorAll('tr[data-cid]').forEach(tr=>{
     tr.addEventListener('dragstart',e=>{
+      // 핸들 셀(⠿)에서 시작한 경우에만 드래그 허용
+      if(!e.target.closest('td[data-field="_drag"]')){e.preventDefault();return;}
       _dragClaimId=+tr.dataset.cid;
       e.dataTransfer.effectAllowed='move';
       setTimeout(()=>tr.classList.add('dragging'),0);
