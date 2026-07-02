@@ -1639,7 +1639,39 @@ const _colWidths=(()=>{
   try{const s=localStorage.getItem('tuunu_colWidths');if(s){const p=JSON.parse(s);return Object.assign({..._colDefaults},p);}}catch(e){}
   return{..._colDefaults};
 })();
-function _saveColWidths(){try{localStorage.setItem('tuunu_colWidths',JSON.stringify(_colWidths));}catch(e){}}
+function _saveColWidths(){
+  const uid=_currentUserId();
+  const key='tuunu_colWidths'+(uid?'_'+uid:'');
+  try{localStorage.setItem(key,JSON.stringify(_colWidths));}catch(e){}
+  if(uid&&typeof db!=='undefined'){
+    db.collection('userSettings').doc(uid).set({colWidths:_colWidths},{merge:true}).catch(()=>{});
+  }
+}
+function _loadUserColWidths(){
+  const uid=_currentUserId();
+  if(!uid)return;
+  // localStorage 즉시 적용 (구 키 → 신 키 마이그레이션 포함)
+  const key='tuunu_colWidths_'+uid;
+  try{
+    const s=localStorage.getItem(key)||localStorage.getItem('tuunu_colWidths');
+    if(s){Object.assign(_colWidths,JSON.parse(s));_applyColWidths();}
+  }catch(e){}
+  // Firestore에서 최신값 로드 (크로스 디바이스)
+  if(typeof db==='undefined')return;
+  db.collection('userSettings').doc(uid).get().then(doc=>{
+    if(!doc.exists||!doc.data().colWidths)return;
+    Object.assign(_colWidths,doc.data().colWidths);
+    // 새 키로 다시 저장 (마이그레이션)
+    try{localStorage.setItem(key,JSON.stringify(_colWidths));}catch(e){}
+    _applyColWidths();
+    const table=document.getElementById('claim-sheet');
+    if(table)table.querySelectorAll('th[data-col]').forEach(th=>{
+      const col=th.dataset.col;
+      if(_colWidths[col]){th.style.minWidth=_colWidths[col]+'px';th.style.maxWidth=_colWidths[col]+'px';th.style.width=_colWidths[col]+'px';}
+    });
+    _vsRender();
+  }).catch(()=>{});
+}
 function _colW(key){const w=_colWidths[key];return w?`min-width:${w}px;max-width:${w}px;width:${w}px;`:'';}
 
 // colgroup 너비 + sticky left 위치 동적 적용 (table-layout:fixed 전제)
@@ -1657,7 +1689,7 @@ function _applyColWidths(){
     const w=_colWidths[k]||80;
     const tdKey=_TD_FIELD[k]||k;
     css+=`#claim-sheet th[data-col="${k}"]{left:${cum}px !important;}\n`;
-    css+=`#claim-sheet tbody td[data-field="${tdKey}"]{left:${cum}px !important;border-right:1px solid #e8e8e6 !important;border-left:1px solid #e8e8e6 !important;}\n`;
+    css+=`#claim-sheet tbody td[data-field="${tdKey}"]{left:${cum}px !important;box-shadow:inset 1px 0 0 #e8e8e6,inset -1px 0 0 #e8e8e6;}\n`;
     cum+=w;
   });
   let el=document.getElementById('dyn-sticky-css');
@@ -3828,6 +3860,7 @@ function init(){
   const d=document.getElementById('c-date');if(d)d.value=todayStr();
   const m=document.getElementById('c-month');if(m)m.value=String(today.getMonth()+1);
   const rd=document.getElementById('r-date');if(rd)rd.value=todayStr();
+  _loadUserColWidths(); // 사용자별 컬럼 너비 복원 (Firestore + localStorage)
   initChips();
   initSearchables();
   // 필터 팝업 이벤트
