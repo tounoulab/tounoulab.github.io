@@ -171,6 +171,10 @@ tr:hover td{background:#fafafa;}
 #sla-table td,#leadtime-table td{text-align:center !important;}
 /* 틀 고정 컬럼 위치/너비는 _applyColWidths() 동적 CSS로 전부 관리됨 */
 #claim-sheet th[data-col]{position:sticky;z-index:5;background:#f6f6f4;}
+/* 일반 td: 새 stacking context z-index:0, 텍스트 선택 허용 */
+#claim-sheet tbody td{position:relative;z-index:0;}
+#claim-sheet tbody td:not([data-field="_drag"]){user-select:text;}
+/* 틀고정 td: z-index:2로 비고정 td 위에 표시, --bg CSS var로 배경 */
 #claim-sheet tbody td[data-field="month"],
 #claim-sheet tbody td[data-field="ticketNo"],
 #claim-sheet tbody td[data-field="date"],
@@ -183,7 +187,7 @@ tr:hover td{background:#fafafa;}
 #claim-sheet tbody td[data-field="buyer"],
 #claim-sheet tbody td[data-field="product"],
 #claim-sheet tbody td[data-field="option"],
-#claim-sheet tbody td[data-field="category"]{position:sticky;z-index:1;background:inherit;}
+#claim-sheet tbody td[data-field="category"]{position:sticky;z-index:2;background:var(--bg,#fff);}
 .th-filter-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:4px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;padding:0;z-index:4;}
 .th-filter-btn:hover{background:#e8e8e6;color:#555;}
 .th-filter-btn.active{background:#1a73e8;color:#fff;}
@@ -346,10 +350,10 @@ tr:hover td{background:#fafafa;}
             </div>
           </div>
           <div class="status-row">
-            <div class="status-item"><div class="status-item-label">금일 접수</div><div class="status-item-value" id="h-today">-</div></div>
-            <div class="status-item"><div class="status-item-label">완료</div><div class="status-item-value" id="h-done">-</div></div>
-            <div class="status-item"><div class="status-item-label">이번 주</div><div class="status-item-value" id="h-week">-</div></div>
-            <div class="status-item" style="border-right:none;"><div class="status-item-label">이번 달</div><div class="status-item-value" id="h-month">-</div></div>
+            <div class="status-item"><div class="status-item-label" id="lbl-today">금일 접수</div><div class="status-item-value" id="h-today">-</div><div style="font-size:10px;color:#bbb;margin-top:2px;" id="h-today-hint"></div></div>
+            <div class="status-item"><div class="status-item-label" id="lbl-done">완료</div><div class="status-item-value" id="h-done">-</div><div style="font-size:10px;color:#bbb;margin-top:2px;" id="h-done-hint"></div></div>
+            <div class="status-item"><div class="status-item-label" id="lbl-week">이번 주</div><div class="status-item-value" id="h-week">-</div><div style="font-size:10px;color:#bbb;margin-top:2px;" id="h-week-hint"></div></div>
+            <div class="status-item" style="border-right:none;"><div class="status-item-label" id="lbl-month">이번 달</div><div class="status-item-value" id="h-month">-</div><div style="font-size:10px;color:#bbb;margin-top:2px;" id="h-month-hint"></div></div>
           </div>
           <div id="h-filter-badge" style="display:none;padding:6px 18px 10px;font-size:12px;color:#1a73e8;font-weight:500;"></div>
         </div>
@@ -396,7 +400,7 @@ tr:hover td{background:#fafafa;}
           </div>
           <!-- 이번 주 -->
           <div class="card" style="margin-bottom:0;">
-            <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.05em;margin-bottom:14px;">이번 주</div>
+            <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:14px;"><span style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.05em;">이번 주</span><span id="week-chart-hint" style="font-size:10px;color:#ccc;"></span></div>
             <div class="chart-inner-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div>
                 <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">귀책별 현황</div>
@@ -725,6 +729,10 @@ tr:hover td{background:#fafafa;}
     <span style="font-size:18px;font-weight:700;">클레임 현황</span>
     <span id="claim-count-badge" style="font-size:13px;color:#888;font-weight:400;"></span>
     <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+      <input type="date" id="claim-date-from" style="height:32px;padding:0 8px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;width:130px;outline:none;box-sizing:border-box;color:#333;" onchange="_applyClaimDateFilter()" title="인입일 시작"/>
+      <span style="font-size:11px;color:#aaa;line-height:32px;">~</span>
+      <input type="date" id="claim-date-to" style="height:32px;padding:0 8px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;width:130px;outline:none;box-sizing:border-box;color:#333;" onchange="_applyClaimDateFilter()" title="인입일 종료"/>
+      <button onclick="_clearClaimDateFilter()" style="height:32px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;background:#f5f5f3;color:#888;cursor:pointer;font-family:inherit;">날짜 초기화</button>
       <input id="claim-search-input" type="text" placeholder="🔍 주문번호·구매자·상품명 검색" oninput="_applyClaimSearch(this.value)" style="height:32px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:13px;width:200px;outline:none;box-sizing:border-box;"/>
       <button onclick="openClaimModal()" style="height:32px;padding:0 14px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">+ 클레임 등록</button>
       <button id="btn-group-order" class="btn-secondary" onclick="toggleGroupByOrder()" title="같은 주문번호를 1건으로 묶어서 표시" style="height:32px;white-space:nowrap;">주문별 보기</button>
@@ -1108,8 +1116,15 @@ function renderWeeklyTrendChart(claims){
 
   const el=document.getElementById('chart-weekly');if(!el)return;
   if(_charts['chart-weekly']){_charts['chart-weekly'].destroy();delete _charts['chart-weekly'];}
-
-  _charts['chart-weekly']=new Chart(el.getContext('2d'),{
+  // DPR 수동 적용으로 고화질 렌더링
+  const dpr=window.devicePixelRatio||1;
+  const container=el.parentElement;
+  const cw=container.clientWidth||600;
+  const ch=container.clientHeight||160;
+  el.width=cw*dpr;el.height=ch*dpr;
+  el.style.width=cw+'px';el.style.height=ch+'px';
+  const ctx2d=el.getContext('2d');ctx2d.scale(dpr,dpr);
+  _charts['chart-weekly']=new Chart(ctx2d,{
     type:'line',
     data:{
       labels:dayLabels,
@@ -1124,8 +1139,7 @@ function renderWeeklyTrendChart(claims){
       }]
     },
     options:{
-      responsive:true,maintainAspectRatio:false,
-      devicePixelRatio:window.devicePixelRatio||2,
+      responsive:false,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y}건`}}},
       scales:{
         y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0f0ee'},border:{display:false}},
@@ -1167,12 +1181,15 @@ function renderHomeDashboard(){
     setTxt('h-month',countUniq(claims,'date',ms,me)+'건');
     setTxt('side-today-claim',countUniq(claims,'date',t,t)+'건');
     setTxt('side-today-return',countIn(returns,'date',t,t)+'건');
-    const todayLbl=document.querySelector('#h-today')?.closest('.status-item')?.querySelector('.status-item-label');
-    if(todayLbl)todayLbl.textContent='금일 접수';
-    const weekLbl=document.querySelector('#h-week')?.closest('.status-item')?.querySelector('.status-item-label');
-    if(weekLbl)weekLbl.textContent='이번 주';
-    const monthLbl=document.querySelector('#h-month')?.closest('.status-item')?.querySelector('.status-item-label');
-    if(monthLbl)monthLbl.textContent='이번 달';
+    const todayLbl=document.getElementById('lbl-today');if(todayLbl)todayLbl.textContent='금일 접수';
+    const weekLbl=document.getElementById('lbl-week');if(weekLbl)weekLbl.textContent='이번 주';
+    const monthLbl=document.getElementById('lbl-month');if(monthLbl)monthLbl.textContent='이번 달';
+    // 날짜 기준 hint
+    setTxt('h-today-hint',t);
+    setTxt('h-done-hint',t+' 처리 완료');
+    setTxt('h-week-hint',ws.slice(5).replace('-','/')+'~'+we.slice(5).replace('-','/'));
+    setTxt('h-month-hint',ms.slice(5).replace('-','/')+'~'+me.slice(5).replace('-','/'));
+    setTxt('week-chart-hint',ws.slice(5).replace('-','/')+'~'+we.slice(5).replace('-','/'));
     chartClaims=_chartMode==='today'
       ?claims.filter(r=>normDate(r.date)===t)
       :claims.filter(r=>{const v=normDate(r.date);return v>=ws&&v<=we;});
@@ -1265,8 +1282,9 @@ function renderSLATable(claims){
   const byMonth=months.map(m=>{
     const ms=year+'-'+String(m).padStart(2,'0')+'-01';
     const meD=new Date(year,m,0);const me=year+'-'+String(m).padStart(2,'0')+'-'+String(meD.getDate()).padStart(2,'0');
-    const mc=dedup(claims.filter(r=>{const v=normDate(r.date);return v>=ms&&v<=me;}));
-    const ihaeng=mc.filter(r=>{const bd=calcBusinessDays(r.indate,r.donedate);return bd!==null&&bd<=3;}).length;
+    // indate(인입일) 기준 월별 그룹, 처리 완료(donedate 있음)인 건만 집계
+    const mc=dedup(claims.filter(r=>{const v=normDate(r.indate);return v&&v>=ms&&v<=me&&r.donedate;}));
+    const ihaeng=mc.filter(r=>{const bd=calcBusinessDays(r.indate,r.donedate);return bd!==null&&bd<=4;}).length;
     return{total:mc.length,ihaeng};
   });
   const totalAll=byMonth.reduce((s,v)=>s+v.total,0);
@@ -1296,7 +1314,7 @@ function renderLeadtimeTable(claims){
     const cells=months.map(m=>{
       const ms=year+'-'+String(m).padStart(2,'0')+'-01';
       const meD=new Date(year,m,0);const me=year+'-'+String(m).padStart(2,'0')+'-'+String(meD.getDate()).padStart(2,'0');
-      const mc=rowC.filter(r=>{const v=normDate(r.date);return v>=ms&&v<=me;});
+      const mc=rowC.filter(r=>{const v=normDate(r.indate);return v&&v>=ms&&v<=me&&r.donedate;});
       return`<td style="${cs}${tp==='(전체 평균)'?'font-weight:600;background:#fafaf8;':''}">${avgFor(mc)}</td>`;
     }).join('');
     return`<tr><td style="${ls}${tp==='(전체 평균)'?'background:#f0f0ee;font-weight:700;':''}">${tp}</td>${cells}</tr>`;
@@ -1331,8 +1349,8 @@ function calcBusinessDays(start,end){
   if(_bdCache[key]!==undefined)return _bdCache[key];
   const s=new Date(ns),e=new Date(ne);
   if(e<s)return(_bdCache[key]=0);
-  // 인입일은 0일차 → 다음날부터 카운트 (구글시트 NETWORKDAYS 기준)
-  let count=0;const cur=new Date(s);cur.setDate(cur.getDate()+1);
+  // 인입일 당일부터 포함 카운트 (구글시트 NETWORKDAYS 동일 기준, 주말·공휴일 제외)
+  let count=0;const cur=new Date(s);
   while(cur<=e){const dow=cur.getDay(),ds=cur.toISOString().slice(0,10);if(dow!==0&&dow!==6&&!KR_HOLIDAYS.has(ds))count++;cur.setDate(cur.getDate()+1);}
   return(_bdCache[key]=count);
 }
@@ -1632,14 +1650,14 @@ const _colDefaults={
   month:60,_ticket:76,
   date:100,indate:100,shipdate:100,donedate:100,
   channel:100,platform:68,orderno:190,buyer:66,
-  product:250,option:115,category:100,
+  product:300,option:115,category:100,
   issue:165,liability:56,type:122,nature:100,
   _img:54,reason:150,
   returnYn:52,reshipYn:62,accident:86,
   costP:80,costR:80,costS:80,
-  _lead:58,status:70,_sla:48,_del:88
+  _lead:58,status:70,_sla:48,_del:115
 };
-const _COL_VER='v7'; // 버전 올리면 저장된 너비 초기화 → 새 기본값 적용
+const _COL_VER='v8'; // 버전 올리면 저장된 너비 초기화 → 새 기본값 적용
 const _colWidths=(()=>{
   const uid=sessionStorage.getItem('tuunu_session_v1')||'';
   const key='tuunu_colWidths_'+_COL_VER+(uid?'_'+uid:'');
@@ -1967,6 +1985,13 @@ function toggleGroupByOrder(){
   if(btn){btn.style.background=_groupByOrder?'#1a1a1a':'';btn.style.color=_groupByOrder?'#fff':'';}
   renderClaimTable();
 }
+function _applyClaimDateFilter(){renderClaimTable();}
+function _clearClaimDateFilter(){
+  const f=document.getElementById('claim-date-from');
+  const t=document.getElementById('claim-date-to');
+  if(f)f.value='';if(t)t.value='';
+  renderClaimTable();
+}
 function getFilteredClaims(){
   let claims=loadClaims();
   Object.entries(claimFilters).forEach(([key,val])=>{
@@ -1978,6 +2003,13 @@ function getFilteredClaims(){
       claims=claims.filter(r=>sel.has(r[key]||''));
     }
   });
+  // 날짜 범위 필터 (인입일 기준)
+  const dateFrom=document.getElementById('claim-date-from')?.value||'';
+  const dateTo=document.getElementById('claim-date-to')?.value||'';
+  if(dateFrom||dateTo){
+    const from=dateFrom||'1900-01-01',to=dateTo||'9999-12-31';
+    claims=claims.filter(r=>{const v=normDate(r.indate)||normDate(r.date)||'';return v>=from&&v<=to;});
+  }
   // 전체 텍스트 검색
   if(_claimSearchQ){
     const q=_claimSearchQ;
@@ -2149,7 +2181,7 @@ function _buildClaimRow(r,i){
   });
   cells+=`<td class="tdc" style="white-space:nowrap;${_colW('_del')}"><button style="padding:2px 7px;font-size:11px;border:1px solid #c5cae9;border-radius:4px;background:#f3f4fd;cursor:pointer;color:#3949ab;margin-right:3px;" onclick="duplicateClaim(${r.id})" title="이 행 복사">복사</button><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
   const dragTd=`<td class="tdc" data-field="_drag" style="position:sticky;left:0;background:${bg};z-index:2;${_colW('_drag')}">⠿</td>`;
-  return`<tr draggable="true" data-cid="${r.id}" style="background:${bg};">${dragTd}${cells}</tr>`;
+  return`<tr draggable="true" data-cid="${r.id}" style="background:${bg};--bg:${bg};">${dragTd}${cells}</tr>`;
 }
 
 function _doRenderClaimTable(){
