@@ -213,7 +213,7 @@ tr:hover td{background:#fafafa;}
 #vocw-editor ol ol li{list-style-type:lower-alpha;}
 #vocw-editor ol ol ol li{list-style-type:lower-roman;}
 /* VOC 에디터 헤딩 스타일 */
-#vocw-editor h1{font-size:30px;font-weight:800;margin:18px 0 8px;line-height:1.25;border-bottom:2px solid #f0f0ee;padding-bottom:6px;}
+#vocw-editor h1{font-size:30px;font-weight:800;margin:18px 0 8px;line-height:1.25;}
 #vocw-editor h2{font-size:22px;font-weight:700;margin:14px 0 6px;line-height:1.35;}
 #vocw-editor h3{font-size:17px;font-weight:600;margin:12px 0 4px;line-height:1.4;}
 #vocw-editor h4{font-size:14px;font-weight:600;margin:10px 0 4px;color:#444;}
@@ -557,6 +557,7 @@ tr:hover td{background:#fafafa;}
     <button onclick="switchPage('voclog')" style="font-size:13px;padding:5px 12px;border:1px solid #e0e0de;border-radius:8px;background:#fff;cursor:pointer;color:#555;font-family:inherit;">← 뒤로</button>
     <span style="font-size:18px;font-weight:700;">✍️ VOC 작성</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+      <input type="month" id="vocw-month" onchange="switchVocWriteTab(_vocwType)" style="font-size:12px;padding:4px 8px;border:1px solid #e0e0de;border-radius:8px;background:#f8f8f6;cursor:pointer;font-family:inherit;color:#555;height:30px;" title="저장할 월 선택">
       <button id="vocw-tab-weekly" onclick="switchVocWriteTab('weekly')" style="font-size:12px;padding:4px 14px;border-radius:20px;border:1px solid #1a1a1a;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">📅 위클리</button>
       <button id="vocw-tab-monthly" onclick="switchVocWriteTab('monthly')" style="font-size:12px;padding:4px 14px;border-radius:20px;border:1px solid #e0e0de;background:#fff;color:#888;cursor:pointer;font-family:inherit;">📊 먼슬리</button>
       <button onclick="saveVocWriteReport()" style="font-size:13px;padding:6px 18px;border:none;border-radius:8px;background:#1a1a1a;color:#fff;cursor:pointer;font-weight:600;font-family:inherit;">저장</button>
@@ -608,35 +609,41 @@ tr:hover td{background:#fafafa;}
           <div id="vocw-table-label" style="font-size:11px;color:#888;text-align:center;margin-top:7px;">표 크기를 선택하세요</div>
         </div>
       </div>
+      <!-- 정렬 -->
+      <span style="width:1px;background:#e0e0de;height:20px;margin:0 4px;display:inline-block;flex-shrink:0;"></span>
+      <button onmousedown="event.preventDefault()" onclick="vocwFmt('justifyLeft')" title="왼쪽 정렬" style="padding:4px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">≡←</button>
+      <button onmousedown="event.preventDefault()" onclick="vocwFmt('justifyCenter')" title="가운데 정렬 (표 셀에서도 동작)" style="padding:4px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">≡≡</button>
+      <button onmousedown="event.preventDefault()" onclick="vocwFmt('justifyRight')" title="오른쪽 정렬" style="padding:4px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">≡→</button>
       <!-- 색상 피커 (표 셀 배경 + 하이라이트) -->
+      <span style="width:1px;background:#e0e0de;height:20px;margin:0 4px;display:inline-block;flex-shrink:0;"></span>
       <div style="position:relative;display:inline-block;">
-        <button id="vocw-color-btn" onclick="vocwToggleColorPicker(this)" title="배경색 / 표 셀 색상 설정 — 파스텔 팔레트" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">🎨 색상</button>
-        <div id="vocw-color-picker" style="display:none;position:fixed;background:#fff;border:1px solid #e0e0de;border-radius:10px;padding:12px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:200px;">
-          <div style="font-size:11px;color:#888;margin-bottom:8px;font-weight:600;">하이라이트 / 표 셀 배경색</div>
+        <button id="vocw-color-btn" onmousedown="vocwSaveEditorSel();event.preventDefault()" onclick="vocwToggleColorPicker(this)" title="배경색 / 표 셀 색상 설정 — 파스텔 팔레트" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">🎨 색상</button>
+        <div id="vocw-color-picker" onmousedown="event.preventDefault()" style="display:none;position:fixed;background:#fff;border:1px solid #e0e0de;border-radius:10px;padding:12px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:200px;">
+          <div style="font-size:11px;color:#888;margin-bottom:8px;font-weight:600;">배경색 / 표 셀 배경</div>
           <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;">
-            <div class="vocw-color-swatch" style="background:#FFD6D6;" onclick="vocwApplyColor('#FFD6D6')" title="분홍"></div>
-            <div class="vocw-color-swatch" style="background:#FFE4CC;" onclick="vocwApplyColor('#FFE4CC')" title="주황"></div>
-            <div class="vocw-color-swatch" style="background:#FFF9CC;" onclick="vocwApplyColor('#FFF9CC')" title="노랑"></div>
-            <div class="vocw-color-swatch" style="background:#D6F5D6;" onclick="vocwApplyColor('#D6F5D6')" title="연두"></div>
-            <div class="vocw-color-swatch" style="background:#CCF0FF;" onclick="vocwApplyColor('#CCF0FF')" title="하늘"></div>
-            <div class="vocw-color-swatch" style="background:#E0CCFF;" onclick="vocwApplyColor('#E0CCFF')" title="연보라"></div>
-            <div class="vocw-color-swatch" style="background:#FFD9E8;" onclick="vocwApplyColor('#FFD9E8')" title="연핑크"></div>
-            <div class="vocw-color-swatch" style="background:#CCFFE8;" onclick="vocwApplyColor('#CCFFE8')" title="민트"></div>
-            <div class="vocw-color-swatch" style="background:#FFE8CC;" onclick="vocwApplyColor('#FFE8CC')" title="복숭아"></div>
-            <div class="vocw-color-swatch" style="background:#E8F4FF;" onclick="vocwApplyColor('#E8F4FF')" title="연하늘"></div>
-            <div class="vocw-color-swatch" style="background:#F0F0F0;" onclick="vocwApplyColor('#F0F0F0')" title="연회색"></div>
-            <div class="vocw-color-swatch" style="background:#fff;border:2px solid #ccc;" onclick="vocwApplyColor('transparent')" title="색상 제거 (투명)">✕</div>
+            <div class="vocw-color-swatch" style="background:#FFD6D6;" onmousedown="event.preventDefault()" onclick="vocwApplyColor('#FFD6D6')" title="분홍"></div>
+            <div class="vocw-color-swatch" style="background:#FFE4CC;" onmousedown="event.preventDefault()" onclick="vocwApplyColor('#FFE4CC')" title="주황"></div>
+            <div class="vocw-color-swatch" style="background:#FFF9CC;" onmousedown="event.preventDefault()" onclick="vocwApplyColor('#FFF9CC')" title="노랑"></div>
+            <div class="vocw-color-swatch" style="background:#D6F5D6;" onmousedown="event.preventDefault()" onclick="vocwApplyColor('#D6F5D6')" title="연두"></div>
+            <div class="vocw-color-swatch" style="background:#CCF0FF;" onmousedown="event.preventDefault()" onclick="vocwApplyColor('#CCF0FF')" title="하늘"></div>
+            <div class="vocw-color-swatch" style="background:#E0CCFF;" onmousedown="event.preventDefault()" onclick="vocwApplyColor('#E0CCFF')" title="연보라"></div>
+            <div class="vocw-color-swatch" style="background:#FFD9E8;" onmousedown="event.preventDefault()" onclick="vocwApplyColor('#FFD9E8')" title="연핑크"></div>
+            <div class="vocw-color-swatch" style="background:#CCFFE8;" onmousedown="event.preventDefault()" onclick="vocwApplyColor('#CCFFE8')" title="민트"></div>
+            <div class="vocw-color-swatch" style="background:#FFE8CC;" onmousedown="event.preventDefault()" onclick="vocwApplyColor('#FFE8CC')" title="복숭아"></div>
+            <div class="vocw-color-swatch" style="background:#E8F4FF;" onmousedown="event.preventDefault()" onclick="vocwApplyColor('#E8F4FF')" title="연하늘"></div>
+            <div class="vocw-color-swatch" style="background:#F0F0F0;" onmousedown="event.preventDefault()" onclick="vocwApplyColor('#F0F0F0')" title="연회색"></div>
+            <div class="vocw-color-swatch" style="background:#fff;border:2px solid #ccc;text-align:center;line-height:19px;font-size:11px;color:#999;" onmousedown="event.preventDefault()" onclick="vocwApplyColor('transparent')" title="색상 제거">✕</div>
           </div>
           <div style="font-size:11px;color:#888;margin-bottom:6px;font-weight:600;">글자색</div>
           <div style="display:flex;flex-wrap:wrap;gap:5px;">
-            <div class="vocw-color-swatch" style="background:#e53935;" onclick="vocwApplyTextColor('#e53935')" title="빨강"></div>
-            <div class="vocw-color-swatch" style="background:#f57c00;" onclick="vocwApplyTextColor('#f57c00')" title="주황"></div>
-            <div class="vocw-color-swatch" style="background:#f9a825;" onclick="vocwApplyTextColor('#f9a825')" title="노랑"></div>
-            <div class="vocw-color-swatch" style="background:#2e7d32;" onclick="vocwApplyTextColor('#2e7d32')" title="초록"></div>
-            <div class="vocw-color-swatch" style="background:#1565c0;" onclick="vocwApplyTextColor('#1565c0')" title="파랑"></div>
-            <div class="vocw-color-swatch" style="background:#6a1b9a;" onclick="vocwApplyTextColor('#6a1b9a')" title="보라"></div>
-            <div class="vocw-color-swatch" style="background:#888;" onclick="vocwApplyTextColor('#888')" title="회색"></div>
-            <div class="vocw-color-swatch" style="background:#1a1a1a;" onclick="vocwApplyTextColor('#1a1a1a')" title="검정"></div>
+            <div class="vocw-color-swatch" style="background:#e53935;" onmousedown="event.preventDefault()" onclick="vocwApplyTextColor('#e53935')" title="빨강"></div>
+            <div class="vocw-color-swatch" style="background:#f57c00;" onmousedown="event.preventDefault()" onclick="vocwApplyTextColor('#f57c00')" title="주황"></div>
+            <div class="vocw-color-swatch" style="background:#f9a825;" onmousedown="event.preventDefault()" onclick="vocwApplyTextColor('#f9a825')" title="노랑"></div>
+            <div class="vocw-color-swatch" style="background:#2e7d32;" onmousedown="event.preventDefault()" onclick="vocwApplyTextColor('#2e7d32')" title="초록"></div>
+            <div class="vocw-color-swatch" style="background:#1565c0;" onmousedown="event.preventDefault()" onclick="vocwApplyTextColor('#1565c0')" title="파랑"></div>
+            <div class="vocw-color-swatch" style="background:#6a1b9a;" onmousedown="event.preventDefault()" onclick="vocwApplyTextColor('#6a1b9a')" title="보라"></div>
+            <div class="vocw-color-swatch" style="background:#888;" onmousedown="event.preventDefault()" onclick="vocwApplyTextColor('#888')" title="회색"></div>
+            <div class="vocw-color-swatch" style="background:#1a1a1a;" onmousedown="event.preventDefault()" onclick="vocwApplyTextColor('#1a1a1a')" title="검정"></div>
           </div>
         </div>
       </div>
@@ -2657,6 +2664,8 @@ function openVlReport(type){
   const modal=document.getElementById('modal-vl-report');
   if(!modal)return;
   modal.style.display='flex';
+  const vlmInp=document.getElementById('vlm-month-inp');
+  if(vlmInp&&!vlmInp.value){const d=new Date();vlmInp.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
   // 탭 UI 업데이트
   switchVlReportTab(_vlReportType,false);
   // 편집 모드 초기화 (뷰 모드로)
@@ -2677,10 +2686,19 @@ function switchVlReportTab(type,loadContent=true){
   if(tm){tm.style.background=type==='monthly'?'#1a1a1a':'#fff';tm.style.color=type==='monthly'?'#fff':'#888';tm.style.borderColor=type==='monthly'?'#1a1a1a':'#e0e0de';tm.style.fontWeight=type==='monthly'?'600':'400';}
   if(loadContent)_loadVlModalReport(type);
 }
+// VOC 로그 모달 월별 문서 ID
+function _vlModalMonth(){
+  const inp=document.getElementById('vlm-month-inp');
+  if(inp&&inp.value)return inp.value;
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+function _vlModalDocId(type){return'vl_report_'+(type||'weekly')+'_'+_vlModalMonth();}
+
 function _loadVlModalReport(type){
   const view=document.getElementById('vlm-report-view');
   if(!view)return;
-  const docId='vl_report_'+(type||'weekly');
+  const docId=_vlModalDocId(type);
   view.innerHTML='<p style="color:#bbb;font-size:13px;">로딩 중...</p>';
   try{
     db.collection('_sys').doc(docId).get().then(function(doc){
@@ -2761,12 +2779,25 @@ function switchVocWriteTab(type){
   if(tm){tm.style.background=type==='monthly'?'#1a1a1a':'#fff';tm.style.color=type==='monthly'?'#fff':'#888';tm.style.borderColor=type==='monthly'?'#1a1a1a':'#e0e0de';tm.style.fontWeight=type==='monthly'?'600':'400';}
   _loadVocwContent(type);
 }
+// 현재 선택된 월 반환 (YYYY-MM 형식, 기본값: 현재 월)
+function _vocwCurrentMonth(){
+  const inp=document.getElementById('vocw-month');
+  if(inp&&inp.value)return inp.value;
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+// Firestore 문서 ID: vl_report_weekly_2026-07 형태
+function _vocwDocId(type){return'vl_report_'+(type||'weekly')+'_'+_vocwCurrentMonth();}
+
 function _loadVocwContent(type){
   const editor=document.getElementById('vocw-editor');
   if(!editor)return;
+  // 월 입력 기본값 설정
+  const inp=document.getElementById('vocw-month');
+  if(inp&&!inp.value){const d=new Date();inp.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
   editor.innerHTML='<span style="color:#bbb;">로딩 중...</span>';
   try{
-    db.collection('_sys').doc('vl_report_'+(type||'weekly')).get().then(function(doc){
+    db.collection('_sys').doc(_vocwDocId(type)).get().then(function(doc){
       const html=(doc.exists&&doc.data().html)||'';
       editor.innerHTML=html||'';
       if(!html)editor.focus();
@@ -2778,9 +2809,10 @@ function saveVocWriteReport(){
   const editor=document.getElementById('vocw-editor');
   if(!editor)return;
   const html=editor.innerHTML;
-  const docId='vl_report_'+_vocwType;
+  const month=_vocwCurrentMonth();
+  const docId=_vocwDocId(_vocwType);
   try{
-    db.collection('_sys').doc(docId).set({html,type:_vocwType,updatedAt:new Date().toISOString()}).then(function(){
+    db.collection('_sys').doc(docId).set({html,type:_vocwType,month,updatedAt:new Date().toISOString()}).then(function(){
       const msg=document.createElement('div');
       msg.style.cssText='position:fixed;top:70px;right:24px;background:#1a1a1a;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;';
       msg.textContent='저장되었습니다.';
@@ -2861,6 +2893,24 @@ function vocwSetFontSize(sizeStr){
   document.execCommand('insertHTML',false,`<span style="font-size:${sizeStr}">${innerHtml}</span>`);
 }
 
+// 에디터 선택 영역 저장 (색상 버튼 클릭 전에 호출)
+let _vocwSavedSel=null;
+function vocwSaveEditorSel(){
+  const sel=window.getSelection();
+  if(!sel||!sel.rangeCount){_vocwSavedSel=null;return;}
+  _vocwSavedSel=[];
+  for(let i=0;i<sel.rangeCount;i++)_vocwSavedSel.push(sel.getRangeAt(i).cloneRange());
+}
+function vocwRestoreEditorSel(){
+  if(!_vocwSavedSel||!_vocwSavedSel.length)return;
+  const ed=document.getElementById('vocw-editor');
+  if(!ed)return;
+  ed.focus();
+  const sel=window.getSelection();
+  sel.removeAllRanges();
+  _vocwSavedSel.forEach(r=>sel.addRange(r));
+}
+
 // 색상 피커 토글
 function vocwToggleColorPicker(btn){
   const picker=document.getElementById('vocw-color-picker');
@@ -2879,30 +2929,45 @@ function vocwToggleColorPicker(btn){
   }
 }
 
-// 배경색 적용: 커서가 표 셀 안이면 셀 배경, 아니면 선택 텍스트 하이라이트
+// 배경색 적용: 드래그 선택된 표 셀 또는 텍스트 하이라이트
 function vocwApplyColor(color){
   document.getElementById('vocw-color-picker').style.display='none';
+  // 저장된 선택 영역 복원
+  vocwRestoreEditorSel();
   const ed=document.getElementById('vocw-editor');
   if(!ed)return;
-  ed.focus();
-  // 표 셀 감지
   const sel=window.getSelection();
-  if(sel&&sel.rangeCount){
-    let node=sel.anchorNode;
-    while(node&&node!==ed){
-      if(node.nodeName==='TD'||node.nodeName==='TH'){
-        node.style.backgroundColor=color==='transparent'?'':color;
+  if(!sel||!sel.rangeCount)return;
+
+  // 표 셀 감지: anchor/focus 노드에서 TD/TH 검색
+  const findCell=(node)=>{let n=node;while(n&&n!==ed){if(n.nodeName==='TD'||n.nodeName==='TH')return n;n=n.parentNode;}return null;};
+  const anchorCell=findCell(sel.anchorNode);
+  const focusCell=findCell(sel.focusNode);
+
+  if(anchorCell||focusCell){
+    // 표 안 → 선택된 모든 셀에 색상 적용
+    const anyCell=anchorCell||focusCell;
+    let table=anyCell;
+    while(table&&table.nodeName!=='TABLE')table=table.parentNode;
+    if(table){
+      const cells=Array.from(table.querySelectorAll('td,th'));
+      const colored=cells.filter(c=>sel.containsNode(c,true));
+      if(colored.length>0){
+        colored.forEach(c=>{c.style.backgroundColor=color==='transparent'?'':color;});
         return;
       }
-      node=node.parentNode;
     }
+    // 단일 셀 (클릭만 한 경우)
+    (anchorCell||focusCell).style.backgroundColor=color==='transparent'?'':color;
+    return;
   }
-  // 선택 텍스트 하이라이트
-  if(sel&&!sel.isCollapsed){
-    if(color==='transparent'){
-      document.execCommand('removeFormat',false,null);
-    }else{
-      document.execCommand('hiliteColor',false,color);
+
+  // 표 밖 → 텍스트 하이라이트
+  if(!sel.isCollapsed){
+    if(color==='transparent'){document.execCommand('removeFormat',false,null);}
+    else{
+      const ok=document.execCommand('hiliteColor',false,color);
+      if(!ok)document.execCommand('backColor',false,color);
     }
   }
 }
@@ -2910,9 +2975,9 @@ function vocwApplyColor(color){
 // 글자색 적용
 function vocwApplyTextColor(color){
   document.getElementById('vocw-color-picker').style.display='none';
+  vocwRestoreEditorSel();
   const ed=document.getElementById('vocw-editor');
   if(!ed)return;
-  ed.focus();
   const sel=window.getSelection();
   if(sel&&!sel.isCollapsed){
     document.execCommand('foreColor',false,color);
@@ -4770,8 +4835,8 @@ _loadUsersFromFirestore(function(){
   <div style="background:#fff;border-radius:16px;width:min(740px,92vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 48px rgba(0,0,0,0.22);overflow:hidden;">
     <!-- 헤더 -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px 12px;border-bottom:1px solid #f0f0ee;flex-shrink:0;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span style="font-size:15px;font-weight:700;">📊 Report</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <input type="month" id="vlm-month-inp" onchange="_loadVlModalReport(_vlReportType)" style="font-size:11px;padding:2px 6px;border:1px solid #e0e0de;border-radius:6px;background:#f8f8f6;cursor:pointer;font-family:inherit;color:#555;height:26px;" title="조회할 월 선택">
         <button id="vl-tab-weekly" onclick="switchVlReportTab('weekly')" style="font-size:11px;padding:3px 12px;border-radius:20px;border:1px solid #1a1a1a;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">Weekly</button>
         <button id="vl-tab-monthly" onclick="switchVlReportTab('monthly')" style="font-size:11px;padding:3px 12px;border-radius:20px;border:1px solid #e0e0de;background:#fff;color:#888;cursor:pointer;font-family:inherit;">Monthly</button>
       </div>
