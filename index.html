@@ -1288,7 +1288,7 @@ function renderLeadtimeTable(claims){
   const cs='padding:6px 10px;border:1px solid #f0f0ee;text-align:center;font-size:12px;';
   const ls=cs+'font-weight:500;background:#f8f8f6;text-align:center;white-space:nowrap;position:sticky;left:0;z-index:1;min-width:130px;';
   const avgFor=arr=>{
-    const bds=arr.filter(r=>r.donedate&&r.indate).map(r=>{const v=calcBusinessDays(r.indate,r.donedate);return v!==null?v+1:null;}).filter(v=>v!==null);
+    const bds=arr.filter(r=>r.donedate&&r.indate).map(r=>calcBusinessDays(r.indate,r.donedate)).filter(v=>v!==null);
     return bds.length?(bds.reduce((a,b)=>a+b,0)/bds.length).toFixed(1):'-';
   };
   tbody.innerHTML=allTypes.map(tp=>{
@@ -1331,7 +1331,8 @@ function calcBusinessDays(start,end){
   if(_bdCache[key]!==undefined)return _bdCache[key];
   const s=new Date(ns),e=new Date(ne);
   if(e<s)return(_bdCache[key]=0);
-  let count=0;const cur=new Date(s);cur.setDate(cur.getDate()+1);
+  // 인입일 자체부터 포함 (단, 주말·공휴일이면 건너뜀)
+  let count=0;const cur=new Date(s);
   while(cur<=e){const dow=cur.getDay(),ds=cur.toISOString().slice(0,10);if(dow!==0&&dow!==6&&!KR_HOLIDAYS.has(ds))count++;cur.setDate(cur.getDate()+1);}
   return(_bdCache[key]=count);
 }
@@ -1628,38 +1629,43 @@ function _openSearchSelect(td,claimId,field,curVal,opts){
 // ===== 컬럼 너비 관리 (localStorage 저장/복원) =====
 const _colDefaults={
   _drag:28,
-  month:64,date:84,indate:84,shipdate:84,donedate:96,
-  channel:80,platform:80,orderno:120,buyer:68,product:130,option:100,category:82,
-  _ticket:90,
-  issue:110,liability:70,type:120,nature:80,_img:70,
-  reason:140,returnYn:50,reshipYn:50,accident:60,status:70,
-  _lead:65,_sla:55,costP:80,costR:80,costS:80,_del:90
+  month:46,_ticket:74,
+  date:88,indate:88,shipdate:88,donedate:88,
+  channel:82,platform:62,orderno:150,buyer:62,
+  product:180,option:96,category:82,
+  issue:110,liability:54,type:104,nature:66,
+  _img:56,reason:130,
+  returnYn:40,reshipYn:40,accident:46,
+  costP:74,costR:74,costS:74,
+  _lead:56,status:66,_sla:46,_del:86
 };
+const _COL_VER='v3'; // 버전 올리면 저장된 너비 초기화 → 새 기본값 적용
 const _colWidths=(()=>{
-  try{const s=localStorage.getItem('tuunu_colWidths');if(s){const p=JSON.parse(s);return Object.assign({..._colDefaults},p);}}catch(e){}
+  const uid=sessionStorage.getItem('tuunu_session_v1')||'';
+  const key='tuunu_colWidths_'+_COL_VER+(uid?'_'+uid:'');
+  try{const s=localStorage.getItem(key);if(s){const p=JSON.parse(s);return Object.assign({..._colDefaults},p);}}catch(e){}
   return{..._colDefaults};
 })();
 function _saveColWidths(){
   const uid=_currentUserId();
-  const key='tuunu_colWidths'+(uid?'_'+uid:'');
+  const key='tuunu_colWidths_'+_COL_VER+(uid?'_'+uid:'');
   try{localStorage.setItem(key,JSON.stringify(_colWidths));}catch(e){}
   if(uid&&typeof db!=='undefined'){
-    db.collection('userSettings').doc(uid).set({colWidths:_colWidths},{merge:true}).catch(()=>{});
+    db.collection('userSettings').doc(uid).set({colWidths:_colWidths,ver:_COL_VER},{merge:true}).catch(()=>{});
   }
 }
 function _loadUserColWidths(){
   const uid=_currentUserId();
   if(!uid)return;
-  // localStorage 즉시 적용 (구 키 → 신 키 마이그레이션 포함)
-  const key='tuunu_colWidths_'+uid;
+  const key='tuunu_colWidths_'+_COL_VER+'_'+uid;
   try{
-    const s=localStorage.getItem(key)||localStorage.getItem('tuunu_colWidths');
+    const s=localStorage.getItem(key);
     if(s){Object.assign(_colWidths,JSON.parse(s));_applyColWidths();}
   }catch(e){}
   // Firestore에서 최신값 로드 (크로스 디바이스)
   if(typeof db==='undefined')return;
   db.collection('userSettings').doc(uid).get().then(doc=>{
-    if(!doc.exists||!doc.data().colWidths)return;
+    if(!doc.exists||!doc.data().colWidths||doc.data().ver!==_COL_VER)return;
     Object.assign(_colWidths,doc.data().colWidths);
     // 새 키로 다시 저장 (마이그레이션)
     try{localStorage.setItem(key,JSON.stringify(_colWidths));}catch(e){}
@@ -2108,7 +2114,7 @@ function _buildClaimRow(r,i){
       return;
     }
     if(key==='_lead'){
-      const leadDisp=bdays===null?(r.leadtime||'-'):bdays+1;
+      const leadDisp=bdays===null?(r.leadtime||'-'):bdays;
       cells+=`<td class="tdc" style="${_colW('_lead')}">${leadDisp}</td>`;
       return;
     }
