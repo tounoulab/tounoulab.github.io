@@ -202,6 +202,8 @@ tr:hover td{background:#fafafa;}
 #vl-report-editor h2{font-size:17px;font-weight:700;margin:16px 0 6px;}
 #vl-report-editor h3{font-size:15px;font-weight:600;margin:12px 0 4px;}
 #vl-report-editor[contenteditable]:empty::before{content:attr(placeholder);color:#bbb;pointer-events:none;}
+#vocw-editor[contenteditable]:empty::before{content:attr(placeholder);color:#bbb;pointer-events:none;}
+#vocw-editor table td{border:1px solid #e0e0de;padding:8px;min-width:60px;}
 .td-left{text-align:left !important;}
 .col-rz{position:absolute;right:0;top:0;height:100%;width:6px;cursor:col-resize;z-index:2;}
 .col-rz:hover,.col-rz.dragging{background:rgba(26,115,232,0.35);}
@@ -320,7 +322,7 @@ tr:hover td{background:#fafafa;}
         <div class="gnb-nav-item" data-page="voclog" onclick="switchPage('voclog')">📝 VOC 로그</div>
         <div class="gnb-nav-item" data-page="return" onclick="switchPage('return')">📦 반품 입고</div>
         <div class="gnb-nav-item" data-page="msg" onclick="switchPage('msg')">✉️ 문자 안내</div>
-        <div id="btn-voc-write" class="gnb-nav-item" onclick="openVocWriteModal()" style="display:none;color:#dc2626;font-weight:700;">✍️ VOC 작성</div>
+        <div id="btn-voc-write" class="gnb-nav-item" onclick="switchPage('vocwrite')" style="display:none;color:#dc2626;font-weight:700;">✍️ VOC 작성</div>
       </div>
     </div>
     <div class="gnb-right" style="display:flex;align-items:center;gap:8px;">
@@ -480,6 +482,23 @@ tr:hover td{background:#fafafa;}
           <div id="notice-list" style="font-size:13px;color:#555;"></div>
         </div>
         <div class="side-card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:12px;">📊 Report</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #f0f0ee;border-radius:10px;margin-bottom:8px;background:#fafaf8;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:34px;height:34px;background:#fff8e1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;">📅</div>
+              <div><div style="font-weight:600;font-size:12px;">Weekly Report</div><div style="font-size:11px;color:#aaa;margin-top:1px;">주간 VOC 및 클레임</div></div>
+            </div>
+            <button onclick="openVlReport('weekly')" style="font-size:11px;padding:5px 10px;background:#f5a623;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open</button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #f0f0ee;border-radius:10px;background:#fafaf8;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:34px;height:34px;background:#fff3e0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;">📊</div>
+              <div><div style="font-weight:600;font-size:12px;">Monthly Report</div><div style="font-size:11px;color:#aaa;margin-top:1px;">월간 VOC 리포트 및 KPI</div></div>
+            </div>
+            <button onclick="openVlReport('monthly')" style="font-size:11px;padding:5px 10px;background:#f5a623;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open</button>
+          </div>
+        </div>
+        <div class="side-card">
           <div class="side-card-title">오늘의 현황</div>
           <div class="sub-row"><span class="sub-row-label">클레임 인입</span><span class="sub-row-value" id="side-today-claim">-</span></div>
           <div class="sub-row"><span class="sub-row-label">반품 입고</span><span class="sub-row-value" id="side-today-return">-</span></div>
@@ -511,6 +530,74 @@ tr:hover td{background:#fafafa;}
     </div>
   </div>
 </div><!-- /page-home -->
+
+<!-- ===== PAGE: VOC 작성 ===== -->
+<div id="page-vocwrite" class="page">
+<div style="max-width:860px;margin:0 auto;padding:24px;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+    <button onclick="switchPage('voclog')" style="font-size:13px;padding:5px 12px;border:1px solid #e0e0de;border-radius:8px;background:#fff;cursor:pointer;color:#555;font-family:inherit;">← 뒤로</button>
+    <span style="font-size:18px;font-weight:700;">✍️ VOC 작성</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+      <button id="vocw-tab-weekly" onclick="switchVocWriteTab('weekly')" style="font-size:12px;padding:4px 14px;border-radius:20px;border:1px solid #1a1a1a;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">📅 위클리</button>
+      <button id="vocw-tab-monthly" onclick="switchVocWriteTab('monthly')" style="font-size:12px;padding:4px 14px;border-radius:20px;border:1px solid #e0e0de;background:#fff;color:#888;cursor:pointer;font-family:inherit;">📊 먼슬리</button>
+      <button onclick="saveVocWriteReport()" style="font-size:13px;padding:6px 18px;border:none;border-radius:8px;background:#1a1a1a;color:#fff;cursor:pointer;font-weight:600;font-family:inherit;">저장</button>
+    </div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <!-- 툴바 -->
+    <div id="vocw-toolbar" style="display:flex;align-items:center;gap:2px;padding:8px 14px;background:#f8f8f6;border-bottom:1px solid #f0f0ee;flex-wrap:wrap;position:relative;">
+      <!-- 인라인 서식 -->
+      <button id="vocw-btn-bold" onclick="vocwToggle('bold')" title="굵게 (Ctrl+B)" data-cmd="bold" style="padding:4px 9px;font-size:13px;font-weight:700;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">B</button>
+      <button id="vocw-btn-italic" onclick="vocwToggle('italic')" title="기울임 (Ctrl+I)" data-cmd="italic" style="padding:4px 9px;font-size:13px;font-style:italic;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">I</button>
+      <button id="vocw-btn-underline" onclick="vocwToggle('underline')" title="밑줄 (Ctrl+U)" data-cmd="underline" style="padding:4px 9px;font-size:13px;text-decoration:underline;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">U</button>
+      <button id="vocw-btn-strike" onclick="vocwToggle('strikeThrough')" title="취소선" data-cmd="strikeThrough" style="padding:4px 9px;font-size:12px;text-decoration:line-through;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">S</button>
+      <span style="width:1px;background:#e0e0de;height:20px;margin:0 3px;display:inline-block;flex-shrink:0;"></span>
+      <!-- 블록 서식 -->
+      <button id="vocw-btn-h2" onclick="vocwToggleBlock('h2')" title="제목 2 — 큰 제목 스타일 (## 입력)" style="padding:4px 9px;font-size:12px;font-weight:700;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">H2</button>
+      <button id="vocw-btn-h3" onclick="vocwToggleBlock('h3')" title="제목 3 — 중간 제목 스타일 (### 입력)" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">H3</button>
+      <button id="vocw-btn-h4" onclick="vocwToggleBlock('h4')" title="제목 4 — 작은 제목 스타일" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">H4</button>
+      <button id="vocw-btn-p" onclick="vocwToggleBlock('p')" title="일반 텍스트 — 기본 단락 스타일" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">P</button>
+      <span style="width:1px;background:#e0e0de;height:20px;margin:0 3px;display:inline-block;flex-shrink:0;"></span>
+      <!-- 글자 크기 -->
+      <select onchange="vocwSetFontSize(this.value);this.value=''" title="글자 크기 설정" style="height:28px;padding:0 4px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;color:#555;">
+        <option value="">크기</option>
+        <option value="11px">11px</option>
+        <option value="12px">12px</option>
+        <option value="13px">13px</option>
+        <option value="14px">14px</option>
+        <option value="16px">16px</option>
+        <option value="18px">18px</option>
+        <option value="20px">20px</option>
+        <option value="24px">24px</option>
+        <option value="28px">28px</option>
+        <option value="32px">32px</option>
+      </select>
+      <span style="width:1px;background:#e0e0de;height:20px;margin:0 3px;display:inline-block;flex-shrink:0;"></span>
+      <!-- 목록 -->
+      <button onclick="vocwFmt('insertUnorderedList')" title="글머리 기호 목록 (- 입력 후 스페이스)" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">• 목록</button>
+      <button onclick="vocwFmt('insertOrderedList')" title="번호 매기기 목록" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">1. 목록</button>
+      <button onclick="vocwFmt('indent')" title="들여쓰기 (Tab)" style="padding:4px 9px;font-size:13px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">→</button>
+      <button onclick="vocwFmt('outdent')" title="내어쓰기 (Shift+Tab)" style="padding:4px 9px;font-size:13px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">←</button>
+      <span style="width:1px;background:#e0e0de;height:20px;margin:0 3px;display:inline-block;flex-shrink:0;"></span>
+      <!-- 삽입 -->
+      <button onclick="vocwInsertHr()" title="구분선 삽입 (--- 입력)" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">—</button>
+      <div style="position:relative;display:inline-block;">
+        <button id="vocw-tbl-btn" onclick="vocwToggleTablePicker(this)" title="표 삽입 — 행·열 수를 마우스로 선택" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">표 ▾</button>
+        <div id="vocw-table-picker" style="display:none;position:fixed;background:#fff;border:1px solid #e0e0de;border-radius:10px;padding:10px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+          <div id="vocw-table-grid" style="display:grid;grid-template-columns:repeat(8,22px);gap:3px;"></div>
+          <div id="vocw-table-label" style="font-size:11px;color:#888;text-align:center;margin-top:7px;">표 크기를 선택하세요</div>
+        </div>
+      </div>
+      <span style="width:1px;background:#e0e0de;height:20px;margin:0 3px;display:inline-block;flex-shrink:0;"></span>
+      <button onclick="vocwFmt('removeFormat')" title="서식 모두 제거" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#999;font-family:inherit;">서식 제거</button>
+    </div>
+    <!-- 에디터 본문 -->
+    <div id="vocw-editor" contenteditable="true"
+      style="min-height:calc(100vh - 280px);padding:24px 32px;font-size:15px;line-height:1.8;color:#1a1a1a;outline:none;background:#fff;"
+      placeholder="여기에 리포트를 작성하세요..."></div>
+  </div>
+</div>
+</div><!-- /page-vocwrite -->
 
 <!-- ===== PAGE: 문자 안내 ===== -->
 <div id="page-msg" class="page">
@@ -752,8 +839,8 @@ tr:hover td{background:#fafafa;}
     </div>
   </div>
 </div>
-<div id="claim-scroll-wrap" style="overflow:auto;max-height:calc(100vh - 190px);padding:0 0 24px 24px;">
-  <table id="claim-sheet" style="table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:13px;background:#fff;border:1px solid #e0e0de;border-radius:8px;">
+<div id="claim-scroll-wrap" style="overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 190px);padding:0 0 24px 24px;position:relative;">
+  <table id="claim-sheet" style="table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:13px;background:#fff;">
     <colgroup id="claim-colgroup">
       <col data-col="_drag"><col data-col="month"><col data-col="_ticket"><col data-col="date"><col data-col="indate"><col data-col="shipdate">
       <col data-col="donedate"><col data-col="channel"><col data-col="platform"><col data-col="orderno">
@@ -868,7 +955,6 @@ tr:hover td{background:#fafafa;}
       </div>
       <button onclick="openVlReport('monthly')" style="font-size:12px;padding:6px 12px;background:#f5a623;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open Report</button>
     </div>
-    <button onclick="openVlReport('weekly');toggleVlModalEditor()" style="width:100%;font-size:12px;padding:8px;border:1px solid #e0e0de;border-radius:8px;background:#f5f5f3;color:#555;cursor:pointer;font-family:inherit;">✏️ 편집</button>
   </div>
 </div>
 </div><!-- /page-voclog -->
@@ -950,6 +1036,7 @@ function switchPage(name){
   if(name==='home')renderHomeDashboard();
   if(name==='voc'){renderVocStats();renderVocCharts();_restoreScroll('voc');}
   if(name==='voclog'){renderVocLog();_restoreScroll('voclog');}
+  if(name==='vocwrite'){if(_currentUserId()==='chohee'){switchVocWriteTab(_vocwType||'weekly');}else{switchPage('home');return;}_restoreScroll('vocwrite');}
   if(name==='return'){renderReturnStats();renderReturnTable();_restoreScroll('return');}
   if(name==='claim'){
     _vsScrollRestored=false;
@@ -1145,6 +1232,12 @@ function renderDonutChart(canvasId,legendId,countsObj){
     },
     options:{
       cutout:'68%',responsive:true,maintainAspectRatio:true,
+      onClick:(evt,elements)=>{
+        if(!elements.length)return;
+        const idx=elements[0].index;
+        const label=sorted[idx][0];
+        _showClaimListPopup(canvasId,label);
+      },
       plugins:{
         legend:{display:false},
         tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed}건 (${Math.round(ctx.parsed/total*100)}%)`}}
@@ -1157,6 +1250,70 @@ function renderDonutChart(canvasId,legendId,countsObj){
   if(leg)leg.innerHTML=sorted.map(([k,v],i)=>
     `<div class="chart-legend-item"><span class="chart-legend-dot" style="background:${CHART_COLORS[i]};"></span><span>${k}</span><span style="font-weight:600;">${Math.round(v/total*100)}%</span></div>`
   ).join('');
+}
+
+function _showClaimListPopup(chartId,label){
+  const t=todayStr();
+  const[ws]=weekRange(),[ms]=monthRange();
+  // chartId로 날짜 범위 추정
+  const isToday=chartId.includes('today');
+  const from=isToday?t:ws,to=t;
+  const claims=loadClaims();
+  // 어느 필드로 필터할지 — chartId 에서 유추
+  let field='type';
+  if(chartId.includes('issue'))field='issue';
+  else if(chartId.includes('liability'))field='liability';
+  else if(chartId.includes('platform'))field='platform';
+  else if(chartId.includes('type')||chartId.includes('week'))field='type';
+  const filtered=claims.filter(r=>{
+    const v=normDate(r.date)||'';
+    return v>=from&&v<=to&&(r[field]||'(미입력)')===label;
+  });
+  // 모달 표시
+  let modal=document.getElementById('_claimListModal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='_claimListModal';
+    modal.style.cssText='display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.35);align-items:center;justify-content:center;';
+    modal.innerHTML=`<div style="background:#fff;border-radius:14px;width:min(680px,92vw);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.2);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f0f0ee;flex-shrink:0;">
+        <span id="_clm-title" style="font-size:15px;font-weight:700;"></span>
+        <button onclick="document.getElementById('_claimListModal').style.display='none'" style="font-size:20px;border:none;background:none;cursor:pointer;color:#999;line-height:1;">×</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px 20px;" id="_clm-body"></div>
+    </div>`;
+    document.body.appendChild(modal);
+  }
+  const titleEl=modal.querySelector('#_clm-title');
+  const bodyEl=modal.querySelector('#_clm-body');
+  // 중복 주문번호 1건 집계
+  const _seen=new Set();
+  const deduped=filtered.filter(r=>{const k=r.orderno||String(r.id);if(_seen.has(k))return false;_seen.add(k);return true;});
+  const dupCount=filtered.length-deduped.length;
+  const dedupNote=dupCount>0?` (중복 주문번호 ${dupCount}건 제외, 1건 집계)`:'';
+  if(titleEl)titleEl.textContent=`${label} — ${deduped.length}건${dedupNote}`;
+  if(bodyEl){
+    if(!deduped.length){bodyEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">해당 데이터 없음</div>';
+    }else{
+      bodyEl.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:#f6f6f4;">
+          <th style="padding:7px 10px;text-align:left;border-bottom:1px solid #e8e8e6;white-space:nowrap;">날짜</th>
+          <th style="padding:7px 10px;text-align:left;border-bottom:1px solid #e8e8e6;white-space:nowrap;">주문번호</th>
+          <th style="padding:7px 10px;text-align:left;border-bottom:1px solid #e8e8e6;">상품명</th>
+          <th style="padding:7px 10px;text-align:left;border-bottom:1px solid #e8e8e6;white-space:nowrap;">처리유형</th>
+          <th style="padding:7px 10px;text-align:left;border-bottom:1px solid #e8e8e6;white-space:nowrap;">상태</th>
+        </tr></thead>
+        <tbody>${deduped.map(r=>`<tr style="border-bottom:1px solid #f0f0ee;">
+          <td style="padding:7px 10px;white-space:nowrap;">${r.date||'-'}</td>
+          <td style="padding:7px 10px;white-space:nowrap;font-size:11px;">${r.orderno||'-'}</td>
+          <td style="padding:7px 10px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.product||''}">${r.product||'-'}</td>
+          <td style="padding:7px 10px;white-space:nowrap;">${r.type||'-'}</td>
+          <td style="padding:7px 10px;white-space:nowrap;">${r.status||'-'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+    }
+  }
+  modal.style.display='flex';
 }
 
 function renderWeeklyTrendChart(claims){
@@ -2112,7 +2269,7 @@ function renderClaimTable(){
 }
 
 // ===== 가상 스크롤 (Virtual Scroll) =====
-const VS_ROW_H=36,VS_BUF=60;
+const VS_ROW_H=38,VS_BUF=120;
 let _vsClaims=[],_vsRafId=null,_vsWrap=null,_vsScrollBound=false,_vsScrollRestored=false;
 function _vsInit(){
   const wrap=document.getElementById('claim-scroll-wrap');
@@ -2239,7 +2396,7 @@ function _buildClaimRow(r,i){
       }else{
         tdisp=`<span style="color:#ccc;">-</span>`;
       }
-      cells+=`<td class="tdc" data-id="${r.id}" data-field="ticketNo" data-val="${tno}" onclick="editCell(this,+this.dataset.id,'ticketNo',this.dataset.val)" style="${_colW('_ticket')}">${tdisp}</td>`;
+      cells+=`<td class="tdc" data-id="${r.id}" data-field="ticketNo" data-val="${tno}" onclick="editCell(this,+this.dataset.id,'ticketNo',this.dataset.val)" style="background:${bg};${_colW('_ticket')}">${tdisp}</td>`;
       return;
     }
     const f=CF[key];if(!f)return;
@@ -2251,11 +2408,14 @@ function _buildClaimRow(r,i){
       const num=val?parseFloat(String(val).replace(/,/g,'')):NaN;
       disp=(!isNaN(num)&&val)?num.toLocaleString():'-';
     }
-    cells+=`<td class="tdc${isLeft?' td-left':''}" title="${val||'-'}" data-id="${r.id}" data-field="${key}" data-val="${val.replace(/"/g,'&quot;')}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)" style="${_colW(key)}">${disp}</td>`;
+    // 스티키 컬럼은 수평 스크롤 시 배경이 투명하면 뒤 셀이 비침 → 명시적 배경색 적용
+    const _isStickyCol=_STICKY_KEYS.includes(key);
+    const _stickyBg=_isStickyCol?`background:${bg};`:'';
+    cells+=`<td class="tdc${isLeft?' td-left':''}" title="${val||'-'}" data-id="${r.id}" data-field="${key}" data-val="${val.replace(/"/g,'&quot;')}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)" style="${_stickyBg}${_colW(key)}">${disp}</td>`;
   });
   cells+=`<td class="tdc" style="white-space:nowrap;${_colW('_del')}"><button style="padding:2px 7px;font-size:11px;border:1px solid #c5cae9;border-radius:4px;background:#f3f4fd;cursor:pointer;color:#3949ab;margin-right:3px;" onclick="duplicateClaim(${r.id})" title="이 행 복사">복사</button><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
   const bgVal=bg||'#fff';
-  const dragTd=`<td class="tdc" data-field="_drag" style="position:sticky;left:0;background:${bgVal};z-index:3;${_colW('_drag')}">⠿</td>`;
+  const dragTd=`<td class="tdc" data-field="_drag" style="position:sticky;left:0;background:${bgVal};z-index:3;box-sizing:border-box;${_colW('_drag')}">⠿</td>`;
   return`<tr draggable="true" data-cid="${r.id}" style="background:${bgVal};--bg:${bgVal};">${dragTd}${cells}</tr>`;
 }
 
@@ -2541,33 +2701,235 @@ function vlFmt(c,v){vlmFmt(c,v);}
 function vlFmtBlock(t){vlmFmtBlock(t);}
 function vlInsertHr(){vlmInsertHr();}
 
-// ===== VOC 작성 모달 (chohee 전용) =====
-function openVocWriteModal(){
-  if(_currentUserId()!=='chohee')return;
-  const modal=document.getElementById('modal-voc-write');
-  if(!modal)return;
-  modal.style.display='flex';
-  ['vocw-orderno','vocw-platform','vocw-issue','vocw-reason'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+// ===== VOC 작성 전체 페이지 에디터 (chohee 전용) =====
+let _vocwType='weekly';
+function switchVocWriteTab(type){
+  _vocwType=type;
+  const tw=document.getElementById('vocw-tab-weekly');
+  const tm=document.getElementById('vocw-tab-monthly');
+  if(tw){tw.style.background=type==='weekly'?'#1a1a1a':'#fff';tw.style.color=type==='weekly'?'#fff':'#888';tw.style.borderColor=type==='weekly'?'#1a1a1a':'#e0e0de';tw.style.fontWeight=type==='weekly'?'600':'400';}
+  if(tm){tm.style.background=type==='monthly'?'#1a1a1a':'#fff';tm.style.color=type==='monthly'?'#fff':'#888';tm.style.borderColor=type==='monthly'?'#1a1a1a':'#e0e0de';tm.style.fontWeight=type==='monthly'?'600':'400';}
+  _loadVocwContent(type);
 }
-function closeVocWriteModal(){
-  const modal=document.getElementById('modal-voc-write');
-  if(modal)modal.style.display='none';
+function _loadVocwContent(type){
+  const editor=document.getElementById('vocw-editor');
+  if(!editor)return;
+  editor.innerHTML='<span style="color:#bbb;">로딩 중...</span>';
+  try{
+    db.collection('_sys').doc('vl_report_'+(type||'weekly')).get().then(function(doc){
+      const html=(doc.exists&&doc.data().html)||'';
+      editor.innerHTML=html||'';
+      if(!html)editor.focus();
+      _initVocwEditor();
+    }).catch(function(){editor.innerHTML='';_initVocwEditor();});
+  }catch(e){editor.innerHTML='';_initVocwEditor();}
 }
-function submitVocWrite(){
-  const orderno=(document.getElementById('vocw-orderno')?.value||'').trim();
-  const platform=(document.getElementById('vocw-platform')?.value||'').trim();
-  const issue=(document.getElementById('vocw-issue')?.value||'').trim();
-  const reason=(document.getElementById('vocw-reason')?.value||'').trim();
-  if(!orderno&&!issue){alert('주문번호 또는 이슈를 입력해 주세요.');return;}
-  const t=todayStr();
-  const newClaim={id:Date.now(),date:t,indate:t,orderno,platform,issue,reason,nature:'VOC',status:'접수',type:'',liability:'',channel:'',buyer:'',product:'',option:'',category:'',month:t.slice(0,7),shipdate:'',donedate:'',returnYn:'',reshipYn:'',accident:'',costP:'',costR:'',costS:'',leadtime:''};
-  const claims=loadClaims();
-  claims.unshift(newClaim);
-  saveClaims(claims);
-  closeVocWriteModal();
-  if(_activePage()==='claim')renderClaimTable();
-  alert('VOC가 등록되었습니다.');
+function saveVocWriteReport(){
+  const editor=document.getElementById('vocw-editor');
+  if(!editor)return;
+  const html=editor.innerHTML;
+  const docId='vl_report_'+_vocwType;
+  try{
+    db.collection('_sys').doc(docId).set({html,type:_vocwType,updatedAt:new Date().toISOString()}).then(function(){
+      const msg=document.createElement('div');
+      msg.style.cssText='position:fixed;top:70px;right:24px;background:#1a1a1a;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;';
+      msg.textContent='저장되었습니다.';
+      document.body.appendChild(msg);
+      setTimeout(()=>msg.remove(),2000);
+    }).catch(function(){alert('저장 중 오류가 발생했습니다.');});
+  }catch(e){alert('저장할 수 없습니다.');}
 }
+
+// 기본 execCommand 래퍼
+function vocwFmt(cmd,val){
+  const ed=document.getElementById('vocw-editor');
+  if(!ed)return;
+  ed.focus();
+  document.execCommand(cmd,false,val||null);
+  _updateVocwToolbarState();
+}
+
+// 인라인 서식 토글 (bold/italic/underline/strikeThrough): 두 번 누르면 원복
+function vocwToggle(cmd){
+  const ed=document.getElementById('vocw-editor');
+  if(!ed)return;
+  ed.focus();
+  document.execCommand(cmd,false,null);
+  _updateVocwToolbarState();
+}
+
+// 블록 서식 토글: 같은 블록 두 번 누르면 P로 원복
+function vocwToggleBlock(tag){
+  const ed=document.getElementById('vocw-editor');
+  if(!ed)return;
+  ed.focus();
+  const current=(document.queryCommandValue('formatBlock')||'').toLowerCase();
+  if(current===tag.toLowerCase()||current==='h'+tag.replace(/\D/g,'')){
+    document.execCommand('formatBlock',false,'p');
+  }else{
+    document.execCommand('formatBlock',false,tag);
+  }
+  _updateVocwToolbarState();
+}
+
+// 툴바 버튼 활성 상태 반영
+function _updateVocwToolbarState(){
+  try{
+    const cmds=[['bold','vocw-btn-bold'],['italic','vocw-btn-italic'],['underline','vocw-btn-underline'],['strikeThrough','vocw-btn-strike']];
+    cmds.forEach(([cmd,id])=>{
+      const btn=document.getElementById(id);
+      if(!btn)return;
+      const active=document.queryCommandState(cmd);
+      btn.style.background=active?'#1a1a1a':'#fff';
+      btn.style.color=active?'#fff':'inherit';
+    });
+    // 블록 버튼
+    const blockTag=(document.queryCommandValue('formatBlock')||'p').toLowerCase();
+    ['h2','h3','h4','p'].forEach(tag=>{
+      const btn=document.getElementById('vocw-btn-'+tag);
+      if(!btn)return;
+      const active=blockTag===tag;
+      btn.style.background=active?'#1a1a1a':'#fff';
+      btn.style.color=active?'#fff':'inherit';
+    });
+  }catch(e){}
+}
+
+// 글자 크기 설정 (선택 영역에 span 적용)
+function vocwSetFontSize(sizeStr){
+  if(!sizeStr)return;
+  const ed=document.getElementById('vocw-editor');
+  if(!ed)return;
+  ed.focus();
+  const sel=window.getSelection();
+  if(!sel||!sel.rangeCount||sel.isCollapsed)return;
+  const range=sel.getRangeAt(0);
+  const frag=range.cloneContents();
+  const div=document.createElement('div');
+  div.appendChild(frag);
+  const innerHtml=div.innerHTML||sel.toString();
+  document.execCommand('insertHTML',false,`<span style="font-size:${sizeStr}">${innerHtml}</span>`);
+}
+
+// 구분선
+function vocwInsertHr(){
+  const ed=document.getElementById('vocw-editor');
+  if(!ed)return;
+  ed.focus();
+  document.execCommand('insertHTML',false,'<hr style="border:0;border-top:2px solid #e0e0de;margin:16px 0;"><p><br></p>');
+}
+
+// 표 크기 피커
+let _vocwTblInit=false;
+function vocwToggleTablePicker(btn){
+  const picker=document.getElementById('vocw-table-picker');
+  if(!picker)return;
+  if(picker.style.display==='none'||!picker.style.display){
+    if(!_vocwTblInit){
+      const grid=document.getElementById('vocw-table-grid');
+      if(grid){
+        for(let r=1;r<=8;r++){for(let c=1;c<=8;c++){
+          const cell=document.createElement('div');
+          cell.style.cssText='width:20px;height:20px;border:1px solid #e0e0de;border-radius:2px;cursor:pointer;background:#f8f8f6;box-sizing:border-box;';
+          cell.dataset.r=r;cell.dataset.c=c;
+          cell.addEventListener('mouseover',()=>_hoverVocwTable(r,c));
+          cell.addEventListener('click',()=>{_insertVocwTable(r,c);picker.style.display='none';});
+          grid.appendChild(cell);
+        }}
+        grid.addEventListener('mouseleave',()=>{
+          grid.querySelectorAll('div').forEach(c=>{c.style.background='#f8f8f6';c.style.borderColor='#e0e0de';});
+          const lbl=document.getElementById('vocw-table-label');if(lbl)lbl.textContent='표 크기를 선택하세요';
+        });
+      }
+      _vocwTblInit=true;
+    }
+    const rect=btn.getBoundingClientRect();
+    picker.style.top=(rect.bottom+4)+'px';
+    picker.style.left=rect.left+'px';
+    picker.style.display='block';
+    // 외부 클릭시 닫기
+    setTimeout(()=>{
+      const close=(e)=>{if(!picker.contains(e.target)&&e.target!==btn){picker.style.display='none';document.removeEventListener('click',close);}};
+      document.addEventListener('click',close);
+    },0);
+  }else{
+    picker.style.display='none';
+  }
+}
+function _hoverVocwTable(rows,cols){
+  const grid=document.getElementById('vocw-table-grid');if(!grid)return;
+  grid.querySelectorAll('div').forEach(cell=>{
+    const r=+cell.dataset.r,c=+cell.dataset.c;
+    const active=r<=rows&&c<=cols;
+    cell.style.background=active?'#dbeafe':'#f8f8f6';
+    cell.style.borderColor=active?'#1a73e8':'#e0e0de';
+  });
+  const lbl=document.getElementById('vocw-table-label');
+  if(lbl)lbl.textContent=`${cols}열 × ${rows}행`;
+}
+function _insertVocwTable(rows,cols){
+  const ed=document.getElementById('vocw-editor');if(!ed)return;
+  ed.focus();
+  let tbl='<table style="border-collapse:collapse;width:100%;margin:12px 0;">';
+  for(let r=0;r<rows;r++){
+    tbl+='<tr>';
+    for(let c=0;c<cols;c++){tbl+=`<td style="border:1px solid #e0e0de;padding:8px;min-width:60px;">&nbsp;</td>`;}
+    tbl+='</tr>';
+  }
+  tbl+='</table><p><br></p>';
+  document.execCommand('insertHTML',false,tbl);
+}
+
+// 키보드 단축키 + 자동 글머리 + Tab 들여쓰기
+let _vocwEditorInited=false;
+function _initVocwEditor(){
+  if(_vocwEditorInited)return;
+  _vocwEditorInited=true;
+  const ed=document.getElementById('vocw-editor');
+  if(!ed)return;
+  ed.addEventListener('keydown',function(e){
+    // Tab → indent, Shift+Tab → outdent
+    if(e.key==='Tab'){
+      e.preventDefault();
+      if(e.shiftKey){document.execCommand('outdent',false,null);}
+      else{document.execCommand('indent',false,null);}
+      return;
+    }
+    // Ctrl+B/I/U 단축키
+    if(e.ctrlKey||e.metaKey){
+      if(e.key==='b'){e.preventDefault();vocwToggle('bold');}
+      if(e.key==='i'){e.preventDefault();vocwToggle('italic');}
+      if(e.key==='u'){e.preventDefault();vocwToggle('underline');}
+    }
+    // Enter 후 툴바 상태 갱신
+    if(e.key==='Enter'){setTimeout(_updateVocwToolbarState,10);}
+  });
+  ed.addEventListener('keyup',function(e){
+    // - + Space → 글머리 기호 자동 변환
+    if(e.key===' '){
+      const sel=window.getSelection();
+      if(!sel||!sel.rangeCount)return;
+      const node=sel.anchorNode;
+      if(!node||node.nodeType!==3)return;
+      const text=node.textContent;
+      const offset=sel.anchorOffset;
+      const lineStart=text.slice(0,offset);
+      if(lineStart==='-'||(lineStart.startsWith('-')&&lineStart.trim()==='-')){
+        node.textContent=text.slice(offset);
+        sel.collapse(node,0);
+        document.execCommand('insertUnorderedList',false,null);
+      }
+    }
+    _updateVocwToolbarState();
+  });
+  ed.addEventListener('mouseup',_updateVocwToolbarState);
+  ed.addEventListener('focus',_updateVocwToolbarState);
+}
+
+// 더 이상 모달 사용 안 함 (호환성 유지용 stub)
+function openVocWriteModal(){switchPage('vocwrite');}
+function closeVocWriteModal(){}
+function submitVocWrite(){}
 // ===== CSV =====
 function dlCSV(filename,headers,rows){
   const csv='﻿'+[headers,...rows].map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
@@ -4286,9 +4648,6 @@ _loadUsersFromFirestore(function(){
         <button id="vl-tab-monthly" onclick="switchVlReportTab('monthly')" style="font-size:11px;padding:3px 12px;border-radius:20px;border:1px solid #e0e0de;background:#fff;color:#888;cursor:pointer;font-family:inherit;">Monthly</button>
       </div>
       <div style="display:flex;align-items:center;gap:6px;">
-        <button id="btn-vlm-edit" onclick="toggleVlModalEditor()" style="font-size:11px;padding:4px 10px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;font-family:inherit;">✏️ Edit</button>
-        <button id="btn-vlm-save" onclick="saveVlModalReport()" style="display:none;font-size:11px;padding:4px 10px;border:none;border-radius:5px;background:#1a1a1a;cursor:pointer;color:#fff;font-family:inherit;">저장</button>
-        <button id="btn-vlm-cancel" onclick="cancelVlModalEditor()" style="display:none;font-size:11px;padding:4px 10px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;font-family:inherit;">취소</button>
         <button onclick="closeVlReport()" style="font-size:20px;padding:0 6px;border:none;background:none;cursor:pointer;color:#999;line-height:1;">×</button>
       </div>
     </div>
