@@ -137,11 +137,11 @@ tr:hover td{background:#fafafa;}
 .output-box{background:#f8f8f6;border:1px solid #e8e8e6;border-radius:10px;padding:16px 18px;font-size:14px;line-height:1.9;white-space:pre-wrap;word-break:break-word;color:#1a1a1a;}
 .byte-info{font-size:12px;color:#aaa;margin-top:8px;text-align:right;}
 /* VOC bars */
-.voc-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.voc-label{font-size:13px;color:#555;width:160px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.voc-bar-wrap{flex:1;height:8px;background:#f0f0ee;border-radius:4px;}
-.voc-bar{height:100%;background:#1a1a1a;border-radius:4px;}
-.voc-count{font-size:12px;color:#888;width:28px;text-align:right;flex-shrink:0;}
+.voc-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;min-height:28px;}
+.voc-label{font-size:12px;color:#555;width:160px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.voc-bar-wrap{flex:1;height:12px;background:#f0f0ee;border-radius:6px;align-self:center;}
+.voc-bar{height:100%;background:#1a1a1a;border-radius:6px;}
+.voc-count{font-size:12px;color:#888;width:30px;text-align:right;flex-shrink:0;}
 /* ===== searchable dropdown ===== */
 .sd-wrap{position:relative;}
 .sd-input{width:100%;padding:8px 28px 8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;cursor:text;}
@@ -189,7 +189,7 @@ tr:hover td{background:#fafafa;}
 #claim-sheet thead th{border-top:0!important;border-left:0!important;border-right:1px solid #e0e0de!important;border-bottom:1px solid #e0e0de!important;}
 #claim-sheet thead th:first-child{border-left:0!important;}
 #claim-sheet tbody td[data-field="_drag"]{border-left:0!important;}
-.voc-label-wrap{white-space:normal !important;width:200px !important;flex-shrink:0;}
+.voc-label-wrap{white-space:nowrap !important;width:160px !important;flex-shrink:0;}
 .stat-hint{font-size:10px;color:#bbb;margin-top:2px;}
 /* VOC 리포트 뷰 스타일 */
 .vl-report-content h2{font-size:17px;font-weight:700;margin:16px 0 6px;}
@@ -320,6 +320,7 @@ tr:hover td{background:#fafafa;}
         <div class="gnb-nav-item" data-page="voclog" onclick="switchPage('voclog')">📝 VOC 로그</div>
         <div class="gnb-nav-item" data-page="return" onclick="switchPage('return')">📦 반품 입고</div>
         <div class="gnb-nav-item" data-page="msg" onclick="switchPage('msg')">✉️ 문자 안내</div>
+        <div id="btn-voc-write" class="gnb-nav-item" onclick="openVocWriteModal()" style="display:none;color:#dc2626;font-weight:700;">✍️ VOC 작성</div>
       </div>
     </div>
     <div class="gnb-right" style="display:flex;align-items:center;gap:8px;">
@@ -571,6 +572,7 @@ tr:hover td{background:#fafafa;}
       <select id="absence" onchange="onAbsenceChange()">
         <option value="1차">1차 부재</option>
         <option value="2차">2차 부재</option>
+        <option value="부재없음">부재 없음</option>
       </select>
     </div>
     <!-- 출고 일정 안내 시 출고 예정 기간 입력 -->
@@ -622,7 +624,12 @@ tr:hover td{background:#fafafa;}
         <option value="당일출고">당일 출고</option>
       </select>
     </div>
-    <!-- 파손/훼손 교환 + 첨부 시 출고 예정 일자 -->
+    <!-- 단순변심 교환 + 부재 없음 시 변경 옵션 -->
+    <div class="conditional-row" id="rowChangeOption" style="margin-bottom:12px;">
+      <label>변경 옵션</label>
+      <input type="text" id="changeOption" placeholder="예: 네이비/L → 네이비/XL" />
+    </div>
+    <!-- 파손/훼손 교환 + 첨부 시 / 단순변심 교환 + 부재없음 시 출고 예정 일자 -->
     <div class="conditional-row" id="rowExchangeShipDate" style="margin-bottom:12px;">
       <label>출고 예정 일자</label>
       <input type="text" id="exchangeShipDate" placeholder="예: 6/25" />
@@ -730,9 +737,10 @@ tr:hover td{background:#fafafa;}
     <span style="font-size:18px;font-weight:700;">클레임 현황</span>
     <span id="claim-count-badge" style="font-size:13px;color:#888;font-weight:400;"></span>
     <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
-      <input type="date" id="claim-date-from" style="height:32px;padding:0 8px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;width:130px;outline:none;box-sizing:border-box;color:#333;" onchange="_applyClaimDateFilter()" title="인입일 시작"/>
+      <button id="btn-claim-date-field" onclick="_toggleClaimDateField()" style="height:32px;padding:0 10px;border:1px solid #c5d8f9;border-radius:8px;font-size:12px;background:#f0f6ff;color:#1a73e8;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">기준: 인입일</button>
+      <input type="date" id="claim-date-from" style="height:32px;padding:0 8px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;width:130px;outline:none;box-sizing:border-box;color:#333;" onchange="_applyClaimDateFilter()"/>
       <span style="font-size:11px;color:#aaa;line-height:32px;">~</span>
-      <input type="date" id="claim-date-to" style="height:32px;padding:0 8px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;width:130px;outline:none;box-sizing:border-box;color:#333;" onchange="_applyClaimDateFilter()" title="인입일 종료"/>
+      <input type="date" id="claim-date-to" style="height:32px;padding:0 8px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;width:130px;outline:none;box-sizing:border-box;color:#333;" onchange="_applyClaimDateFilter()"/>
       <button onclick="_clearClaimDateFilter()" style="height:32px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;background:#f5f5f3;color:#888;cursor:pointer;font-family:inherit;">날짜 초기화</button>
       <input id="claim-search-input" type="text" placeholder="🔍 주문번호·구매자·상품명 검색" oninput="_applyClaimSearch(this.value)" style="height:32px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:13px;width:200px;outline:none;box-sizing:border-box;"/>
       <button onclick="openClaimModal()" style="height:32px;padding:0 14px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">+ 클레임 등록</button>
@@ -833,37 +841,34 @@ tr:hover td{background:#fafafa;}
   <div class="card"><div class="card-title" id="vl-issue-title">이번 달 이슈 TOP 5 (VOC)</div><div id="chart-vl-issue"></div></div>
   <div class="card"><div class="card-title" id="vl-type-title">이번 주 처리 유형별 현황 (VOC)</div><div id="chart-vl-type"></div></div>
   <div class="card"><div class="card-title" id="vl-liability-title">이번 주 귀책별 현황 (VOC)</div><div id="chart-vl-liability"></div></div>
-  <!-- 클레임 리포트 (Notion 스타일 인라인 에디터) -->
+  <!-- 클레임 리포트 카드 -->
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <span class="card-title" style="margin:0;">클레임 리포트</span>
-      <div style="display:flex;gap:6px;">
-        <button id="btn-vl-edit" onclick="toggleVlEditor()" style="font-size:11px;padding:4px 10px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;font-family:inherit;">✏️ Edit</button>
-        <button id="btn-vl-save" onclick="saveVlReport()" style="display:none;font-size:11px;padding:4px 10px;border:none;border-radius:5px;background:#1a1a1a;cursor:pointer;color:#fff;font-family:inherit;">저장</button>
-        <button id="btn-vl-cancel" onclick="cancelVlEditor()" style="display:none;font-size:11px;padding:4px 10px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;font-family:inherit;">취소</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <span style="font-size:15px;font-weight:700;">📊 Report</span>
+    </div>
+    <!-- Weekly Report -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid #f0f0ee;border-radius:10px;margin-bottom:8px;background:#fafaf8;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;background:#fff8e1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;">📅</div>
+        <div>
+          <div style="font-weight:600;font-size:13px;">Weekly Report</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px;">주간 VOC 및 클레임 분석</div>
+        </div>
       </div>
+      <button onclick="openVlReport('weekly')" style="font-size:12px;padding:6px 12px;background:#f5a623;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open Report</button>
     </div>
-    <!-- 에디터 툴바 (편집 모드일 때만 보임) -->
-    <div id="vl-editor-toolbar" style="display:none;margin-bottom:8px;padding:6px 8px;background:#f8f8f6;border-radius:8px;display:none;gap:4px;flex-wrap:wrap;">
-      <button onclick="vlFmt('bold')" title="굵게" style="padding:3px 8px;font-size:12px;font-weight:700;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">B</button>
-      <button onclick="vlFmt('italic')" title="기울임" style="padding:3px 8px;font-size:12px;font-style:italic;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">I</button>
-      <button onclick="vlFmt('underline')" title="밑줄" style="padding:3px 8px;font-size:12px;text-decoration:underline;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">U</button>
-      <span style="width:1px;background:#e0e0de;margin:0 2px;"></span>
-      <button onclick="vlFmtBlock('h2')" title="제목" style="padding:3px 8px;font-size:12px;font-weight:700;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">H2</button>
-      <button onclick="vlFmtBlock('h3')" title="소제목" style="padding:3px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">H3</button>
-      <button onclick="vlFmtBlock('p')" title="본문" style="padding:3px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">P</button>
-      <span style="width:1px;background:#e0e0de;margin:0 2px;"></span>
-      <button onclick="vlFmt('insertUnorderedList')" title="목록" style="padding:3px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">• 목록</button>
-      <button onclick="vlFmt('insertOrderedList')" title="번호 목록" style="padding:3px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">1. 목록</button>
-      <span style="width:1px;background:#e0e0de;margin:0 2px;"></span>
-      <button onclick="vlInsertHr()" title="구분선" style="padding:3px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">—</button>
+    <!-- Monthly Report -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid #f0f0ee;border-radius:10px;margin-bottom:14px;background:#fafaf8;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;background:#fff3e0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;">📊</div>
+        <div>
+          <div style="font-weight:600;font-size:13px;">Monthly Report</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px;">월간 VOC 리포트 및 KPI</div>
+        </div>
+      </div>
+      <button onclick="openVlReport('monthly')" style="font-size:12px;padding:6px 12px;background:#f5a623;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open Report</button>
     </div>
-    <!-- 뷰 모드 -->
-    <div id="vl-report-view" class="vl-report-content" style="min-height:80px;font-size:14px;line-height:1.7;color:#333;">
-      <span style="color:#bbb;font-size:13px;">리포트를 작성해 주세요. Edit 버튼을 눌러 편집을 시작하세요.</span>
-    </div>
-    <!-- 편집 모드 -->
-    <div id="vl-report-editor" contenteditable="true" style="display:none;min-height:200px;border:1.5px solid #e0e0de;border-radius:8px;padding:14px;font-size:14px;line-height:1.7;color:#333;outline:none;background:#fff;" placeholder="여기에 리포트를 작성하세요..."></div>
+    <button onclick="openVlReport('weekly');toggleVlModalEditor()" style="width:100%;font-size:12px;padding:8px;border:1px solid #e0e0de;border-radius:8px;background:#f5f5f3;color:#555;cursor:pointer;font-family:inherit;">✏️ 편집</button>
   </div>
 </div>
 </div><!-- /page-voclog -->
@@ -2047,6 +2052,13 @@ function toggleGroupByOrder(){
   if(btn){btn.style.background=_groupByOrder?'#1a1a1a':'';btn.style.color=_groupByOrder?'#fff':'';}
   renderClaimTable();
 }
+let _claimDateField='indate';
+function _toggleClaimDateField(){
+  _claimDateField=_claimDateField==='indate'?'date':'indate';
+  const btn=document.getElementById('btn-claim-date-field');
+  if(btn)btn.textContent='기준: '+(_claimDateField==='indate'?'인입일':'작성일');
+  renderClaimTable();
+}
 function _applyClaimDateFilter(){renderClaimTable();}
 function _clearClaimDateFilter(){
   const f=document.getElementById('claim-date-from');
@@ -2065,12 +2077,12 @@ function getFilteredClaims(){
       claims=claims.filter(r=>sel.has(r[key]||''));
     }
   });
-  // 날짜 범위 필터 (인입일 기준)
+  // 날짜 범위 필터 (기준 필드: _claimDateField)
   const dateFrom=document.getElementById('claim-date-from')?.value||'';
   const dateTo=document.getElementById('claim-date-to')?.value||'';
   if(dateFrom||dateTo){
     const from=dateFrom||'1900-01-01',to=dateTo||'9999-12-31';
-    claims=claims.filter(r=>{const v=normDate(r.indate)||normDate(r.date)||'';return v>=from&&v<=to;});
+    claims=claims.filter(r=>{const v=normDate(r[_claimDateField])||normDate(r.indate)||normDate(r.date)||'';return v>=from&&v<=to;});
   }
   // 전체 텍스트 검색
   if(_claimSearchQ){
@@ -2252,9 +2264,11 @@ function _doRenderClaimTable(){
   if(!tbody)return;
   const allClaims=loadClaims(),claims=getFilteredClaims();
   const badge=document.getElementById('claim-count-badge');
-  const hasFilter=Object.values(claimFilters).some(v=>v instanceof Set?v.size>0:!!v);
+  const _df=document.getElementById('claim-date-from')?.value||'';
+  const _dt=document.getElementById('claim-date-to')?.value||'';
+  const hasFilter=!!(_df||_dt)||Object.values(claimFilters).some(v=>v instanceof Set?v.size>0:!!v)||!!_claimSearchQ;
   if(badge)badge.textContent=hasFilter
-    ?`${claims.length}건 / 전체 ${allClaims.length}건`
+    ?`${claims.length}건 검색됨 / 전체 ${allClaims.length}건`
     :`총 ${allClaims.length}건`;
   if(!claims.length){tbody.innerHTML='';if(empty)empty.style.display='';initColResize();return;}
   if(empty)empty.style.display='none';
@@ -2398,8 +2412,11 @@ function _renderVl7dayChart(vocAll,t){
   el.removeAttribute('width');el.removeAttribute('height');el.style.width='';el.style.height='';
   const ctx=el.getContext('2d');
   _charts[cid]=new Chart(ctx,{
-    type:'bar',
-    data:{labels,datasets:[{label:'VOC',data:counts,backgroundColor:'rgba(220,87,87,0.75)',borderRadius:4,borderSkipped:false}]},
+    type:'line',
+    data:{labels,datasets:[{label:'VOC',data:counts,
+      borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,0.08)',
+      pointBackgroundColor:'#dc2626',pointRadius:4,pointHoverRadius:6,
+      tension:0.35,fill:true,borderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.y}건`}}},
       scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f5f5f3'},border:{display:false}},
@@ -2423,90 +2440,133 @@ function renderVocLogCharts(vocAll,ws,ms,t){
   upd('vl-type-title','이번 주 처리 유형별 현황 (VOC, '+wRange+')');
   upd('vl-liability-title','이번 주 귀책별 현황 (VOC, '+wRange+')');
 }
-// ===== 클레임 리포트 Notion 에디터 =====
-function _loadVlReport(){
-  const view=document.getElementById('vl-report-view');
-  const editor=document.getElementById('vl-report-editor');
+// ===== 클레임 리포트 모달 =====
+let _vlReportType='weekly';
+function openVlReport(type){
+  _vlReportType=type||'weekly';
+  const modal=document.getElementById('modal-vl-report');
+  if(!modal)return;
+  modal.style.display='flex';
+  // 탭 UI 업데이트
+  switchVlReportTab(_vlReportType,false);
+  // 편집 모드 초기화 (뷰 모드로)
+  _setVlModalMode('view');
+  // 리포트 로드
+  _loadVlModalReport(_vlReportType);
+}
+function closeVlReport(){
+  const modal=document.getElementById('modal-vl-report');
+  if(modal)modal.style.display='none';
+  _setVlModalMode('view');
+}
+function switchVlReportTab(type,loadContent=true){
+  _vlReportType=type;
+  const tw=document.getElementById('vl-tab-weekly');
+  const tm=document.getElementById('vl-tab-monthly');
+  if(tw){tw.style.background=type==='weekly'?'#1a1a1a':'#fff';tw.style.color=type==='weekly'?'#fff':'#888';tw.style.borderColor=type==='weekly'?'#1a1a1a':'#e0e0de';tw.style.fontWeight=type==='weekly'?'600':'400';}
+  if(tm){tm.style.background=type==='monthly'?'#1a1a1a':'#fff';tm.style.color=type==='monthly'?'#fff':'#888';tm.style.borderColor=type==='monthly'?'#1a1a1a':'#e0e0de';tm.style.fontWeight=type==='monthly'?'600':'400';}
+  if(loadContent)_loadVlModalReport(type);
+}
+function _loadVlModalReport(type){
+  const view=document.getElementById('vlm-report-view');
   if(!view)return;
+  const docId='vl_report_'+(type||'weekly');
+  view.innerHTML='<p style="color:#bbb;font-size:13px;">로딩 중...</p>';
   try{
-    db.collection('_sys').doc('vl_report').get().then(function(doc){
+    db.collection('_sys').doc(docId).get().then(function(doc){
       const html=(doc.exists&&doc.data().html)||'';
-      if(html){
-        view.innerHTML=html;
-      }else{
-        view.innerHTML='<p style="color:#bbb;font-size:13px;">클레임 리포트를 작성해 주세요. 우측 상단 EDIT 버튼을 눌러 편집할 수 있습니다.</p>';
-      }
-      if(editor)editor.innerHTML=html;
+      view.innerHTML=html||'<p style="color:#bbb;font-size:13px;">아직 작성된 리포트가 없습니다. Edit 버튼을 눌러 작성해 주세요.</p>';
     }).catch(function(){
       view.innerHTML='<p style="color:#bbb;font-size:13px;">리포트를 불러오는 중 오류가 발생했습니다.</p>';
     });
-  }catch(e){
-    view.innerHTML='<p style="color:#bbb;font-size:13px;">리포트를 불러올 수 없습니다.</p>';
+  }catch(e){view.innerHTML='<p style="color:#bbb;font-size:13px;">리포트를 불러올 수 없습니다.</p>';}
+}
+function _setVlModalMode(mode){
+  const toolbar=document.getElementById('vlm-editor-toolbar');
+  const view=document.getElementById('vlm-report-view');
+  const editor=document.getElementById('vlm-report-editor');
+  const btnEdit=document.getElementById('btn-vlm-edit');
+  const btnSave=document.getElementById('btn-vlm-save');
+  const btnCancel=document.getElementById('btn-vlm-cancel');
+  if(mode==='edit'){
+    if(toolbar)toolbar.style.display='flex';
+    if(view)view.style.display='none';
+    if(editor){editor.style.display='block';editor.innerHTML=document.getElementById('vlm-report-view')?.innerHTML||'';editor.focus();}
+    if(btnEdit)btnEdit.style.display='none';
+    if(btnSave)btnSave.style.display='inline-flex';
+    if(btnCancel)btnCancel.style.display='inline-flex';
+  }else{
+    if(toolbar)toolbar.style.display='none';
+    if(view)view.style.display='block';
+    if(editor)editor.style.display='none';
+    if(btnEdit)btnEdit.style.display='inline-flex';
+    if(btnSave)btnSave.style.display='none';
+    if(btnCancel)btnCancel.style.display='none';
   }
 }
-function toggleVlEditor(){
-  const toolbar=document.getElementById('vl-editor-toolbar');
-  const view=document.getElementById('vl-report-view');
-  const editor=document.getElementById('vl-report-editor');
-  const btnEdit=document.getElementById('btn-vl-edit');
-  const btnSave=document.getElementById('btn-vl-save');
-  const btnCancel=document.getElementById('btn-vl-cancel');
-  if(!toolbar||!view||!editor)return;
-  const isEditing=toolbar.style.display!=='none';
-  if(isEditing){
-    // 이미 편집 중이면 무시
-    return;
-  }
+function toggleVlModalEditor(){
   // 뷰→편집 전환
-  toolbar.style.display='flex';
-  view.style.display='none';
-  editor.style.display='block';
-  editor.innerHTML=view.innerHTML==='<p style="color:#bbb;font-size:13px;">클레임 리포트를 작성해 주세요. 우측 상단 EDIT 버튼을 눌러 편집할 수 있습니다.</p>'?'':view.innerHTML;
-  editor.focus();
-  if(btnEdit)btnEdit.style.display='none';
-  if(btnSave)btnSave.style.display='inline-flex';
-  if(btnCancel)btnCancel.style.display='inline-flex';
+  const view=document.getElementById('vlm-report-view');
+  const editor=document.getElementById('vlm-report-editor');
+  if(!editor)return;
+  editor.innerHTML=view?.innerHTML||'';
+  _setVlModalMode('edit');
 }
-function cancelVlEditor(){
-  const toolbar=document.getElementById('vl-editor-toolbar');
-  const view=document.getElementById('vl-report-view');
-  const editor=document.getElementById('vl-report-editor');
-  const btnEdit=document.getElementById('btn-vl-edit');
-  const btnSave=document.getElementById('btn-vl-save');
-  const btnCancel=document.getElementById('btn-vl-cancel');
-  if(!toolbar||!view||!editor)return;
-  toolbar.style.display='none';
-  view.style.display='block';
-  editor.style.display='none';
-  if(btnEdit)btnEdit.style.display='inline-flex';
-  if(btnSave)btnSave.style.display='none';
-  if(btnCancel)btnCancel.style.display='none';
+function cancelVlModalEditor(){
+  _setVlModalMode('view');
+  _loadVlModalReport(_vlReportType);
 }
-function saveVlReport(){
-  const editor=document.getElementById('vl-report-editor');
-  const view=document.getElementById('vl-report-view');
+function saveVlModalReport(){
+  const editor=document.getElementById('vlm-report-editor');
   if(!editor)return;
   const html=editor.innerHTML;
+  const docId='vl_report_'+_vlReportType;
   try{
-    db.collection('_sys').doc('vl_report').set({html,updatedAt:new Date().toISOString()}).then(function(){
-      if(view)view.innerHTML=html||'<p style="color:#bbb;font-size:13px;">클레임 리포트를 작성해 주세요. 우측 상단 EDIT 버튼을 눌러 편집할 수 있습니다.</p>';
-      cancelVlEditor();
-    }).catch(function(){
-      alert('저장 중 오류가 발생했습니다.');
-    });
+    db.collection('_sys').doc(docId).set({html,type:_vlReportType,updatedAt:new Date().toISOString()}).then(function(){
+      const view=document.getElementById('vlm-report-view');
+      if(view)view.innerHTML=html||'<p style="color:#bbb;font-size:13px;">아직 작성된 리포트가 없습니다.</p>';
+      _setVlModalMode('view');
+    }).catch(function(){alert('저장 중 오류가 발생했습니다.');});
   }catch(e){alert('저장할 수 없습니다.');}
 }
-function vlFmt(cmd,val){
-  document.getElementById('vl-report-editor')?.focus();
-  document.execCommand(cmd,false,val||null);
+function vlmFmt(cmd,val){document.getElementById('vlm-report-editor')?.focus();document.execCommand(cmd,false,val||null);}
+function vlmFmtBlock(tag){document.getElementById('vlm-report-editor')?.focus();document.execCommand('formatBlock',false,tag);}
+function vlmInsertHr(){document.getElementById('vlm-report-editor')?.focus();document.execCommand('insertHTML',false,'<hr>');}
+// 하위 호환: 기존 함수명 유지
+function _loadVlReport(){} // Report는 이제 모달로 처리
+function toggleVlEditor(){openVlReport(_vlReportType);}
+function cancelVlEditor(){closeVlReport();}
+function saveVlReport(){saveVlModalReport();}
+function vlFmt(c,v){vlmFmt(c,v);}
+function vlFmtBlock(t){vlmFmtBlock(t);}
+function vlInsertHr(){vlmInsertHr();}
+
+// ===== VOC 작성 모달 (chohee 전용) =====
+function openVocWriteModal(){
+  if(_currentUserId()!=='chohee')return;
+  const modal=document.getElementById('modal-voc-write');
+  if(!modal)return;
+  modal.style.display='flex';
+  ['vocw-orderno','vocw-platform','vocw-issue','vocw-reason'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
-function vlFmtBlock(tag){
-  document.getElementById('vl-report-editor')?.focus();
-  document.execCommand('formatBlock',false,tag);
+function closeVocWriteModal(){
+  const modal=document.getElementById('modal-voc-write');
+  if(modal)modal.style.display='none';
 }
-function vlInsertHr(){
-  document.getElementById('vl-report-editor')?.focus();
-  document.execCommand('insertHTML',false,'<hr>');
+function submitVocWrite(){
+  const orderno=(document.getElementById('vocw-orderno')?.value||'').trim();
+  const platform=(document.getElementById('vocw-platform')?.value||'').trim();
+  const issue=(document.getElementById('vocw-issue')?.value||'').trim();
+  const reason=(document.getElementById('vocw-reason')?.value||'').trim();
+  if(!orderno&&!issue){alert('주문번호 또는 이슈를 입력해 주세요.');return;}
+  const t=todayStr();
+  const newClaim={id:Date.now(),date:t,indate:t,orderno,platform,issue,reason,nature:'VOC',status:'접수',type:'',liability:'',channel:'',buyer:'',product:'',option:'',category:'',month:t.slice(0,7),shipdate:'',donedate:'',returnYn:'',reshipYn:'',accident:'',costP:'',costR:'',costS:'',leadtime:''};
+  const claims=loadClaims();
+  claims.unshift(newClaim);
+  saveClaims(claims);
+  closeVocWriteModal();
+  if(_activePage()==='claim')renderClaimTable();
+  alert('VOC가 등록되었습니다.');
 }
 // ===== CSV =====
 function dlCSV(filename,headers,rows){
@@ -3017,12 +3077,13 @@ function updateObTimeVisibility() {
   const shipCheckEl = document.getElementById('shipCheck');
   const shipCheckVal = shipCheckEl ? shipCheckEl.value : '';
   const defectJudgeValOb = document.getElementById('defectJudge') ? document.getElementById('defectJudge').value : '';
-  const showOb = (v === '수령확인_부재' || (selectedIssue === '클레임_불량 주장' && (v.startsWith('반품_') || v === '불량주장_교환') && !((v.startsWith('반품_') || v === '불량주장_교환') && photoVal2 === '첨부' && defectJudgeValOb === '불량확인')) || (selectedIssue === '클레임_오출고' && (v.startsWith('반품_') || v === '오출고_교환') && photoVal2 !== '첨부') || (selectedIssue === '클레임_누락' && (v === '누락_반품' || v === '누락_교환') && shipCheckVal !== '누락확인') || v === '단순변심교환_부재' || v === '반품불가' || v === '단종품절' || ((v === '파손훼손_반품' || v === '파손훼손_교환') && photoVal2 === '미첨부')) && ab === '1차';
+  const showOb = ab !== '부재없음' && (v === '수령확인_부재' || (selectedIssue === '클레임_불량 주장' && (v.startsWith('반품_') || v === '불량주장_교환') && !((v.startsWith('반품_') || v === '불량주장_교환') && photoVal2 === '첨부' && defectJudgeValOb === '불량확인')) || (selectedIssue === '클레임_오출고' && (v.startsWith('반품_') || v === '오출고_교환') && photoVal2 !== '첨부') || (selectedIssue === '클레임_누락' && (v === '누락_반품' || v === '누락_교환') && shipCheckVal !== '누락확인') || v === '단순변심교환_부재' || v === '반품불가' || v === '단종품절' || ((v === '파손훼손_반품' || v === '파손훼손_교환') && photoVal2 === '미첨부')) && ab === '1차';
   document.getElementById('rowObTime').className = 'conditional-row' + (showOb ? ' visible' : '');
 }
 
 function onAbsenceChange() {
   updateObTimeVisibility();
+  onClaimTypeChange();
 }
 
 function onDefectJudgeChange() {
@@ -3075,7 +3136,10 @@ function onClaimTypeChange() {
     && !(v === '분실_교환' && document.getElementById('lostStatus').value === '부재');
   document.getElementById('rowDefectJudge').className = 'conditional-row' + (selectedIssue === '클레임_불량 주장' && photoVal === '첨부' && (v === '불량주장_교환' || claimMainVal === '반품') ? ' visible' : '');
   document.getElementById('rowExchangeType').className = 'conditional-row' + (showExchangeType ? ' visible' : '');
-  document.getElementById('rowExchangeShipDate').className = 'conditional-row' + ((v === '파손훼손_교환' && photoVal === '첨부') || (v === '파손훼손_교환배송전') || (v === '분실_교환' && document.getElementById('lostStatus').value === '종결') || (v === '오출고_교환' && photoVal === '첨부') || (v === '누락_교환' && shipCheckVal2 === '누락확인') || (v === '불량주장_교환' && photoVal === '첨부' && defectJudge === '불량확인') ? ' visible' : '');
+  const absenceVal = document.getElementById('absence').value;
+  const isDansoExchangeNoAbsence = v === '단순변심교환_부재' && absenceVal === '부재없음';
+  document.getElementById('rowChangeOption').className = 'conditional-row' + (isDansoExchangeNoAbsence ? ' visible' : '');
+  document.getElementById('rowExchangeShipDate').className = 'conditional-row' + (isDansoExchangeNoAbsence || (v === '파손훼손_교환' && photoVal === '첨부') || (v === '파손훼손_교환배송전') || (v === '분실_교환' && document.getElementById('lostStatus').value === '종결') || (v === '오출고_교환' && photoVal === '첨부') || (v === '누락_교환' && shipCheckVal2 === '누락확인') || (v === '불량주장_교환' && photoVal === '첨부' && defectJudge === '불량확인') ? ' visible' : '');
   document.getElementById('rowReturnDeny').className = 'conditional-row' + (v === '반품불가' ? ' visible' : '');
   if (isBullyangConfirmedReturn) document.getElementById('rowSubType').className = 'conditional-row';
   document.getElementById('rowLostStatus').className = 'conditional-row' + (v === '분실_반품' || v === '분실_교환' ? ' visible' : '');
@@ -3219,6 +3283,28 @@ function buildText() {
   }
 
   if (claimType === '단순변심교환_부재') {
+    // [부재 없음] — 자동회수 + 출고 예정 안내 스크립트
+    if (absence === '부재없음') {
+      const changeOption = document.getElementById('changeOption').value.trim() || '[변경 옵션]';
+      const exchangeShipDate = document.getElementById('exchangeShipDate').value.trim() || '[출고 예정 일자]';
+      lines.push('');
+      lines.push('교환 신청하신 상품 안내차 연락 드렸습니다.');
+      lines.push('');
+      lines.push(`- 상품명 : ${product}`);
+      lines.push(`- 변경 옵션 : ${changeOption}`);
+      lines.push('');
+      lines.push('금일 자동회수접수 되었으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+      lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+      lines.push('');
+      lines.push(`교환 상품은 회수 수거 확인 후 발송 도와드리고 있어 ${exchangeShipDate}에 발송 될 예정으로 시간 양해 부탁드립니다.`);
+      lines.push('');
+      lines.push('발송 진행시 운송장 번호 안내 드릴 수 있도록 하겠습니다.');
+      lines.push('감사합니다.');
+      lines.push('');
+      lines.push(FOOTER);
+      return lines.join('\n');
+    }
+    // [1차 / 2차 부재] — 기존 스크립트
     const obTime = document.getElementById('obTime').value.trim() || '[OB 예정 시간]';
     lines.push('');
     lines.push('교환 신청하신 상품 관련하여 확인차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
@@ -4067,6 +4153,8 @@ function _updateGnbUser(){
   if(noticeBtn)noticeBtn.style.display=(u&&u.id==='chohee')?'':'none';
   var linkBtn=document.getElementById('btn-link-add');
   if(linkBtn)linkBtn.style.display=(u&&u.id==='chohee')?'':'none';
+  var vocWriteBtn=document.getElementById('btn-voc-write');
+  if(vocWriteBtn)vocWriteBtn.style.display=(u&&u.id==='chohee')?'':'none';
 }
 
 function submitLogin(){
@@ -4186,5 +4274,79 @@ _loadUsersFromFirestore(function(){
   }
 });
 </script>
+
+<!-- ===== Report 뷰/편집 모달 ===== -->
+<div id="modal-vl-report" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.35);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;width:min(740px,92vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 48px rgba(0,0,0,0.22);overflow:hidden;">
+    <!-- 헤더 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px 12px;border-bottom:1px solid #f0f0ee;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:15px;font-weight:700;">📊 Report</span>
+        <button id="vl-tab-weekly" onclick="switchVlReportTab('weekly')" style="font-size:11px;padding:3px 12px;border-radius:20px;border:1px solid #1a1a1a;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">Weekly</button>
+        <button id="vl-tab-monthly" onclick="switchVlReportTab('monthly')" style="font-size:11px;padding:3px 12px;border-radius:20px;border:1px solid #e0e0de;background:#fff;color:#888;cursor:pointer;font-family:inherit;">Monthly</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button id="btn-vlm-edit" onclick="toggleVlModalEditor()" style="font-size:11px;padding:4px 10px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;font-family:inherit;">✏️ Edit</button>
+        <button id="btn-vlm-save" onclick="saveVlModalReport()" style="display:none;font-size:11px;padding:4px 10px;border:none;border-radius:5px;background:#1a1a1a;cursor:pointer;color:#fff;font-family:inherit;">저장</button>
+        <button id="btn-vlm-cancel" onclick="cancelVlModalEditor()" style="display:none;font-size:11px;padding:4px 10px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;font-family:inherit;">취소</button>
+        <button onclick="closeVlReport()" style="font-size:20px;padding:0 6px;border:none;background:none;cursor:pointer;color:#999;line-height:1;">×</button>
+      </div>
+    </div>
+    <!-- 에디터 툴바 -->
+    <div id="vlm-editor-toolbar" style="display:none;padding:7px 16px;background:#f8f8f6;border-bottom:1px solid #f0f0ee;flex-shrink:0;flex-wrap:wrap;gap:4px;">
+      <button onclick="vlmFmt('bold')" title="굵게" style="padding:3px 8px;font-size:12px;font-weight:700;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">B</button>
+      <button onclick="vlmFmt('italic')" title="기울임" style="padding:3px 8px;font-size:12px;font-style:italic;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">I</button>
+      <button onclick="vlmFmt('underline')" title="밑줄" style="padding:3px 8px;font-size:12px;text-decoration:underline;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">U</button>
+      <span style="width:1px;background:#e0e0de;margin:0 2px;display:inline-block;"></span>
+      <button onclick="vlmFmtBlock('h2')" style="padding:3px 8px;font-size:12px;font-weight:700;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">H2</button>
+      <button onclick="vlmFmtBlock('h3')" style="padding:3px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">H3</button>
+      <button onclick="vlmFmtBlock('p')" style="padding:3px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">P</button>
+      <span style="width:1px;background:#e0e0de;margin:0 2px;display:inline-block;"></span>
+      <button onclick="vlmFmt('insertUnorderedList')" style="padding:3px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">• 목록</button>
+      <button onclick="vlmFmt('insertOrderedList')" style="padding:3px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">1. 목록</button>
+      <button onclick="vlmInsertHr()" style="padding:3px 8px;font-size:12px;border:1px solid #e0e0de;border-radius:4px;background:#fff;cursor:pointer;">—</button>
+    </div>
+    <!-- 콘텐츠 영역 -->
+    <div style="flex:1;overflow-y:auto;padding:20px 24px;">
+      <div id="vlm-report-view" class="vl-report-content" style="min-height:120px;font-size:14px;line-height:1.8;color:#333;"></div>
+      <div id="vlm-report-editor" contenteditable="true" style="display:none;min-height:300px;border:1.5px solid #e0e0de;border-radius:8px;padding:14px;font-size:14px;line-height:1.8;color:#333;outline:none;background:#fff;" placeholder="여기에 리포트를 작성하세요..."></div>
+    </div>
+  </div>
+</div>
+
+<!-- VOC 작성 모달 (chohee 전용) -->
+<div id="modal-voc-write" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.35);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;width:min(520px,92vw);box-shadow:0 8px 48px rgba(0,0,0,0.22);overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid #f0f0ee;">
+      <span style="font-size:15px;font-weight:700;color:#dc2626;">✍️ VOC 작성</span>
+      <button onclick="closeVocWriteModal()" style="font-size:20px;border:none;background:none;cursor:pointer;color:#999;line-height:1;">×</button>
+    </div>
+    <div style="padding:20px 22px 24px;">
+      <p style="font-size:13px;color:#555;margin:0 0 16px;">클레임 등록 화면에서 클레임 성격 = VOC로 입력됩니다.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:12px;color:#888;width:70px;flex-shrink:0;">주문번호</label>
+          <input id="vocw-orderno" type="text" placeholder="주문번호 입력" style="flex:1;height:34px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:13px;outline:none;font-family:inherit;"/>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:12px;color:#888;width:70px;flex-shrink:0;">플랫폼</label>
+          <input id="vocw-platform" type="text" placeholder="예: 스마트스토어" style="flex:1;height:34px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:13px;outline:none;font-family:inherit;"/>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:12px;color:#888;width:70px;flex-shrink:0;">이슈</label>
+          <input id="vocw-issue" type="text" placeholder="이슈 내용" style="flex:1;height:34px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:13px;outline:none;font-family:inherit;"/>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <label style="font-size:12px;color:#888;width:70px;flex-shrink:0;padding-top:8px;">사유</label>
+          <textarea id="vocw-reason" placeholder="상세 사유" rows="3" style="flex:1;padding:8px 10px;border:1px solid #e0e0de;border-radius:8px;font-size:13px;outline:none;font-family:inherit;resize:vertical;"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">
+        <button onclick="closeVocWriteModal()" style="padding:8px 18px;border:1px solid #e0e0de;border-radius:8px;background:#f5f5f3;color:#555;cursor:pointer;font-size:13px;font-family:inherit;">취소</button>
+        <button onclick="submitVocWrite()" style="padding:8px 18px;border:none;border-radius:8px;background:#dc2626;color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;">VOC 등록</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
