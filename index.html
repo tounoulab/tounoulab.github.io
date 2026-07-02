@@ -1629,17 +1629,17 @@ function _openSearchSelect(td,claimId,field,curVal,opts){
 // ===== 컬럼 너비 관리 (localStorage 저장/복원) =====
 const _colDefaults={
   _drag:28,
-  month:46,_ticket:74,
-  date:88,indate:88,shipdate:88,donedate:88,
-  channel:82,platform:62,orderno:150,buyer:62,
-  product:180,option:96,category:82,
-  issue:110,liability:54,type:104,nature:66,
-  _img:56,reason:130,
-  returnYn:40,reshipYn:40,accident:46,
-  costP:74,costR:74,costS:74,
-  _lead:56,status:66,_sla:46,_del:86
+  month:44,_ticket:76,
+  date:100,indate:100,shipdate:100,donedate:100,
+  channel:100,platform:68,orderno:170,buyer:66,
+  product:210,option:108,category:90,
+  issue:140,liability:56,type:114,nature:68,
+  _img:54,reason:150,
+  returnYn:42,reshipYn:42,accident:48,
+  costP:80,costR:80,costS:80,
+  _lead:58,status:70,_sla:48,_del:88
 };
-const _COL_VER='v3'; // 버전 올리면 저장된 너비 초기화 → 새 기본값 적용
+const _COL_VER='v4'; // 버전 올리면 저장된 너비 초기화 → 새 기본값 적용
 const _colWidths=(()=>{
   const uid=sessionStorage.getItem('tuunu_session_v1')||'';
   const key='tuunu_colWidths_'+_COL_VER+(uid?'_'+uid:'');
@@ -2543,7 +2543,7 @@ const EMPATHY = {
 const SHIPPING_FEE = {
   '반품_전체': '반품 배송비 6,000원은 환불금에서 공제되어 처리될 예정이며,',
   '반품_부분_무배충족': '반품 배송비 3,000원은 환불금에서 공제되어 처리될 예정이며,',
-  '반품_부분_무배미충족': '부분 반품으로 인해 잔여 상품이 무료 배송 조건을 충족하지 않아 반품 배송비 6,000원은 환불금에서 공제되어 처리될 예정이며,'
+  '반품_부분_무배미충족': '부분 반품으로 인해 잔여 상품이 무료 배송 조건에 해당되지 않아, 초도 배송비 및 회수 배송비를 포함한 반품 배송비 6,000원이 환불금에서 공제될 예정입니다.'
 };
 
 let selectedIssue = null;
@@ -3473,7 +3473,7 @@ function buildText() {
     lines.push('');
     lines.push('위 송장 번호로 금일 발송 예정이며 금일 밤 또는 익일 중으로 배송 흐름 확인이 가능하십니다.');
     lines.push('');
-    lines.push('교환 처리에 너른 양해해 주셔서 진심으로 감사드립니다.');
+    lines.push('교환 일정에 너른 양해해 주셔서 진심으로 감사드립니다.');
     lines.push('상품 수령 후 이상이 있는 경우 언제든 뚜누 고객센터로 연락 부탁드립니다.');
     lines.push('');
     lines.push('감사합니다.');
@@ -3493,18 +3493,18 @@ function buildText() {
     lines.push('');
     lines.push('위 송장 번호로 금일 발송 예정이며 금일 밤 또는 익일 중으로 배송 흐름 확인이 가능하십니다.');
     if (claimType === '교환_재출고완료_반송후') {
-      lines.push('배송 과정에서 파손 이슈로 불편을 드렸음에도 교환 처리에 너른 양해해 주셔서 진심으로 감사드립니다.');
+      lines.push('배송 과정에서 파손 이슈로 불편을 드렸음에도 교환 일정에 너른 양해해 주셔서 진심으로 감사드립니다.');
       lines.push('상품 수령 후 이상이 있는 경우 언제든 뚜누 고객센터로 연락 부탁드립니다.');
     } else if (claimType === '교환_재출고완료_분실') {
       lines.push('');
-      lines.push('배송 과정에서 분실 이슈로 불편을 드렸음에도 교환 처리에 너른 양해해 주셔서 진심으로 감사드립니다.');
+      lines.push('배송 과정에서 분실 이슈로 불편을 드렸음에도 교환 일정에 너른 양해해 주셔서 진심으로 감사드립니다.');
       lines.push('상품 수령 후 이상이 있는 경우 언제든 뚜누 고객센터로 연락 부탁드립니다.');
       lines.push('');
       lines.push('또한 분실되었던 상품이 시간이 지난 후 배송될 수도 있어, 추후 동일 상품을 추가로 수령하시게 될 경우 번거로우시겠지만 뚜누 고객센터로 연락 부탁드립니다.');
       lines.push('');
     } else if (claimType === '교환_재출고완료_배송전') {
       lines.push('');
-      lines.push('배송 과정에서 파손 이슈로 불편을 드렸음에도 교환 처리에 너른 양해해 주셔서 진심으로 감사드립니다.');
+      lines.push('배송 과정에서 파손 이슈로 불편을 드렸음에도 교환 일정에 너른 양해해 주셔서 진심으로 감사드립니다.');
       lines.push('상품 수령 후 이상이 있는 경우 언제든 뚜누 고객센터로 연락 부탁드립니다.');
       lines.push('');
     } else {
