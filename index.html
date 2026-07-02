@@ -168,33 +168,21 @@ tr:hover td{background:#fafafa;}
 #leadtime-table th:first-child,#leadtime-table td:first-child{width:160px;}
 #leadtime-table th:not(:first-child),#leadtime-table td:not(:first-child){width:52px;}
 #sla-table td,#leadtime-table td{text-align:center !important;}
-/* 틀 고정 컬럼 (발생월~상품분류) */
-/* 틀고정: month(64) date(84) indate(84) shipdate(84) donedate(96) channel(80) platform(80) orderno(120) buyer(68) product(130) option(100) category(82) */
-#claim-sheet th[data-col="month"]   {left:0px;  min-width:64px; z-index:5;}
-#claim-sheet th[data-col="date"]    {left:64px; min-width:84px; z-index:5;}
-#claim-sheet th[data-col="indate"]  {left:148px;min-width:84px; z-index:5;}
-#claim-sheet th[data-col="shipdate"]{left:232px;min-width:84px; z-index:5;}
-#claim-sheet th[data-col="donedate"]{left:316px;min-width:96px; z-index:5;}
-#claim-sheet th[data-col="channel"] {left:412px;min-width:80px; z-index:5;}
-#claim-sheet th[data-col="platform"]{left:492px;min-width:80px; z-index:5;}
-#claim-sheet th[data-col="orderno"] {left:572px;min-width:120px;z-index:5;}
-#claim-sheet th[data-col="buyer"]   {left:692px;min-width:68px; z-index:5;}
-#claim-sheet th[data-col="product"] {left:760px;min-width:130px;z-index:5;}
-#claim-sheet th[data-col="option"]  {left:890px;min-width:100px;z-index:5;}
-#claim-sheet th[data-col="category"]{left:990px;min-width:82px; z-index:5;}
-#claim-sheet tbody td[data-field="month"]   {position:sticky;left:0px;  z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="ticketNo"]{position:sticky;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="date"]    {position:sticky;left:64px; z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="indate"]  {position:sticky;left:148px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="shipdate"]{position:sticky;left:232px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="donedate"]{position:sticky;left:316px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="channel"] {position:sticky;left:412px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="platform"]{position:sticky;left:492px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="orderno"] {position:sticky;left:572px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="buyer"]   {position:sticky;left:692px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="product"] {position:sticky;left:760px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="option"]  {position:sticky;left:890px;z-index:1;background:inherit;}
-#claim-sheet tbody td[data-field="category"]{position:sticky;left:990px;z-index:1;background:inherit;}
+/* 틀 고정 컬럼 위치/너비는 _applyColWidths() 동적 CSS로 전부 관리됨 */
+#claim-sheet th[data-col]{position:sticky;z-index:5;background:#f6f6f4;}
+#claim-sheet tbody td[data-field="month"],
+#claim-sheet tbody td[data-field="ticketNo"],
+#claim-sheet tbody td[data-field="date"],
+#claim-sheet tbody td[data-field="indate"],
+#claim-sheet tbody td[data-field="shipdate"],
+#claim-sheet tbody td[data-field="donedate"],
+#claim-sheet tbody td[data-field="channel"],
+#claim-sheet tbody td[data-field="platform"],
+#claim-sheet tbody td[data-field="orderno"],
+#claim-sheet tbody td[data-field="buyer"],
+#claim-sheet tbody td[data-field="product"],
+#claim-sheet tbody td[data-field="option"],
+#claim-sheet tbody td[data-field="category"]{position:sticky;z-index:1;background:inherit;}
 .th-filter-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:4px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;padding:0;z-index:4;}
 .th-filter-btn:hover{background:#e8e8e6;color:#555;}
 .th-filter-btn.active{background:#1a73e8;color:#fff;}
@@ -746,7 +734,7 @@ tr:hover td{background:#fafafa;}
     </div>
   </div>
 </div>
-<div id="claim-scroll-wrap" style="overflow:auto;max-height:calc(100vh - 190px);padding:0 24px 24px;">
+<div id="claim-scroll-wrap" style="overflow:auto;max-height:calc(100vh - 190px);padding:0 0 24px 24px;">
   <table id="claim-sheet" style="table-layout:fixed;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid #e0e0de;border-radius:8px;">
     <colgroup id="claim-colgroup">
       <col data-col="_drag"><col data-col="month"><col data-col="_ticket"><col data-col="date"><col data-col="indate"><col data-col="shipdate">
@@ -1331,8 +1319,8 @@ function calcBusinessDays(start,end){
   if(_bdCache[key]!==undefined)return _bdCache[key];
   const s=new Date(ns),e=new Date(ne);
   if(e<s)return(_bdCache[key]=0);
-  // 인입일 자체부터 포함 (단, 주말·공휴일이면 건너뜀)
-  let count=0;const cur=new Date(s);
+  // 인입일은 0일차 → 다음날부터 카운트 (구글시트 NETWORKDAYS 기준)
+  let count=0;const cur=new Date(s);cur.setDate(cur.getDate()+1);
   while(cur<=e){const dow=cur.getDay(),ds=cur.toISOString().slice(0,10);if(dow!==0&&dow!==6&&!KR_HOLIDAYS.has(ds))count++;cur.setDate(cur.getDate()+1);}
   return(_bdCache[key]=count);
 }
@@ -1629,17 +1617,17 @@ function _openSearchSelect(td,claimId,field,curVal,opts){
 // ===== 컬럼 너비 관리 (localStorage 저장/복원) =====
 const _colDefaults={
   _drag:28,
-  month:44,_ticket:76,
+  month:60,_ticket:76,
   date:100,indate:100,shipdate:100,donedate:100,
   channel:100,platform:68,orderno:190,buyer:66,
-  product:210,option:108,category:90,
-  issue:140,liability:56,type:114,nature:68,
+  product:210,option:112,category:100,
+  issue:165,liability:56,type:122,nature:100,
   _img:54,reason:150,
-  returnYn:42,reshipYn:42,accident:48,
+  returnYn:52,reshipYn:62,accident:86,
   costP:80,costR:80,costS:80,
   _lead:58,status:70,_sla:48,_del:88
 };
-const _COL_VER='v5'; // 버전 올리면 저장된 너비 초기화 → 새 기본값 적용
+const _COL_VER='v6'; // 버전 올리면 저장된 너비 초기화 → 새 기본값 적용
 const _colWidths=(()=>{
   const uid=sessionStorage.getItem('tuunu_session_v1')||'';
   const key='tuunu_colWidths_'+_COL_VER+(uid?'_'+uid:'');
