@@ -56,7 +56,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic 
 .page-inner{max-width:100%;margin:0;padding:24px;}
 /* Home layout */
 .home-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start;}
-.home-layout>div{min-width:0;overflow:hidden;}
+.home-layout>div{min-width:0;overflow:visible;}
 /* Status section */
 .status-section{background:#fff;border-radius:12px;border:1px solid #e8e8e6;overflow:hidden;margin-bottom:16px;}
 .status-hd{padding:18px 24px 0;font-size:15px;font-weight:700;}
@@ -174,7 +174,8 @@ tr:hover td{background:#fafafa;}
 /* 일반 td: 새 stacking context z-index:0, 텍스트 선택 허용 */
 #claim-sheet tbody td{position:relative;z-index:0;}
 #claim-sheet tbody td:not([data-field="_drag"]){user-select:text;}
-/* 틀고정 td: z-index:2로 비고정 td 위에 표시, --bg CSS var로 배경 */
+/* 틀고정 td: z-index:2로 비고정 td 위에 표시, --bg CSS var로 배경
+   ※ product/option/category는 누적 좌표 1503px → 뷰포트 초과로 sticky 불가 → 제외 */
 #claim-sheet tbody td[data-field="month"],
 #claim-sheet tbody td[data-field="ticketNo"],
 #claim-sheet tbody td[data-field="date"],
@@ -184,10 +185,7 @@ tr:hover td{background:#fafafa;}
 #claim-sheet tbody td[data-field="channel"],
 #claim-sheet tbody td[data-field="platform"],
 #claim-sheet tbody td[data-field="orderno"],
-#claim-sheet tbody td[data-field="buyer"],
-#claim-sheet tbody td[data-field="product"],
-#claim-sheet tbody td[data-field="option"],
-#claim-sheet tbody td[data-field="category"]{position:sticky;z-index:2;background:var(--bg,#fff);}
+#claim-sheet tbody td[data-field="buyer"]{position:sticky;z-index:2;background:var(--bg,#fff);}
 .th-filter-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:4px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;padding:0;z-index:4;}
 .th-filter-btn:hover{background:#e8e8e6;color:#555;}
 .th-filter-btn.active{background:#1a73e8;color:#fff;}
@@ -352,8 +350,8 @@ tr:hover td{background:#fafafa;}
           <div class="status-row">
             <div class="status-item"><div class="status-item-label" id="lbl-today">금일 접수</div><div class="status-item-value" id="h-today">-</div><div style="font-size:10px;color:#bbb;margin-top:2px;" id="h-today-hint"></div></div>
             <div class="status-item"><div class="status-item-label" id="lbl-done">완료</div><div class="status-item-value" id="h-done">-</div><div style="font-size:10px;color:#bbb;margin-top:2px;" id="h-done-hint"></div></div>
-            <div class="status-item"><div class="status-item-label" id="lbl-week">이번 주</div><div class="status-item-value" id="h-week">-</div><div style="font-size:10px;color:#bbb;margin-top:2px;" id="h-week-hint"></div></div>
-            <div class="status-item" style="border-right:none;"><div class="status-item-label" id="lbl-month">이번 달</div><div class="status-item-value" id="h-month">-</div><div style="font-size:10px;color:#bbb;margin-top:2px;" id="h-month-hint"></div></div>
+            <div class="status-item"><div class="status-item-label" id="lbl-week">이번 주 접수</div><div class="status-item-value" id="h-week">-</div><div style="font-size:10px;color:#bbb;margin-top:2px;" id="h-week-hint"></div></div>
+            <div class="status-item" style="border-right:none;"><div class="status-item-label" id="lbl-month">이번 달 접수</div><div class="status-item-value" id="h-month">-</div><div style="font-size:10px;color:#bbb;margin-top:2px;" id="h-month-hint"></div></div>
           </div>
           <div id="h-filter-badge" style="display:none;padding:6px 18px 10px;font-size:12px;color:#1a73e8;font-weight:500;"></div>
         </div>
@@ -1116,15 +1114,11 @@ function renderWeeklyTrendChart(claims){
 
   const el=document.getElementById('chart-weekly');if(!el)return;
   if(_charts['chart-weekly']){_charts['chart-weekly'].destroy();delete _charts['chart-weekly'];}
-  // DPR 수동 적용으로 고화질 렌더링
-  const dpr=window.devicePixelRatio||1;
-  const container=el.parentElement;
-  const cw=container.clientWidth||600;
-  const ch=container.clientHeight||160;
-  el.width=cw*dpr;el.height=ch*dpr;
-  el.style.width=cw+'px';el.style.height=ch+'px';
-  const ctx2d=el.getContext('2d');ctx2d.scale(dpr,dpr);
-  _charts['chart-weekly']=new Chart(ctx2d,{
+  // 도넛 차트와 동일하게 Chart.js 자동 DPR 처리 (responsive:true)
+  // devicePixelRatio 수동 오버라이드 제거 → 이중 적용 블러 방지
+  el.removeAttribute('width');el.removeAttribute('height');
+  el.style.width='';el.style.height='';
+  _charts['chart-weekly']=new Chart(el.getContext('2d'),{
     type:'line',
     data:{
       labels:dayLabels,
@@ -1139,7 +1133,7 @@ function renderWeeklyTrendChart(claims){
       }]
     },
     options:{
-      responsive:false,maintainAspectRatio:false,
+      responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y}건`}}},
       scales:{
         y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0f0ee'},border:{display:false}},
@@ -1147,6 +1141,8 @@ function renderWeeklyTrendChart(claims){
       }
     }
   });
+  // 레이아웃 완성 후 resize 트리거 (첫 렌더 시 컨테이너 폭 0인 경우 대비)
+  setTimeout(()=>{if(_charts['chart-weekly'])_charts['chart-weekly'].resize();},120);
 }
 function renderHomeDashboard(){
   const claims=loadClaims(),returns=loadReturns(),t=todayStr();
@@ -1182,8 +1178,8 @@ function renderHomeDashboard(){
     setTxt('side-today-claim',countUniq(claims,'date',t,t)+'건');
     setTxt('side-today-return',countIn(returns,'date',t,t)+'건');
     const todayLbl=document.getElementById('lbl-today');if(todayLbl)todayLbl.textContent='금일 접수';
-    const weekLbl=document.getElementById('lbl-week');if(weekLbl)weekLbl.textContent='이번 주';
-    const monthLbl=document.getElementById('lbl-month');if(monthLbl)monthLbl.textContent='이번 달';
+    const weekLbl=document.getElementById('lbl-week');if(weekLbl)weekLbl.textContent='이번 주 접수';
+    const monthLbl=document.getElementById('lbl-month');if(monthLbl)monthLbl.textContent='이번 달 접수';
     // 날짜 기준 hint
     setTxt('h-today-hint',t);
     setTxt('h-done-hint',t+' 처리 완료');
@@ -1699,7 +1695,8 @@ function _loadUserColWidths(){
 function _colW(key){const w=_colWidths[key];return w?`min-width:${w}px;max-width:${w}px;width:${w}px;`:'';}
 
 // colgroup 너비 + sticky left 위치 동적 적용 (table-layout:fixed 전제)
-const _STICKY_KEYS=['_drag','month','_ticket','date','indate','shipdate','donedate','channel','platform','orderno','buyer','product','option','category'];
+// product/option/category 제외: 누적 1503px → 뷰포트 초과로 sticky 불가
+const _STICKY_KEYS=['_drag','month','_ticket','date','indate','shipdate','donedate','channel','platform','orderno','buyer'];
 function _applyColWidths(){
   const cg=document.getElementById('claim-colgroup');
   if(cg)cg.querySelectorAll('col[data-col]').forEach(c=>{
@@ -1798,11 +1795,11 @@ function _cfpRender(q){
   const items=vals.filter(v=>!q||v.toLowerCase().includes(q.toLowerCase()));
   const allSel=sel.size===0;
   list.innerHTML=[
-    `<div class="cfp-item${allSel?' sel':''}" onclick="_cfpToggleAll()">${allSel?'☑':'☐'} (전체)</div>`,
+    `<div class="cfp-item${allSel?' sel':''}" onclick="event.stopPropagation();_cfpToggleAll()">${allSel?'☑':'☐'} (전체)</div>`,
     ...items.map(v=>{
       const checked=sel.has(v);
       const esc=v.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      return`<div class="cfp-item${checked?' sel':''}" onclick="_cfpToggle('${esc}')">${checked?'☑':'☐'} ${v||'(비어있음)'}</div>`;
+      return`<div class="cfp-item${checked?' sel':''}" onclick="event.stopPropagation();_cfpToggle('${esc}')">${checked?'☑':'☐'} ${v||'(비어있음)'}</div>`;
     })
   ].join('');
 }
