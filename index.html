@@ -1173,18 +1173,19 @@ function renderHomeDashboard(){
     if(badge)badge.style.display='none';
     setTxt('h-today',countUniq(claims,'date',t,t)+'건');
     setTxt('h-done',countUniq(claims.filter(r=>normDate(r.donedate)===t),'date','1900','9999')+'건');
-    setTxt('h-week',countUniq(claims,'date',ws,we)+'건');
-    setTxt('h-month',countUniq(claims,'date',ms,me)+'건');
+    // 이번 주/이번 달: 미래 날짜 제외 → 오늘까지만 집계
+    setTxt('h-week',countUniq(claims,'date',ws,t)+'건');
+    setTxt('h-month',countUniq(claims,'date',ms,t)+'건');
     setTxt('side-today-claim',countUniq(claims,'date',t,t)+'건');
     setTxt('side-today-return',countIn(returns,'date',t,t)+'건');
     const todayLbl=document.getElementById('lbl-today');if(todayLbl)todayLbl.textContent='금일 접수';
     const weekLbl=document.getElementById('lbl-week');if(weekLbl)weekLbl.textContent='이번 주 접수';
     const monthLbl=document.getElementById('lbl-month');if(monthLbl)monthLbl.textContent='이번 달 접수';
-    // 날짜 기준 hint
+    // 날짜 기준 hint (오늘까지 기준으로 표시)
     setTxt('h-today-hint',t);
     setTxt('h-done-hint',t+' 처리 완료');
-    setTxt('h-week-hint',ws.slice(5).replace('-','/')+'~'+we.slice(5).replace('-','/'));
-    setTxt('h-month-hint',ms.slice(5).replace('-','/')+'~'+me.slice(5).replace('-','/'));
+    setTxt('h-week-hint',ws.slice(5).replace('-','/')+'~'+t.slice(5).replace('-','/'));
+    setTxt('h-month-hint',ms.slice(5).replace('-','/')+'~'+t.slice(5).replace('-','/'));
     setTxt('week-chart-hint',ws.slice(5).replace('-','/')+'~'+we.slice(5).replace('-','/'));
     chartClaims=_chartMode==='today'
       ?claims.filter(r=>normDate(r.date)===t)
