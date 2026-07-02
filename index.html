@@ -203,6 +203,25 @@ tr:hover td{background:#fafafa;}
 #vl-report-editor h3{font-size:15px;font-weight:600;margin:12px 0 4px;}
 #vl-report-editor[contenteditable]:empty::before{content:attr(placeholder);color:#bbb;pointer-events:none;}
 #vocw-editor[contenteditable]:empty::before{content:attr(placeholder);color:#bbb;pointer-events:none;}
+/* VOC 에디터 단계별 글머리 기호 */
+#vocw-editor ul{padding-left:24px;margin:2px 0;}
+#vocw-editor ul li{list-style-type:disc;margin:2px 0;}
+#vocw-editor ul ul li{list-style-type:circle;}
+#vocw-editor ul ul ul li{list-style-type:square;}
+#vocw-editor ol{padding-left:24px;margin:2px 0;}
+#vocw-editor ol li{list-style-type:decimal;margin:2px 0;}
+#vocw-editor ol ol li{list-style-type:lower-alpha;}
+#vocw-editor ol ol ol li{list-style-type:lower-roman;}
+/* VOC 에디터 헤딩 스타일 */
+#vocw-editor h1{font-size:30px;font-weight:800;margin:18px 0 8px;line-height:1.25;border-bottom:2px solid #f0f0ee;padding-bottom:6px;}
+#vocw-editor h2{font-size:22px;font-weight:700;margin:14px 0 6px;line-height:1.35;}
+#vocw-editor h3{font-size:17px;font-weight:600;margin:12px 0 4px;line-height:1.4;}
+#vocw-editor h4{font-size:14px;font-weight:600;margin:10px 0 4px;color:#444;}
+#vocw-editor p{margin:4px 0;}
+#vocw-editor hr{border:0;border-top:2px solid #e0e0de;margin:16px 0;}
+/* 표 색상 팔레트 */
+.vocw-color-swatch{width:22px;height:22px;border-radius:4px;cursor:pointer;border:1.5px solid rgba(0,0,0,0.12);display:inline-block;transition:transform 0.1s;}
+.vocw-color-swatch:hover{transform:scale(1.2);border-color:rgba(0,0,0,0.35);}
 #vocw-editor table td{border:1px solid #e0e0de;padding:8px;min-width:60px;}
 .td-left{text-align:left !important;}
 .col-rz{position:absolute;right:0;top:0;height:100%;width:6px;cursor:col-resize;z-index:2;}
@@ -547,17 +566,17 @@ tr:hover td{background:#fafafa;}
     <!-- 툴바 -->
     <div id="vocw-toolbar" style="display:flex;align-items:center;gap:2px;padding:8px 14px;background:#f8f8f6;border-bottom:1px solid #f0f0ee;flex-wrap:wrap;position:relative;">
       <!-- 인라인 서식 -->
-      <button id="vocw-btn-bold" onclick="vocwToggle('bold')" title="굵게 (Ctrl+B)" data-cmd="bold" style="padding:4px 9px;font-size:13px;font-weight:700;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">B</button>
-      <button id="vocw-btn-italic" onclick="vocwToggle('italic')" title="기울임 (Ctrl+I)" data-cmd="italic" style="padding:4px 9px;font-size:13px;font-style:italic;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">I</button>
-      <button id="vocw-btn-underline" onclick="vocwToggle('underline')" title="밑줄 (Ctrl+U)" data-cmd="underline" style="padding:4px 9px;font-size:13px;text-decoration:underline;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">U</button>
-      <button id="vocw-btn-strike" onclick="vocwToggle('strikeThrough')" title="취소선" data-cmd="strikeThrough" style="padding:4px 9px;font-size:12px;text-decoration:line-through;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">S</button>
-      <span style="width:1px;background:#e0e0de;height:20px;margin:0 3px;display:inline-block;flex-shrink:0;"></span>
-      <!-- 블록 서식 -->
-      <button id="vocw-btn-h2" onclick="vocwToggleBlock('h2')" title="제목 2 — 큰 제목 스타일 (## 입력)" style="padding:4px 9px;font-size:12px;font-weight:700;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">H2</button>
-      <button id="vocw-btn-h3" onclick="vocwToggleBlock('h3')" title="제목 3 — 중간 제목 스타일 (### 입력)" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">H3</button>
-      <button id="vocw-btn-h4" onclick="vocwToggleBlock('h4')" title="제목 4 — 작은 제목 스타일" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">H4</button>
-      <button id="vocw-btn-p" onclick="vocwToggleBlock('p')" title="일반 텍스트 — 기본 단락 스타일" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">P</button>
-      <span style="width:1px;background:#e0e0de;height:20px;margin:0 3px;display:inline-block;flex-shrink:0;"></span>
+      <button id="vocw-btn-bold" onclick="vocwToggle('bold')" title="굵게 (Ctrl+B)" style="padding:4px 9px;font-size:13px;font-weight:700;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">B</button>
+      <button id="vocw-btn-italic" onclick="vocwToggle('italic')" title="기울임 (Ctrl+I)" style="padding:4px 9px;font-size:13px;font-style:italic;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">I</button>
+      <button id="vocw-btn-underline" onclick="vocwToggle('underline')" title="밑줄 (Ctrl+U)" style="padding:4px 9px;font-size:13px;text-decoration:underline;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">U</button>
+      <button id="vocw-btn-strike" onclick="vocwToggle('strikeThrough')" title="취소선" style="padding:4px 9px;font-size:12px;text-decoration:line-through;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">S</button>
+      <span style="width:1px;background:#e0e0de;height:20px;margin:0 4px;display:inline-block;flex-shrink:0;"></span>
+      <!-- 블록 서식: H1~H4 (P 제외) -->
+      <button id="vocw-btn-h1" onclick="vocwToggleBlock('h1')" title="제목 1 — 가장 큰 제목" style="padding:4px 9px;font-size:12px;font-weight:800;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">H1</button>
+      <button id="vocw-btn-h2" onclick="vocwToggleBlock('h2')" title="제목 2 — 큰 제목" style="padding:4px 9px;font-size:12px;font-weight:700;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">H2</button>
+      <button id="vocw-btn-h3" onclick="vocwToggleBlock('h3')" title="제목 3 — 중간 제목" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">H3</button>
+      <button id="vocw-btn-h4" onclick="vocwToggleBlock('h4')" title="제목 4 — 작은 제목" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">H4</button>
+      <span style="width:1px;background:#e0e0de;height:20px;margin:0 4px;display:inline-block;flex-shrink:0;"></span>
       <!-- 글자 크기 -->
       <select onchange="vocwSetFontSize(this.value);this.value=''" title="글자 크기 설정" style="height:28px;padding:0 4px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;color:#555;">
         <option value="">크기</option>
@@ -572,15 +591,16 @@ tr:hover td{background:#fafafa;}
         <option value="28px">28px</option>
         <option value="32px">32px</option>
       </select>
-      <span style="width:1px;background:#e0e0de;height:20px;margin:0 3px;display:inline-block;flex-shrink:0;"></span>
-      <!-- 목록 -->
-      <button onclick="vocwFmt('insertUnorderedList')" title="글머리 기호 목록 (- 입력 후 스페이스)" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">• 목록</button>
+      <span style="width:1px;background:#e0e0de;height:20px;margin:0 4px;display:inline-block;flex-shrink:0;"></span>
+      <!-- 목록 & 들여쓰기 -->
+      <button onclick="vocwFmt('insertUnorderedList')" title="글머리 기호 목록 — Tab으로 단계 조절, - + 스페이스 자동 변환" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">• 목록</button>
       <button onclick="vocwFmt('insertOrderedList')" title="번호 매기기 목록" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">1. 목록</button>
-      <button onclick="vocwFmt('indent')" title="들여쓰기 (Tab)" style="padding:4px 9px;font-size:13px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">→</button>
-      <button onclick="vocwFmt('outdent')" title="내어쓰기 (Shift+Tab)" style="padding:4px 9px;font-size:13px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">←</button>
-      <span style="width:1px;background:#e0e0de;height:20px;margin:0 3px;display:inline-block;flex-shrink:0;"></span>
+      <button onclick="vocwFmt('indent')" title="들여쓰기 한 단계 (Tab)" style="padding:4px 8px;font-size:13px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">→</button>
+      <button onclick="vocwFmt('outdent')" title="내어쓰기 한 단계 (Shift+Tab)" style="padding:4px 8px;font-size:13px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">←</button>
+      <span style="width:1px;background:#e0e0de;height:20px;margin:0 4px;display:inline-block;flex-shrink:0;"></span>
       <!-- 삽입 -->
-      <button onclick="vocwInsertHr()" title="구분선 삽입 (--- 입력)" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">—</button>
+      <button onclick="vocwInsertHr()" title="구분선 삽입 (--- 입력 후 Enter)" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">—</button>
+      <!-- 표 크기 피커 -->
       <div style="position:relative;display:inline-block;">
         <button id="vocw-tbl-btn" onclick="vocwToggleTablePicker(this)" title="표 삽입 — 행·열 수를 마우스로 선택" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">표 ▾</button>
         <div id="vocw-table-picker" style="display:none;position:fixed;background:#fff;border:1px solid #e0e0de;border-radius:10px;padding:10px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
@@ -588,8 +608,38 @@ tr:hover td{background:#fafafa;}
           <div id="vocw-table-label" style="font-size:11px;color:#888;text-align:center;margin-top:7px;">표 크기를 선택하세요</div>
         </div>
       </div>
-      <span style="width:1px;background:#e0e0de;height:20px;margin:0 3px;display:inline-block;flex-shrink:0;"></span>
-      <button onclick="vocwFmt('removeFormat')" title="서식 모두 제거" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#999;font-family:inherit;">서식 제거</button>
+      <!-- 색상 피커 (표 셀 배경 + 하이라이트) -->
+      <div style="position:relative;display:inline-block;">
+        <button id="vocw-color-btn" onclick="vocwToggleColorPicker(this)" title="배경색 / 표 셀 색상 설정 — 파스텔 팔레트" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">🎨 색상</button>
+        <div id="vocw-color-picker" style="display:none;position:fixed;background:#fff;border:1px solid #e0e0de;border-radius:10px;padding:12px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:200px;">
+          <div style="font-size:11px;color:#888;margin-bottom:8px;font-weight:600;">하이라이트 / 표 셀 배경색</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;">
+            <div class="vocw-color-swatch" style="background:#FFD6D6;" onclick="vocwApplyColor('#FFD6D6')" title="분홍"></div>
+            <div class="vocw-color-swatch" style="background:#FFE4CC;" onclick="vocwApplyColor('#FFE4CC')" title="주황"></div>
+            <div class="vocw-color-swatch" style="background:#FFF9CC;" onclick="vocwApplyColor('#FFF9CC')" title="노랑"></div>
+            <div class="vocw-color-swatch" style="background:#D6F5D6;" onclick="vocwApplyColor('#D6F5D6')" title="연두"></div>
+            <div class="vocw-color-swatch" style="background:#CCF0FF;" onclick="vocwApplyColor('#CCF0FF')" title="하늘"></div>
+            <div class="vocw-color-swatch" style="background:#E0CCFF;" onclick="vocwApplyColor('#E0CCFF')" title="연보라"></div>
+            <div class="vocw-color-swatch" style="background:#FFD9E8;" onclick="vocwApplyColor('#FFD9E8')" title="연핑크"></div>
+            <div class="vocw-color-swatch" style="background:#CCFFE8;" onclick="vocwApplyColor('#CCFFE8')" title="민트"></div>
+            <div class="vocw-color-swatch" style="background:#FFE8CC;" onclick="vocwApplyColor('#FFE8CC')" title="복숭아"></div>
+            <div class="vocw-color-swatch" style="background:#E8F4FF;" onclick="vocwApplyColor('#E8F4FF')" title="연하늘"></div>
+            <div class="vocw-color-swatch" style="background:#F0F0F0;" onclick="vocwApplyColor('#F0F0F0')" title="연회색"></div>
+            <div class="vocw-color-swatch" style="background:#fff;border:2px solid #ccc;" onclick="vocwApplyColor('transparent')" title="색상 제거 (투명)">✕</div>
+          </div>
+          <div style="font-size:11px;color:#888;margin-bottom:6px;font-weight:600;">글자색</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;">
+            <div class="vocw-color-swatch" style="background:#e53935;" onclick="vocwApplyTextColor('#e53935')" title="빨강"></div>
+            <div class="vocw-color-swatch" style="background:#f57c00;" onclick="vocwApplyTextColor('#f57c00')" title="주황"></div>
+            <div class="vocw-color-swatch" style="background:#f9a825;" onclick="vocwApplyTextColor('#f9a825')" title="노랑"></div>
+            <div class="vocw-color-swatch" style="background:#2e7d32;" onclick="vocwApplyTextColor('#2e7d32')" title="초록"></div>
+            <div class="vocw-color-swatch" style="background:#1565c0;" onclick="vocwApplyTextColor('#1565c0')" title="파랑"></div>
+            <div class="vocw-color-swatch" style="background:#6a1b9a;" onclick="vocwApplyTextColor('#6a1b9a')" title="보라"></div>
+            <div class="vocw-color-swatch" style="background:#888;" onclick="vocwApplyTextColor('#888')" title="회색"></div>
+            <div class="vocw-color-swatch" style="background:#1a1a1a;" onclick="vocwApplyTextColor('#1a1a1a')" title="검정"></div>
+          </div>
+        </div>
+      </div>
     </div>
     <!-- 에디터 본문 -->
     <div id="vocw-editor" contenteditable="true"
@@ -2785,7 +2835,7 @@ function _updateVocwToolbarState(){
     });
     // 블록 버튼
     const blockTag=(document.queryCommandValue('formatBlock')||'p').toLowerCase();
-    ['h2','h3','h4','p'].forEach(tag=>{
+    ['h1','h2','h3','h4'].forEach(tag=>{
       const btn=document.getElementById('vocw-btn-'+tag);
       if(!btn)return;
       const active=blockTag===tag;
@@ -2809,6 +2859,64 @@ function vocwSetFontSize(sizeStr){
   div.appendChild(frag);
   const innerHtml=div.innerHTML||sel.toString();
   document.execCommand('insertHTML',false,`<span style="font-size:${sizeStr}">${innerHtml}</span>`);
+}
+
+// 색상 피커 토글
+function vocwToggleColorPicker(btn){
+  const picker=document.getElementById('vocw-color-picker');
+  if(!picker)return;
+  if(picker.style.display==='none'||!picker.style.display){
+    const rect=btn.getBoundingClientRect();
+    picker.style.top=(rect.bottom+4)+'px';
+    picker.style.left=rect.left+'px';
+    picker.style.display='block';
+    setTimeout(()=>{
+      const close=(e)=>{if(!picker.contains(e.target)&&e.target!==btn){picker.style.display='none';document.removeEventListener('click',close);}};
+      document.addEventListener('click',close);
+    },0);
+  }else{
+    picker.style.display='none';
+  }
+}
+
+// 배경색 적용: 커서가 표 셀 안이면 셀 배경, 아니면 선택 텍스트 하이라이트
+function vocwApplyColor(color){
+  document.getElementById('vocw-color-picker').style.display='none';
+  const ed=document.getElementById('vocw-editor');
+  if(!ed)return;
+  ed.focus();
+  // 표 셀 감지
+  const sel=window.getSelection();
+  if(sel&&sel.rangeCount){
+    let node=sel.anchorNode;
+    while(node&&node!==ed){
+      if(node.nodeName==='TD'||node.nodeName==='TH'){
+        node.style.backgroundColor=color==='transparent'?'':color;
+        return;
+      }
+      node=node.parentNode;
+    }
+  }
+  // 선택 텍스트 하이라이트
+  if(sel&&!sel.isCollapsed){
+    if(color==='transparent'){
+      document.execCommand('removeFormat',false,null);
+    }else{
+      document.execCommand('hiliteColor',false,color);
+    }
+  }
+}
+
+// 글자색 적용
+function vocwApplyTextColor(color){
+  document.getElementById('vocw-color-picker').style.display='none';
+  const ed=document.getElementById('vocw-editor');
+  if(!ed)return;
+  ed.focus();
+  const sel=window.getSelection();
+  if(sel&&!sel.isCollapsed){
+    document.execCommand('foreColor',false,color);
+  }
 }
 
 // 구분선
@@ -2901,8 +3009,28 @@ function _initVocwEditor(){
       if(e.key==='i'){e.preventDefault();vocwToggle('italic');}
       if(e.key==='u'){e.preventDefault();vocwToggle('underline');}
     }
-    // Enter 후 툴바 상태 갱신
-    if(e.key==='Enter'){setTimeout(_updateVocwToolbarState,10);}
+    // Enter 입력 시: --- 자동 구분선 변환
+    if(e.key==='Enter'){
+      const sel2=window.getSelection();
+      if(sel2&&sel2.rangeCount){
+        const node2=sel2.anchorNode;
+        const lineText=(node2&&node2.nodeType===3?node2.textContent:(node2&&node2.textContent)||'').trim();
+        if(lineText==='---'){
+          e.preventDefault();
+          // 현재 라인 텍스트 제거 후 hr 삽입
+          const range2=sel2.getRangeAt(0).cloneRange();
+          range2.selectNodeContents(node2.nodeType===3?node2:node2);
+          range2.deleteContents();
+          if(node2.nodeType===3&&node2.parentElement&&node2.parentElement!==document.getElementById('vocw-editor')){
+            const p=node2.parentElement;
+            if(p.textContent.trim()==='')p.remove();
+          }
+          document.execCommand('insertHTML',false,'<hr style="border:0;border-top:2px solid #e0e0de;margin:16px 0;"><p><br></p>');
+          return;
+        }
+      }
+      setTimeout(_updateVocwToolbarState,10);
+    }
   });
   ed.addEventListener('keyup',function(e){
     // - + Space → 글머리 기호 자동 변환
