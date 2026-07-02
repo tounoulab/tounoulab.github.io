@@ -55,7 +55,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic 
 .page.active{display:block;}
 .page-inner{max-width:100%;margin:0;padding:24px;}
 /* Home layout */
-.home-layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;}
+.home-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start;}
+.home-layout>div{min-width:0;overflow:hidden;}
 /* Status section */
 .status-section{background:#fff;border-radius:12px;border:1px solid #e8e8e6;overflow:hidden;margin-bottom:16px;}
 .status-hd{padding:18px 24px 0;font-size:15px;font-weight:700;}
@@ -413,7 +414,7 @@ tr:hover td{background:#fafafa;}
         <!-- 주간 클레임 추이 -->
         <div class="card" style="margin-bottom:16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <span class="card-title" style="margin-bottom:0;">이번 주 클레임 접수 추이</span>
+            <span class="card-title" style="margin-bottom:0;">최근 7일 클레임 접수 추이</span>
             <span id="weekly-total-badge" style="font-size:12px;color:#888;"></span>
           </div>
           <div style="position:relative;height:160px;">
@@ -1085,39 +1086,50 @@ function renderDonutChart(canvasId,legendId,countsObj){
 }
 
 function renderWeeklyTrendChart(claims){
-  const[ws,we]=weekRange();
-  const dayNames=['월','화','수','목','금','토','일'];
-  const days=[];const cur=new Date(ws);
-  while(cur.toISOString().slice(0,10)<=we){days.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
-
+  // 최근 7 영업일 (주말 제외), 오늘 포함 역순으로 수집
+  const days=[];const cur=new Date();
+  while(days.length<7){
+    const dow=cur.getDay();
+    if(dow!==0&&dow!==6)days.unshift(cur.toISOString().slice(0,10));
+    cur.setDate(cur.getDate()-1);
+  }
+  const dayLabels=days.map(d=>{
+    const dt=new Date(d+'T00:00:00Z');
+    const m=dt.getUTCMonth()+1,day=dt.getUTCDate();
+    const dn=['일','월','화','수','목','금','토'][dt.getUTCDay()];
+    return`${m}/${day}(${dn})`;
+  });
   const counts=days.map(d=>{
     const uniq=new Set(claims.filter(r=>normDate(r.date)===d).map(r=>r.orderno||String(r.id)));
     return uniq.size;
   });
-  const weekTotal=counts.reduce((a,b)=>a+b,0);
-  setTxt('weekly-total-badge',`이번 주 총 ${weekTotal}건`);
+  const total=counts.reduce((a,b)=>a+b,0);
+  setTxt('weekly-total-badge',`최근 7일 총 ${total}건`);
 
   const el=document.getElementById('chart-weekly');if(!el)return;
   if(_charts['chart-weekly']){_charts['chart-weekly'].destroy();delete _charts['chart-weekly'];}
 
   _charts['chart-weekly']=new Chart(el.getContext('2d'),{
-    type:'bar',
+    type:'line',
     data:{
-      labels:dayNames.slice(0,days.length),
+      labels:dayLabels,
       datasets:[{
         label:'접수 건수',data:counts,
-        backgroundColor:counts.map(v=>v>0?'rgba(26,26,26,0.82)':'rgba(200,200,200,0.15)'),
-        borderColor:counts.map(v=>v>0?'#1a1a1a':'#ddd'),
-        borderWidth:0,borderRadius:5,borderSkipped:false,
-        barPercentage:0.5,categoryPercentage:0.6
+        borderColor:'#1a1a1a',
+        backgroundColor:'rgba(26,26,26,0.07)',
+        fill:true,tension:0.35,
+        pointBackgroundColor:'#1a1a1a',pointBorderColor:'#fff',
+        pointBorderWidth:2,pointRadius:5,pointHoverRadius:7,
+        borderWidth:2.5
       }]
     },
     options:{
       responsive:true,maintainAspectRatio:false,
+      devicePixelRatio:window.devicePixelRatio||2,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y}건`}}},
       scales:{
         y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0f0ee'},border:{display:false}},
-        x:{ticks:{font:{size:12}},grid:{display:false},border:{display:false}}
+        x:{ticks:{font:{size:11}},grid:{color:'#f5f5f3'},border:{display:false}}
       }
     }
   });
@@ -1324,7 +1336,7 @@ function calcBusinessDays(start,end){
   while(cur<=e){const dow=cur.getDay(),ds=cur.toISOString().slice(0,10);if(dow!==0&&dow!==6&&!KR_HOLIDAYS.has(ds))count++;cur.setDate(cur.getDate()+1);}
   return(_bdCache[key]=count);
 }
-function calcSLA(days){if(days===null)return{text:'-',color:'#bbb'};return days<=3?{text:'준수',color:'#2e7d32'}:{text:'초과',color:'#c62828'};}
+function calcSLA(days){if(days===null)return{text:'-',color:'#bbb'};return days<=4?{text:'준수',color:'#2e7d32'}:{text:'초과',color:'#c62828'};}
 let _editClaimId=null;
 function updateDoneDate(id,value){
   const claims=loadClaims(),idx=claims.findIndex(r=>r.id===id);
@@ -1620,14 +1632,14 @@ const _colDefaults={
   month:60,_ticket:76,
   date:100,indate:100,shipdate:100,donedate:100,
   channel:100,platform:68,orderno:190,buyer:66,
-  product:210,option:112,category:100,
+  product:250,option:115,category:100,
   issue:165,liability:56,type:122,nature:100,
   _img:54,reason:150,
   returnYn:52,reshipYn:62,accident:86,
   costP:80,costR:80,costS:80,
   _lead:58,status:70,_sla:48,_del:88
 };
-const _COL_VER='v6'; // 버전 올리면 저장된 너비 초기화 → 새 기본값 적용
+const _COL_VER='v7'; // 버전 올리면 저장된 너비 초기화 → 새 기본값 적용
 const _colWidths=(()=>{
   const uid=sessionStorage.getItem('tuunu_session_v1')||'';
   const key='tuunu_colWidths_'+_COL_VER+(uid?'_'+uid:'');
@@ -2308,7 +2320,7 @@ function exportClaimsXLSX(){
     const row={};
     cols.forEach(([k,h])=>{row[h]=r[k]||'';});
     const bds=calcBusinessDays(r.indate,r.donedate);
-    row['처리 리드타임']=bds!==null?bds+1:'';
+    row['처리 리드타임']=bds!==null?bds:'';
     return row;
   });
   const ws=XLSX.utils.json_to_sheet(data);
