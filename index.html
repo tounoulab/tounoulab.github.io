@@ -1092,9 +1092,9 @@ tr:hover td{background:#fafafa;}
     <button class="btn-secondary" onclick="exportReturns()">CSV 내보내기</button>
   </div>
   <div class="stats-grid">
-    <div class="stat-card"><div class="stat-label">금일 입고</div><div class="stat-value" id="sr-today">0</div><div class="stat-compare same" id="sr-today-cmp">-</div></div>
-    <div class="stat-card"><div class="stat-label">이번 주</div><div class="stat-value" id="sr-week">0</div><div class="stat-compare same" id="sr-week-cmp">-</div></div>
-    <div class="stat-card"><div class="stat-label">이번 달</div><div class="stat-value" id="sr-month">0</div><div class="stat-compare same" id="sr-month-cmp">-</div></div>
+    <div class="stat-card"><div class="stat-label">금일 입고</div><div class="stat-value" id="sr-today">0</div><div class="stat-hint" id="sr-today-hint"></div><div class="stat-compare same" id="sr-today-cmp">-</div></div>
+    <div class="stat-card"><div class="stat-label">이번 주</div><div class="stat-value" id="sr-week">0</div><div class="stat-hint" id="sr-week-hint"></div><div class="stat-compare same" id="sr-week-cmp">-</div></div>
+    <div class="stat-card"><div class="stat-label">이번 달</div><div class="stat-value" id="sr-month">0</div><div class="stat-hint" id="sr-month-hint"></div><div class="stat-compare same" id="sr-month-cmp">-</div></div>
   </div>
   <div class="card">
     <div class="card-title">반품 입고 등록</div>
@@ -1105,10 +1105,19 @@ tr:hover td{background:#fafafa;}
     <div class="grid2 form-row"><div><label>수량</label><input type="number" id="r-qty" placeholder="1" min="1" value="1"/></div><div><label>개봉 여부</label><select id="r-opened"><option value="">-</option><option>Y</option><option>N</option></select></div></div>
     <div class="form-row"><label>개봉 여부 및 검수 결과</label><textarea id="r-inspect" placeholder="예: 정상, 불량 - 사유 등"></textarea></div>
     <div class="form-row"><label>비고</label><input type="text" id="r-note" placeholder="비고"/></div>
-    <button class="btn-primary" onclick="addReturn()">입고 등록</button>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn-primary" onclick="addReturn()" style="flex:1;">입고 등록</button>
+      <button class="btn-secondary" onclick="addReturnContinue()" style="flex:1;" title="입고일·송장·고객명·주문번호 유지, 상품 정보만 초기화">이어서 등록 ↩</button>
+    </div>
   </div>
   <div class="card">
-    <div class="card-title">입고 목록</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="card-title" style="margin-bottom:0;">입고 목록</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="date" id="r-filter-date" onchange="renderReturnTable()" style="font-size:12px;padding:4px 8px;border:1px solid #e0e0de;border-radius:6px;font-family:inherit;color:#333;">
+        <button onclick="document.getElementById('r-filter-date').value='';renderReturnTable();" style="font-size:11px;padding:4px 10px;border:1px solid #e0e0de;border-radius:6px;background:#f8f8f6;cursor:pointer;font-family:inherit;">전체</button>
+      </div>
+    </div>
     <div class="table-wrap"><table><thead><tr><th>입고일</th><th>고객명</th><th>상품명</th><th>옵션</th><th>수량</th><th>개봉</th><th>검수결과</th><th>주문번호</th><th>비고</th><th></th></tr></thead><tbody id="return-tbody"></tbody></table><div class="empty-msg" id="return-empty">등록된 입고 내역이 없습니다</div></div>
   </div>
 </div>
@@ -2688,6 +2697,17 @@ function addReturn(){
   _fsSet('returns',rec.id,rec).catch(e=>console.error(e));
   clearReturnForm();
 }
+function addReturnContinue(){
+  // 등록 후 입고일·송장·고객명·주문번호 유지, 상품 필드만 초기화
+  const date=document.getElementById('r-date').value;
+  if(!date){alert('입고일을 입력해 주세요.');return;}
+  const rec={id:Date.now(),date,orig:document.getElementById('r-orig').value,retno:document.getElementById('r-retno').value,name:document.getElementById('r-name').value,product:document.getElementById('r-product').value,option:document.getElementById('r-option').value,qty:document.getElementById('r-qty').value||'1',opened:document.getElementById('r-opened').value,inspect:document.getElementById('r-inspect').value,orderno:document.getElementById('r-orderno').value,note:document.getElementById('r-note').value};
+  _fsSet('returns',rec.id,rec).catch(e=>console.error(e));
+  // 상품 관련 필드만 초기화
+  ['r-product','r-option','r-opened','r-inspect','r-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('r-qty').value='1';
+  document.getElementById('r-product').focus();
+}
 function deleteReturn(id){
   if(!confirm('삭제하시겠습니까?'))return;
   _fsDelete('returns',id).catch(e=>console.error(e));
@@ -2700,16 +2720,55 @@ function renderReturnStats(){
   const r=loadReturns(),t=todayStr(),yd=offsetDay(-1);
   const[ws,we]=weekRange(),[lws,lwe]=weekRange(-1),[ms,me]=monthRange(),[lms,lme]=monthRange(-1);
   function cmp(c,p){const d=c-p;if(d>0)return{text:'전 대비 +'+d+'건',cls:'up'};if(d<0)return{text:'전 대비 '+d+'건',cls:'down'};return{text:'전 대비 동일',cls:'same'};}
-  function ss(prefix,val,c){const vEl=document.getElementById(prefix);if(vEl)vEl.textContent=val+'건';const cEl=document.getElementById(prefix+'-cmp');if(cEl){cEl.textContent=c.text;cEl.className='stat-compare '+c.cls;}}
-  ss('sr-today',countIn(r,'date',t,t),cmp(countIn(r,'date',t,t),countIn(r,'date',yd,yd)));
-  ss('sr-week',countIn(r,'date',ws,we),cmp(countIn(r,'date',ws,we),countIn(r,'date',lws,lwe)));
-  ss('sr-month',countIn(r,'date',ms,me),cmp(countIn(r,'date',ms,me),countIn(r,'date',lms,lme)));
+  function ss(prefix,val,c,hint){
+    const vEl=document.getElementById(prefix);if(vEl)vEl.textContent=val+'건';
+    const cEl=document.getElementById(prefix+'-cmp');if(cEl){cEl.textContent=c.text;cEl.className='stat-compare '+c.cls;}
+    const hEl=document.getElementById(prefix+'-hint');if(hEl)hEl.textContent=hint||'';
+  }
+  const fmt=s=>s.slice(5).replace('-','/');
+  ss('sr-today',countIn(r,'date',t,t),cmp(countIn(r,'date',t,t),countIn(r,'date',yd,yd)),fmt(t));
+  ss('sr-week',countIn(r,'date',ws,we),cmp(countIn(r,'date',ws,we),countIn(r,'date',lws,lwe)),fmt(ws)+'~'+fmt(t));
+  ss('sr-month',countIn(r,'date',ms,me),cmp(countIn(r,'date',ms,me),countIn(r,'date',lms,lme)),fmt(ms)+'~'+fmt(t));
 }
 function renderReturnTable(){
-  const returns=loadReturns(),tbody=document.getElementById('return-tbody'),empty=document.getElementById('return-empty');
+  const filterDate=(document.getElementById('r-filter-date')||{}).value||'';
+  let returns=loadReturns().slice().sort((a,b)=>{
+    if((a.date||'')>(b.date||''))return -1;
+    if((a.date||'')<(b.date||''))return 1;
+    return (b.id||0)-(a.id||0);
+  });
+  if(filterDate)returns=returns.filter(r=>r.date===filterDate);
+  const tbody=document.getElementById('return-tbody'),empty=document.getElementById('return-empty');
   if(!returns.length){tbody.innerHTML='';empty.style.display='';return;}
   empty.style.display='none';
-  tbody.innerHTML=returns.map(r=>`<tr><td>${r.date||'-'}</td><td>${r.name||'-'}</td><td>${r.product||'-'}</td><td>${r.option||'-'}</td><td>${r.qty||'-'}</td><td>${r.opened||'-'}</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.inspect||''}">${r.inspect||'-'}</td><td style="font-size:11px;">${r.orderno||'-'}</td><td>${r.note||'-'}</td><td><button class="btn-danger" onclick="deleteReturn(${r.id})">삭제</button></td></tr>`).join('');
+  const orderBg=['#f0f7ff','#fff7ed','#f0fdf4','#fdf4ff','#fefce8'];
+  const orderColorMap={};let colorIdx=0;
+  const DOW=['일','월','화','수','목','금','토'];
+  let lastDate='',html='';
+  returns.forEach(r=>{
+    if((r.date||'')!==lastDate){
+      lastDate=r.date||'';
+      let label=lastDate||'날짜 없음';
+      if(lastDate){const d=new Date(lastDate);label=lastDate+' ('+DOW[d.getDay()]+')';}
+      html+=`<tr><td colspan="10" style="background:#f2f3f5;padding:5px 12px;font-size:11px;font-weight:700;color:#555;border-top:2px solid #e0e0de;">📅 ${label}</td></tr>`;
+    }
+    const ono=(r.orderno||'').trim();
+    if(ono&&orderColorMap[ono]===undefined){orderColorMap[ono]=orderBg[colorIdx%orderBg.length];colorIdx++;}
+    const bg=ono?orderColorMap[ono]:'';
+    html+=`<tr style="background:${bg};">
+      <td style="color:#999;font-size:11px;">${r.date||'-'}</td>
+      <td>${r.name||'-'}</td>
+      <td>${r.product||'-'}</td>
+      <td>${r.option||'-'}</td>
+      <td>${r.qty||'-'}</td>
+      <td>${r.opened||'-'}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.inspect||''}">${r.inspect||'-'}</td>
+      <td style="font-size:11px;font-weight:${ono?'600':'400'};">${ono||'-'}</td>
+      <td>${r.note||'-'}</td>
+      <td><button class="btn-danger" onclick="deleteReturn(${r.id})">삭제</button></td>
+    </tr>`;
+  });
+  tbody.innerHTML=html;
 }
 // ===== VOC =====
 function renderVocStats(){
