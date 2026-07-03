@@ -50,12 +50,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic 
 .chart-legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;}
 .chart-legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#555;}
 .chart-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+/* 옵션 뱃지 + 위쪽 툴팁 */
+.opt-badge{position:relative;display:inline-flex;align-items:center;justify-content:center;background:#1a73e8;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;cursor:default;flex-shrink:0;vertical-align:middle;line-height:1;}
+.opt-badge::before{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;font-size:11px;font-weight:400;padding:5px 8px;border-radius:6px;white-space:nowrap;max-width:280px;overflow:hidden;text-overflow:ellipsis;pointer-events:none;opacity:0;transition:opacity 0.12s;z-index:9999;}
+.opt-badge:hover::before{opacity:1;}
 /* 월별 탭 */
-#claim-month-tabs{display:flex;gap:0;overflow-x:auto;border-bottom:2px solid #e8e8e6;margin-bottom:0;flex-shrink:0;scrollbar-width:none;}
+#claim-month-tabs{display:flex;gap:0;overflow-x:auto;border-top:2px solid #e8e8e6;border-bottom:none;margin-bottom:0;flex-shrink:0;scrollbar-width:none;background:#fff;padding:0 24px;}
 #claim-month-tabs::-webkit-scrollbar{display:none;}
-.cmt-tab{padding:7px 16px;font-size:12px;font-weight:500;color:#888;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color 0.15s,border-color 0.15s;font-family:inherit;background:none;border-top:none;border-left:none;border-right:none;}
+.cmt-tab{padding:7px 16px;font-size:12px;font-weight:500;color:#888;cursor:pointer;border-top:2px solid transparent;margin-top:-2px;border-bottom:none;border-left:none;border-right:none;white-space:nowrap;transition:color 0.15s,border-color 0.15s;font-family:inherit;background:none;}
 .cmt-tab:hover{color:#333;}
-.cmt-tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a;font-weight:700;}
+.cmt-tab.active{color:#1a1a1a;border-top-color:#1a1a1a;font-weight:700;}
 /* Pages */
 .page{display:none;}
 .page.active{display:block;}
@@ -456,40 +460,6 @@ tr:hover td{background:#fafafa;}
           </div>
           <div style="position:relative;height:160px;">
             <canvas id="chart-weekly"></canvas>
-          </div>
-        </div>
-        <!-- SLA 월별 현황 -->
-        <div class="card" style="margin-bottom:16px;">
-          <div class="card-title">SLA 월별 현황</div>
-          <div class="table-wrap">
-            <table id="sla-table" style="min-width:800px;">
-              <thead>
-                <tr>
-                  <th style="background:#f8f8f6;position:sticky;left:0;z-index:2;">구분</th>
-                  <th>1월</th><th>2월</th><th>3월</th><th>4월</th><th>5월</th><th>6월</th>
-                  <th>7월</th><th>8월</th><th>9월</th><th>10월</th><th>11월</th><th>12월</th>
-                  <th>합계</th>
-                </tr>
-              </thead>
-              <tbody id="sla-tbody"></tbody>
-            </table>
-          </div>
-          <div style="font-size:11px;color:#bbb;margin-top:8px;">※ SLA 기준: 클레임 인입일 → 처리 완료일 4 영업일 이내</div>
-        </div>
-        <!-- 처리 유형 월별 평균 리드타임 -->
-        <div class="card" style="margin-bottom:16px;">
-          <div class="card-title">처리 유형별 월평균 리드타임</div>
-          <div class="table-wrap">
-            <table id="leadtime-table" style="min-width:700px;">
-              <thead>
-                <tr>
-                  <th style="background:#f8f8f6;position:sticky;left:0;z-index:2;text-align:left;">처리 유형</th>
-                  <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th>
-                  <th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th>
-                </tr>
-              </thead>
-              <tbody id="leadtime-tbody"></tbody>
-            </table>
           </div>
         </div>
       </div>
@@ -977,7 +947,6 @@ tr:hover td{background:#fafafa;}
     </div>
   </div>
 </div>
-<div id="claim-month-tabs"></div>
 <div id="claim-scroll-wrap" style="overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 190px);padding:0 0 24px 24px;position:relative;">
   <table id="claim-sheet" style="table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:13px;background:#fff;">
     <colgroup id="claim-colgroup">
@@ -1026,7 +995,8 @@ tr:hover td{background:#fafafa;}
     <tbody id="claim-tbody"></tbody>
   </table>
   <div class="empty-msg" id="claim-empty" style="background:#fff;border:1px solid #e0e0de;border-top:none;padding:40px;border-radius:0 0 8px 8px;">등록된 클레임이 없습니다. <span style="color:#1a73e8;cursor:pointer;" onclick="openClaimModal()">+ 클레임 등록</span></div>
-</div>
+</div><!-- /scroll-wrap -->
+<div id="claim-month-tabs"></div>
 </div><!-- /page-claim -->
 
 <!-- ===== PAGE: 클레임 통계 ===== -->
@@ -1042,6 +1012,40 @@ tr:hover td{background:#fafafa;}
   <div class="card"><div class="card-title" id="voc-type-title">이번 주 처리 유형별 현황</div><div id="chart-type"></div></div>
   <div class="card"><div class="card-title" id="voc-liability-title">이번 주 귀책별 현황</div><div id="chart-liability"></div></div>
   <div class="card"><div class="card-title" id="voc-platform-title">이번 주 플랫폼별 현황</div><div id="chart-platform"></div></div>
+  <!-- SLA 월별 현황 -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">SLA 월별 현황</div>
+    <div class="table-wrap">
+      <table id="sla-table" style="min-width:800px;">
+        <thead>
+          <tr>
+            <th style="background:#f8f8f6;position:sticky;left:0;z-index:2;">구분</th>
+            <th>1월</th><th>2월</th><th>3월</th><th>4월</th><th>5월</th><th>6월</th>
+            <th>7월</th><th>8월</th><th>9월</th><th>10월</th><th>11월</th><th>12월</th>
+            <th>합계</th>
+          </tr>
+        </thead>
+        <tbody id="sla-tbody"></tbody>
+      </table>
+    </div>
+    <div style="font-size:11px;color:#bbb;margin-top:8px;">※ SLA 기준: 클레임 인입일 → 처리 완료일 4 영업일 이내</div>
+  </div>
+  <!-- 처리 유형별 월평균 리드타임 -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">처리 유형별 월평균 리드타임</div>
+    <div class="table-wrap">
+      <table id="leadtime-table" style="min-width:700px;">
+        <thead>
+          <tr>
+            <th style="background:#f8f8f6;position:sticky;left:0;z-index:2;text-align:left;">처리 유형</th>
+            <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th>
+            <th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th>
+          </tr>
+        </thead>
+        <tbody id="leadtime-tbody"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 </div><!-- /page-voc -->
 
@@ -1480,26 +1484,35 @@ function _showCategoryBreakdown(label,claims){
   const titleEl=modal.querySelector('#_clm-title');
   const bodyEl=modal.querySelector('#_clm-body');
   if(titleEl)titleEl.textContent=`${label} — ${claims.length}건`;
-  // 상품군별 건수 집계
-  const catMap={};
-  claims.forEach(r=>{const c=r.category||'(미분류)';catMap[c]=(catMap[c]||0)+1;});
-  const sorted=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  // 상품군 + 이슈분류 조합 집계
+  const comboMap={};
+  claims.forEach(r=>{
+    const cat=r.category||'(미분류)';
+    const iss=r.issue||'(이슈 미분류)';
+    const key=`${cat}\t${iss}`;
+    comboMap[key]=(comboMap[key]||0)+1;
+  });
+  const sorted=Object.entries(comboMap).sort((a,b)=>b[1]-a[1]);
   const total=claims.length;
   if(bodyEl){
     if(!sorted.length){bodyEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">해당 데이터 없음</div>';}
     else{
-      bodyEl.innerHTML=`<div style="font-size:12px;color:#aaa;margin-bottom:12px;">상품군 / 클레임 건수</div>
+      bodyEl.innerHTML=`<div style="font-size:12px;color:#aaa;margin-bottom:12px;">상품군  이슈분류  /  클레임 건수</div>
       <div style="display:flex;flex-direction:column;gap:6px;">
-        ${sorted.map(([cat,cnt],i)=>{
+        ${sorted.map(([combo,cnt])=>{
+          const [cat,iss]=combo.split('\t');
           const pct=Math.round(cnt/total*100);
-          const barW=Math.max(4,pct);
+          const barW=Math.max(3,pct);
+          const label=`${cat}  ${iss}`;
           return`<div style="display:flex;align-items:center;gap:10px;">
-            <div style="min-width:110px;max-width:110px;font-size:12px;color:#444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${cat}">${cat}</div>
-            <div style="flex:1;background:#f0f0ee;border-radius:4px;height:14px;overflow:hidden;">
-              <div style="width:${barW}%;background:#1a73e8;height:100%;border-radius:4px;transition:width 0.3s;"></div>
+            <div style="min-width:200px;max-width:200px;font-size:11px;color:#444;line-height:1.3;" title="${label}">
+              <span style="font-weight:600;">${cat}</span>
+              <span style="color:#888;display:block;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${iss}</span>
             </div>
-            <div style="min-width:50px;text-align:right;font-size:12px;font-weight:600;color:#333;">${cnt}건</div>
-            <div style="min-width:32px;text-align:right;font-size:11px;color:#aaa;">${pct}%</div>
+            <div style="flex:1;background:#f0f0ee;border-radius:4px;height:12px;overflow:hidden;">
+              <div style="width:${barW}%;background:#1a73e8;height:100%;border-radius:4px;"></div>
+            </div>
+            <div style="min-width:36px;text-align:right;font-size:12px;font-weight:600;color:#333;">${cnt}건</div>
           </div>`;
         }).join('')}
       </div>`;
@@ -2439,6 +2452,10 @@ function getFilteredClaims(){
     const _SEARCH_FIELDS=['orderno','buyer','product','option','category','issue','liability','type','nature','reason','channel','platform','status'];
     claims=claims.filter(r=>_SEARCH_FIELDS.some(f=>String(r[f]||'').toLowerCase().includes(q)));
   }
+  // 월별 탭 필터
+  if(typeof _activeClaimMonth!=='undefined'&&_activeClaimMonth!=='all'){
+    claims=claims.filter(r=>{const d=normDate(r.date)||'';return d.slice(0,7)===_activeClaimMonth;});
+  }
   if(_groupByOrder){
     const seen=new Set(),grouped=[];
     claims.forEach(r=>{
@@ -2492,24 +2509,9 @@ function _buildClaimMonthTabs(claims){
 }
 function _setClaimMonthTab(month){
   _activeClaimMonth=month;
-  // 탭 active 클래스 갱신
-  document.querySelectorAll('.cmt-tab').forEach(btn=>{
-    btn.classList.toggle('active',btn.textContent===(month==='all'?'전체':`${parseInt(month.split('-')[1],10)}월`)&&(month==='all'?btn.textContent==='전체':btn.getAttribute('onclick').includes(`'${month}'`)));
-  });
-  _buildClaimMonthTabs(_allClaimsRaw||[]);
-  _applyClaimMonthFilter();
+  _doRenderClaimTable();
 }
-function _applyClaimMonthFilter(){
-  if(typeof allClaims==='undefined')return;
-  const base=_allClaimsRaw||allClaims;
-  if(_activeClaimMonth==='all'){
-    // 기존 필터 재적용
-    _renderClaims(base);
-  }else{
-    const filtered=base.filter(r=>{const d=normDate(r.date)||'';return d.slice(0,7)===_activeClaimMonth;});
-    _renderClaims(filtered);
-  }
-}
+function _applyClaimMonthFilter(){_doRenderClaimTable();}
 function _vsOnScroll(){
   if(!_vsWrap)return;
   localStorage.setItem('sc_claim',_vsWrap.scrollTop|0);
@@ -2636,7 +2638,7 @@ function _buildClaimRow(r,i){
     const isLeft=f.align==='left';
     let disp=val||'-';
     if(key==='orderno'&&r._grpCnt>1)disp+=` <span style="background:#1a73e8;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;">${r._grpCnt}건</span>`;
-    if(key==='product'&&r.option){disp+=` <span title="${(r.option||'').replace(/"/g,'&quot;')}" style="display:inline-flex;align-items:center;justify-content:center;background:#1a73e8;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;cursor:default;flex-shrink:0;vertical-align:middle;line-height:1;" aria-label="옵션: ${(r.option||'').replace(/"/g,'&quot;')}">O</span>`;}
+    if(key==='product'&&r.option&&!r.option.includes('지정불가')&&r.option.trim()){disp+=` <span class="opt-badge" data-tip="${(r.option||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}">O</span>`;}
     if(['costP','costR','costS'].includes(key)){
       const num=val?parseFloat(String(val).replace(/,/g,'')):NaN;
       disp=(!isNaN(num)&&val)?num.toLocaleString():'-';
@@ -2666,8 +2668,7 @@ function _doRenderClaimTable(){
   if(!claims.length){tbody.innerHTML='';if(empty)empty.style.display='';initColResize();return;}
   if(empty)empty.style.display='none';
   _vsClaims=claims;
-  if(!_allClaimsRaw)_allClaimsRaw=allClaims;
-  _buildClaimMonthTabs(_allClaimsRaw);
+  _buildClaimMonthTabs(allClaims);
   _vsInit();
   // 스크롤 복원: tbody가 비어있을 때는 scrollTop이 클램핑되므로
   // _vsRender(sc)로 먼저 올바른 위치의 행을 렌더한 뒤 scrollTop을 설정
