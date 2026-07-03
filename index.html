@@ -2154,17 +2154,22 @@ function _applyColWidths(){
   _STICKY_KEYS.forEach((k,idx)=>{
     const w=_colWidths[k]||80;
     const tdKey=_TD_FIELD[k]||k;
+    const isFirst=idx===0; // _drag
     const isLast=idx===_STICKY_KEYS.length-1;
+    // 헤더 left 위치
     css+=`#claim-sheet th[data-col="${k}"]{left:${cum}px !important;}\n`;
-    // 배경을 동적 CSS에서도 지정해 스크롤 시 비치는 버그 방지
+    // 바디 셀: sticky position + 명시적 배경(스크롤 시 비침 방지)
     css+=`#claim-sheet tbody td[data-field="${tdKey}"]{position:sticky !important;left:${cum}px !important;z-index:10 !important;}\n`;
     css+=`#claim-sheet tbody tr.tr-even td[data-field="${tdKey}"]{background:#fff !important;}\n`;
     css+=`#claim-sheet tbody tr.tr-odd td[data-field="${tdKey}"]{background:#fafaf8 !important;}\n`;
-    // 마지막 sticky 컬럼에 구분선 shadow 추가
-    if(isLast){
-      css+=`#claim-sheet th[data-col="${k}"]{box-shadow:inset -2px 0 0 #c8c8c4 !important;}\n`;
-      css+=`#claim-sheet tbody td[data-field="${tdKey}"]{box-shadow:inset -2px 0 0 #d8d8d4 !important;}\n`;
-    }
+    // box-shadow로 좌측 구분선 표현 (border-left은 layout 영향이라 shadow 사용)
+    // _drag 제외한 모든 sticky 셀: 좌측 선 + 마지막 셀: 우측 굵은 구분선
+    const bShadows=[];
+    const hShadows=[];
+    if(!isFirst){bShadows.push('inset 1px 0 0 #e8e8e6');hShadows.push('inset 1px 0 0 #e0e0de');}
+    if(isLast){bShadows.push('inset -2px 0 0 #c8c8c4');hShadows.push('inset -2px 0 0 #c0c0bc');}
+    if(bShadows.length)css+=`#claim-sheet tbody td[data-field="${tdKey}"]{box-shadow:${bShadows.join(',')} !important;}\n`;
+    if(hShadows.length)css+=`#claim-sheet th[data-col="${k}"]{box-shadow:${hShadows.join(',')} !important;}\n`;
     cum+=w;
   });
   let el=document.getElementById('dyn-sticky-css');
