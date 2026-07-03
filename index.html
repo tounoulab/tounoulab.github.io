@@ -303,18 +303,21 @@ tr:hover td{background:#fafafa;}
       <div class="login-logo-title">TOUNOU LAB</div>
       <div class="login-logo-sub">클레임 관리 시스템</div>
     </div>
-    <form onsubmit="submitLogin();return false;" autocomplete="on">
+    <form onsubmit="submitLogin();return false;" autocomplete="off">
     <div class="login-field">
       <label>아이디</label>
-      <input type="text" id="login-id" name="username" placeholder="아이디 입력" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()">
+      <input type="text" id="login-id" name="username" placeholder="아이디 입력" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()">
     </div>
     <div class="login-field">
       <label>비밀번호</label>
-      <input type="password" id="login-pw" name="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitLogin()">
+      <input type="password" id="login-pw" name="password" placeholder="비밀번호 입력" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitLogin()">
     </div>
     <div id="login-err">아이디 또는 비밀번호가 올바르지 않습니다.</div>
     <button type="submit" class="login-btn">로그인</button>
     </form>
+    <div style="text-align:center;margin-top:12px;">
+      <a href="#" onclick="(function(){localStorage.removeItem('tuunu_users_v3');document.getElementById('login-id').value='chohee';document.getElementById('login-pw').value='chohee';document.getElementById('login-err').style.display='none';alert('초기화 완료 — chohee / chohee 로 로그인하세요.');return false;})()" style="font-size:11px;color:#aaa;text-decoration:underline;">비밀번호 초기화</a>
+    </div>
   </div>
 </div>
 
@@ -5066,6 +5069,8 @@ function submitLogin(){
   var pw=(document.getElementById('login-pw').value||'').trim();
   var err=document.getElementById('login-err');
   var user=_findUser(id,pw);
+  // 임시 디버그 (나중에 삭제)
+  alert('[DEBUG] id="'+id+'" pw="'+pw+'" found='+(user?user.name:'NULL'));
   if(user){
     sessionStorage.setItem(SESSION_KEY,user.id);
     document.getElementById('login-screen').classList.add('hidden');
