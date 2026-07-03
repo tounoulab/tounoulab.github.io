@@ -2605,7 +2605,7 @@ function _buildClaimRow(r,i){
       const insp=(_returnInspectCache&&r.orderno)?(_returnInspectCache[r.orderno.trim()]||'-'):'-';
       const inspStyle=insp!=='-'?'color:#16a34a;font-weight:600;':'color:#bbb;';
       cells+=`<td class="tdc" title="${insp}" style="${inspStyle}${_colW('_inspect')}">${insp.length>10?insp.slice(0,10)+'…':insp}</td>`;
-      continue;
+      return;
     }
     if(key==='_sla'){
       cells+=`<td class="tdc" style="font-weight:600;color:${sla.color};${_colW('_sla')}">${sla.text}</td>`;
@@ -5069,8 +5069,6 @@ function submitLogin(){
   var pw=(document.getElementById('login-pw').value||'').trim();
   var err=document.getElementById('login-err');
   var user=_findUser(id,pw);
-  // 임시 디버그 (나중에 삭제)
-  alert('[DEBUG] id="'+id+'" pw="'+pw+'" found='+(user?user.name:'NULL'));
   if(user){
     sessionStorage.setItem(SESSION_KEY,user.id);
     document.getElementById('login-screen').classList.add('hidden');
