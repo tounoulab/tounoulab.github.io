@@ -198,7 +198,7 @@ tr:hover td{background:#fafafa;}
 #claim-sheet td.td-left{text-align:left;}
 #claim-sheet td[onclick]{cursor:pointer;}
 #claim-sheet td[onclick]:hover{background:rgba(26,115,232,0.06) !important;}
-.tdc{border:0;border-right:1px solid #e8e8e6;border-bottom:1px solid #e8e8e6;padding:7px 10px;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;user-select:text;}
+.tdc{border:0;border-right:1px solid #e8e8e6;border-bottom:1px solid #e8e8e6;padding:0 10px;height:38px;line-height:38px;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;user-select:text;vertical-align:middle;}
 /* border-separate 환경에서 첫 열·행 border 보정 */
 #claim-sheet thead th{border-top:0!important;border-left:0!important;border-right:1px solid #e0e0de!important;border-bottom:1px solid #e0e0de!important;}
 #claim-sheet thead th:first-child{border-left:0!important;}
@@ -1674,7 +1674,9 @@ function renderHomeDashboard(){
 const _TICKET_BASE_URL='https://talk.tounou.co.kr/tickets/native/';
 function goToClaimByOrder(orderno){
   if(!orderno)return;
-  _activeClaimMonth='all'; // 전체 탭으로 이동해야 과거 데이터도 표시됨
+  // 해당 클레임의 발생월 탭으로 자동 이동
+  const found=(loadClaims()||[]).find(r=>(r.orderno||'').trim()===orderno.trim());
+  if(found)_activeClaimMonth=_getClaimMonthKey(found);
   switchPage('claim');
   setTimeout(()=>{
     const inp=document.getElementById('claim-search-input');
@@ -2480,7 +2482,7 @@ function getFilteredClaims(){
     claims=claims.filter(r=>_SEARCH_FIELDS.some(f=>String(r[f]||'').toLowerCase().includes(q)));
   }
   // 월별 탭 필터 (발생월 기준)
-  if(typeof _activeClaimMonth!=='undefined'&&_activeClaimMonth&&_activeClaimMonth!=='all'){
+  if(_activeClaimMonth){
     claims=claims.filter(r=>_getClaimMonthKey(r)===_activeClaimMonth);
   }
   if(_groupByOrder){
@@ -2536,24 +2538,28 @@ function _buildClaimMonthTabs(claims){
   const months=[...new Set(claims.map(r=>_getClaimMonthKey(r)).filter(m=>m&&m.length===7))].sort((a,b)=>b.localeCompare(a));
   if(!months.length){tabsEl.innerHTML='';return;}
   // 활성 월이 목록에 없으면 최신 월로 초기화
-  if(_activeClaimMonth!=='all'&&!months.includes(_activeClaimMonth)){_activeClaimMonth=months[0];}
-  const allBtn=`<button class="cmt-tab${_activeClaimMonth==='all'?' active':''}" onclick="_setClaimMonthTab('all')">전체</button>`;
+  if(!months.includes(_activeClaimMonth)){_activeClaimMonth=months[0];}
   const monthBtns=months.map(m=>{
     const [y,mo]=m.split('-');
     const lbl=`${y.slice(2)}년 ${parseInt(mo,10)}월`;
     return`<button class="cmt-tab${_activeClaimMonth===m?' active':''}" onclick="_setClaimMonthTab('${m}')">${lbl}</button>`;
   }).join('');
-  tabsEl.innerHTML=allBtn+monthBtns;
+  tabsEl.innerHTML=monthBtns;
 }
 function _setClaimMonthTab(month){
   _activeClaimMonth=month;
+  if(_vsWrap)_vsWrap.scrollTop=0; // 탭 전환 시 스크롤 최상단으로
   _doRenderClaimTable();
 }
 function _applyClaimMonthFilter(){_doRenderClaimTable();}
 let _vsScrollRaf=null;
 function _vsOnScroll(){
+  if(_dragClaimId)return; // 드래그 중 재렌더 방지
   if(!_vsScrollRaf)_vsScrollRaf=requestAnimationFrame(()=>{
-    if(_vsWrap)localStorage.setItem('sc_claim',_vsWrap.scrollTop|0);
+    if(_vsWrap){
+      localStorage.setItem('sc_claim',_vsWrap.scrollTop|0);
+      _vsRender();
+    }
     _vsScrollRaf=null;
   });
 }
@@ -2562,10 +2568,23 @@ function _vsRender(scrollTopOverride){
   if(!tbody)return;
   if(tbody.querySelector('input,select,textarea'))return;
   if(!_vsClaims.length){tbody.innerHTML='';return;}
-  tbody.innerHTML=_vsClaims.map((r,i)=>_buildClaimRow(r,i)).join('');
+  const wrap=_vsWrap;
+  const st=scrollTopOverride!==undefined?scrollTopOverride:(wrap?wrap.scrollTop:0);
+  const vh=wrap?wrap.clientHeight:700;
+  const total=_vsClaims.length;
+  const buf=10; // 위아래 버퍼 행 수
+  const start=Math.max(0,Math.floor(st/VS_ROW_H)-buf);
+  const end=Math.min(total,Math.ceil((st+vh)/VS_ROW_H)+buf);
+  const topH=start*VS_ROW_H;
+  const botH=(total-end)*VS_ROW_H;
+  let html='';
+  if(topH>0)html+=`<tr style="height:${topH}px;"><td colspan="100" style="padding:0;border:none;"></td></tr>`;
+  for(let i=start;i<end;i++)html+=_buildClaimRow(_vsClaims[i],i);
+  if(botH>0)html+=`<tr style="height:${botH}px;"><td colspan="100" style="padding:0;border:none;"></td></tr>`;
+  tbody.innerHTML=html;
   _attachDragEvents();
-  if(scrollTopOverride!==undefined&&_vsWrap){
-    requestAnimationFrame(()=>{if(_vsWrap)_vsWrap.scrollTop=scrollTopOverride;});
+  if(scrollTopOverride!==undefined&&wrap){
+    requestAnimationFrame(()=>{if(wrap)wrap.scrollTop=scrollTopOverride;});
   }
 }
 
