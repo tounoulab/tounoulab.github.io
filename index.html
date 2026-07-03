@@ -5033,7 +5033,12 @@ function _getUsers(){
   catch(e){return JSON.parse(JSON.stringify(DEFAULT_USERS));}
 }
 function _saveUsers(arr){localStorage.setItem(USERS_KEY,JSON.stringify(arr));}
-function _findUser(id,pw){return _getUsers().find(function(u){return u.id===id&&u.pw===pw;})||null;}
+function _findUser(id,pw){
+  // localStorage 먼저, 없으면 DEFAULT_USERS 폴백
+  const found=_getUsers().find(function(u){return u.id===id&&u.pw===pw;});
+  if(found)return found;
+  return DEFAULT_USERS.find(function(u){return u.id===id&&u.pw===pw;})||null;
+}
 function _isLoggedIn(){return !!sessionStorage.getItem(SESSION_KEY);}
 function _currentUserId(){return sessionStorage.getItem(SESSION_KEY)||'';}
 function _currentUser(){return _getUsers().find(function(u){return u.id===_currentUserId();})||null;}
@@ -5155,7 +5160,13 @@ function _loadUsersFromFirestore(callback){
     db.collection('_sys').doc('accounts').get()
       .then(function(doc){
         if(doc.exists&&Array.isArray(doc.data().users)&&doc.data().users.length>0){
-          localStorage.setItem(USERS_KEY,JSON.stringify(doc.data().users));
+          // Firestore 데이터 + DEFAULT_USERS 병합 (기본 계정 항상 유지)
+          const fsUsers=doc.data().users;
+          const merged=[...fsUsers];
+          DEFAULT_USERS.forEach(function(def){
+            if(!merged.find(function(u){return u.id===def.id;}))merged.push(def);
+          });
+          localStorage.setItem(USERS_KEY,JSON.stringify(merged));
         }
         callback();
       })
