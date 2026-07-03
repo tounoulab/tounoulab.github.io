@@ -5034,10 +5034,14 @@ function _getUsers(){
 }
 function _saveUsers(arr){localStorage.setItem(USERS_KEY,JSON.stringify(arr));}
 function _findUser(id,pw){
-  // localStorage 먼저, 없으면 DEFAULT_USERS 폴백
-  const found=_getUsers().find(function(u){return u.id===id&&u.pw===pw;});
-  if(found)return found;
-  return DEFAULT_USERS.find(function(u){return u.id===id&&u.pw===pw;})||null;
+  var _id=(id||'').trim();
+  var _pw=(pw||'').trim();
+  // DEFAULT_USERS 먼저 (항상 보장)
+  var defFound=DEFAULT_USERS.find(function(u){return u.id===_id&&u.pw===_pw;});
+  if(defFound)return defFound;
+  // localStorage 조회 (비밀번호 변경 반영)
+  var found=_getUsers().find(function(u){return u.id===_id&&u.pw===_pw;});
+  return found||null;
 }
 function _isLoggedIn(){return !!sessionStorage.getItem(SESSION_KEY);}
 function _currentUserId(){return sessionStorage.getItem(SESSION_KEY)||'';}
@@ -5058,8 +5062,8 @@ function _updateGnbUser(){
 }
 
 function submitLogin(){
-  var id=document.getElementById('login-id').value.trim();
-  var pw=document.getElementById('login-pw').value;
+  var id=(document.getElementById('login-id').value||'').trim();
+  var pw=(document.getElementById('login-pw').value||'').trim();
   var err=document.getElementById('login-err');
   var user=_findUser(id,pw);
   if(user){
