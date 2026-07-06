@@ -58,9 +58,19 @@ details summary:after{content:'';display:none;}
 /* 월별 탭 */
 #claim-month-tabs{display:flex;gap:0;overflow-x:auto;border-top:2px solid #e8e8e6;border-bottom:none;margin-bottom:0;flex-shrink:0;scrollbar-width:none;background:#fff;padding:0 24px;}
 #claim-month-tabs::-webkit-scrollbar{display:none;}
+#return-month-tabs::-webkit-scrollbar{display:none;}
+#return-month-tabs{border-top:2px solid #e8e8e6;border-bottom:1px solid #f0f0ee;}
 .cmt-tab{padding:7px 16px;font-size:12px;font-weight:500;color:#888;cursor:pointer;border-top:2px solid transparent;margin-top:-2px;border-bottom:none;border-left:none;border-right:none;white-space:nowrap;transition:color 0.15s,border-color 0.15s;font-family:inherit;background:none;}
 .cmt-tab:hover{color:#333;}
 .cmt-tab.active{color:#1a1a1a;border-top-color:#1a1a1a;font-weight:700;}
+/* ===== 페이지 탭바 ===== */
+#page-tab-bar{position:sticky;top:56px;z-index:99;background:#f0f0ee;border-bottom:1px solid #ddd;display:flex;align-items:flex-end;gap:1px;padding:5px 8px 0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;flex-shrink:0;}
+#page-tab-bar::-webkit-scrollbar{display:none;}
+.ptab{display:inline-flex;align-items:center;gap:4px;padding:5px 10px 5px 10px;font-size:12px;font-weight:500;color:#666;cursor:pointer;border-radius:7px 7px 0 0;background:#e4e4e2;border:1px solid #d8d8d6;border-bottom:none;user-select:none;white-space:nowrap;flex-shrink:0;transition:background 0.1s;}
+.ptab:hover:not(.active){background:#eaeae8;}
+.ptab.active{background:#fff;color:#1a1a1a;font-weight:600;border-color:#d8d8d6;position:relative;bottom:-1px;padding-bottom:6px;}
+.ptab-x{width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-size:10px;color:#aaa;transition:background 0.1s,color 0.1s;flex-shrink:0;}
+.ptab-x:hover{background:#c8c8c6;color:#444;}
 /* Pages */
 .page{display:none;}
 .page.active{display:block;}
@@ -155,6 +165,7 @@ tr:hover td{background:#fafafa;}
 .voc-count{font-size:12px;color:#888;width:30px;text-align:right;flex-shrink:0;}
 /* ===== searchable dropdown ===== */
 .sd-wrap{position:relative;}
+.r-item-row .sd-wrap{width:100%;}
 .sd-input{width:100%;padding:8px 28px 8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;cursor:text;}
 .sd-input:focus{outline:none;border-color:#1a1a1a;}
 .sd-list{display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:8px;z-index:600;max-height:220px;overflow-y:auto;box-shadow:0 6px 20px rgba(0,0,0,0.12);}
@@ -370,6 +381,7 @@ tr:hover td{background:#fafafa;}
     </div>
   </div>
 </nav>
+<div id="page-tab-bar" style="display:none;"></div>
 
 <!-- ===== PAGE: HOME (대시보드) ===== -->
 <div id="page-home" class="page active">
@@ -942,7 +954,7 @@ tr:hover td{background:#fafafa;}
     </div>
   </div>
 </div>
-<div id="claim-scroll-wrap" style="overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 190px);padding:0 0 24px 24px;position:relative;will-change:scroll-position;transform:translateZ(0);">
+<div id="claim-scroll-wrap" style="overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 190px);padding:0 0 24px 24px;position:relative;;">
   <table id="claim-sheet" style="table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:13px;background:#fff;">
     <colgroup id="claim-colgroup">
       <col data-col="_drag"><col data-col="month"><col data-col="_ticket"><col data-col="date"><col data-col="indate"><col data-col="shipdate">
@@ -1089,46 +1101,73 @@ tr:hover td{background:#fafafa;}
 <div style="max-width:960px;margin:0 auto;padding:24px;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
     <span style="font-size:18px;font-weight:700;">반품 입고</span>
-    <button class="btn-secondary" onclick="exportReturns()">CSV 내보내기</button>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button class="btn-primary" onclick="openReturnRegModal()">+ 입고 등록</button>
+      <input type="file" id="r-xlsx-import-input" accept=".xlsx" style="display:none;" onchange="importReturnsXlsx(this)">
+      <button class="btn-secondary" onclick="document.getElementById('r-xlsx-import-input').click()">xlsx 가져오기</button>
+      <button class="btn-secondary" onclick="exportReturnsXlsx()">xlsx 내보내기</button>
+    </div>
   </div>
   <div class="stats-grid">
     <div class="stat-card"><div class="stat-label">금일 입고</div><div class="stat-value" id="sr-today">0</div><div class="stat-hint" id="sr-today-hint"></div><div class="stat-compare same" id="sr-today-cmp">-</div></div>
     <div class="stat-card"><div class="stat-label">이번 주</div><div class="stat-value" id="sr-week">0</div><div class="stat-hint" id="sr-week-hint"></div><div class="stat-compare same" id="sr-week-cmp">-</div></div>
     <div class="stat-card"><div class="stat-label">이번 달</div><div class="stat-value" id="sr-month">0</div><div class="stat-hint" id="sr-month-hint"></div><div class="stat-compare same" id="sr-month-cmp">-</div></div>
   </div>
-  <div class="card">
-    <div class="card-title">반품 입고 등록</div>
-    <!-- 주문 공통 정보 (1번만 입력) -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;">
+      <div class="card-title" style="margin-bottom:0;">입고 목록</div>
+    </div>
+    <div id="return-month-tabs" style="display:flex;gap:0;overflow-x:auto;border-top:2px solid #e8e8e6;scrollbar-width:none;padding:0;"></div>
+    <div class="table-wrap" style="padding:0;"><table><thead><tr><th>입고일</th><th>고객명</th><th>상품명</th><th>옵션</th><th>수량</th><th>개봉</th><th>검수결과</th><th>입고 여부</th><th>주문번호</th><th>비고</th><th></th></tr></thead><tbody id="return-tbody"></tbody></table><div class="empty-msg" id="return-empty">등록된 입고 내역이 없습니다</div></div>
+  </div>
+</div>
+</div><!-- /page-return -->
+
+<!-- ===== 반품 입고 등록 모달 ===== -->
+<div id="return-reg-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.4);overflow-y:auto;" onclick="if(event.target===this)closeReturnRegModal()">
+  <div style="background:#fff;border-radius:12px;max-width:640px;margin:40px auto;padding:28px;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <span style="font-size:16px;font-weight:700;">반품 입고 등록</span>
+      <button onclick="closeReturnRegModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#aaa;line-height:1;">✕</button>
+    </div>
     <div class="form-row"><label>입고일 *</label><input type="date" id="r-date"/></div>
     <div class="grid2 form-row"><div><label>원송장 번호</label><input type="text" id="r-orig" placeholder="원송장 번호"/></div><div><label>반송장 번호</label><input type="text" id="r-retno" placeholder="반송장 번호"/></div></div>
     <div class="grid2 form-row"><div><label>고객명</label><input type="text" id="r-name" placeholder="고객명"/></div><div><label>주문번호 ※CS팀 확인</label><input type="text" id="r-orderno" placeholder="주문번호"/></div></div>
-    <!-- 상품 다중 입력 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 6px;">
       <label style="font-size:12px;font-weight:700;color:#555;">상품 목록</label>
       <button type="button" onclick="addReturnItemRow()" style="font-size:11px;padding:3px 12px;border:1px solid #1a1a1a;border-radius:6px;background:#fff;cursor:pointer;font-family:inherit;font-weight:600;">+ 상품 추가</button>
     </div>
     <div style="display:grid;grid-template-columns:2fr 2fr 56px 56px 1fr 30px;gap:5px;padding:0 2px 5px;border-bottom:1.5px solid #e8e8e6;">
-      <span style="font-size:11px;color:#aaa;">상품명</span><span style="font-size:11px;color:#aaa;">옵션/기종</span><span style="font-size:11px;color:#aaa;text-align:center;">수량</span><span style="font-size:11px;color:#aaa;text-align:center;">개봉</span><span style="font-size:11px;color:#aaa;">검수결과</span><span></span>
+      <span style="font-size:11px;color:#aaa;">상품명</span><span style="font-size:11px;color:#aaa;">옵션</span><span style="font-size:11px;color:#aaa;text-align:center;">수량</span><span style="font-size:11px;color:#aaa;text-align:center;">개봉</span><span style="font-size:11px;color:#aaa;">검수결과</span><span></span>
     </div>
     <div id="r-items-wrap"></div>
-    <!-- 비고 -->
     <div class="form-row" style="margin-top:10px;"><label>비고</label><input type="text" id="r-note" placeholder="비고"/></div>
-    <!-- 히든 호환 필드 (기존 JS 참조용) -->
-    <input type="hidden" id="r-product"><input type="hidden" id="r-option"><input type="hidden" id="r-qty" value="1"><input type="hidden" id="r-opened"><input type="hidden" id="r-inspect">
     <button class="btn-primary" onclick="addReturn()" style="width:100%;margin-top:8px;">입고 등록</button>
   </div>
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div class="card-title" style="margin-bottom:0;">입고 목록</div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <input type="date" id="r-filter-date" onchange="renderReturnTable()" style="font-size:12px;padding:4px 8px;border:1px solid #e0e0de;border-radius:6px;font-family:inherit;color:#333;">
-        <button onclick="document.getElementById('r-filter-date').value='';renderReturnTable();" style="font-size:11px;padding:4px 10px;border:1px solid #e0e0de;border-radius:6px;background:#f8f8f6;cursor:pointer;font-family:inherit;">전체</button>
-      </div>
+</div>
+
+<!-- ===== 반품 수정 모달 ===== -->
+<div id="return-edit-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.4);overflow-y:auto;" onclick="if(event.target===this)closeReturnEditModal()">
+  <div style="background:#fff;border-radius:12px;max-width:480px;margin:40px auto;padding:28px;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <span style="font-size:16px;font-weight:700;">반품 수정</span>
+      <button onclick="closeReturnEditModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#aaa;line-height:1;">✕</button>
     </div>
-    <div class="table-wrap"><table><thead><tr><th>입고일</th><th>고객명</th><th>상품명</th><th>옵션</th><th>수량</th><th>개봉</th><th>검수결과</th><th>주문번호</th><th>비고</th><th></th></tr></thead><tbody id="return-tbody"></tbody></table><div class="empty-msg" id="return-empty">등록된 입고 내역이 없습니다</div></div>
+    <input type="hidden" id="re-id">
+    <div class="form-row"><label>입고일 *</label><input type="date" id="re-date"/></div>
+    <div class="grid2 form-row"><div><label>원송장 번호</label><input type="text" id="re-orig"/></div><div><label>반송장 번호</label><input type="text" id="re-retno"/></div></div>
+    <div class="grid2 form-row"><div><label>고객명</label><input type="text" id="re-name"/></div><div><label>주문번호</label><input type="text" id="re-orderno"/></div></div>
+    <div class="grid2 form-row"><div><label>상품명</label><input type="text" id="re-product"/></div><div><label>옵션</label><input type="text" id="re-option"/></div></div>
+    <div class="grid2 form-row"><div><label>수량</label><input type="text" id="re-qty"/></div><div><label>개봉여부</label><select id="re-opened"><option value="">-</option><option value="Y">개봉</option><option value="N">미개봉</option></select></div></div>
+    <div class="form-row"><label>검수결과</label><input type="text" id="re-inspect" placeholder="예: 정상 / 불량 - 파손"/></div>
+    <div class="grid2 form-row"><div><label>입고 여부</label><select id="re-warehouseStatus" onchange="document.getElementById('re-warehouseReason-wrap').style.display=this.value==='N'?'':'none'"><option value="">-</option><option value="Y">Y</option><option value="N">N</option></select></div><div id="re-warehouseReason-wrap" style="display:none;"><label>미입고 사유</label><select id="re-warehouseReason"><option value="">선택</option><option>고객 반송</option><option>업체 반송</option><option>사고 접수</option><option>CX 전달</option><option>폐기</option><option>3PL 전달</option></select></div></div>
+    <div class="form-row"><label>비고</label><input type="text" id="re-note"/></div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn-primary" onclick="saveReturnEdit()" style="flex:1;">저장</button>
+      <button class="btn-danger" onclick="deleteReturnFromEdit()" style="flex:0 0 auto;">삭제</button>
+    </div>
   </div>
 </div>
-</div><!-- /page-return -->
 
 <!-- 컬럼 필터 팝업 -->
 <div id="cfp">
@@ -1163,12 +1202,36 @@ function _restoreScroll(page){
     }
   });
 }
+// ===== 페이지 탭바 =====
+const _PAGE_LABELS={home:'🏠 대시보드',claim:'📋 클레임 현황',voc:'📊 클레임 통계',voclog:'📝 VOC 로그',return:'📦 반품 입고',msg:'✉️ 문자 안내',vocwrite:'✍️ VOC 작성',accounts:'👥 계정'};
+let _openTabs=[];
+function _renderTabBar(){
+  const bar=document.getElementById('page-tab-bar');if(!bar)return;
+  if(!_openTabs.length){bar.style.display='none';return;}
+  bar.style.display='flex';
+  const cur=localStorage.getItem('tuunu_page')||'';
+  bar.innerHTML=_openTabs.map(pg=>`<div class="ptab${pg===cur?' active':''}" onclick="_tabClick('${pg}')"><span>${_PAGE_LABELS[pg]||pg}</span><span class="ptab-x" onclick="event.stopPropagation();_closeTab('${pg}')">✕</span></div>`).join('');
+}
+function _tabClick(pg){switchPage(pg);}
+function _closeTab(pg){
+  const idx=_openTabs.indexOf(pg);if(idx<0)return;
+  _openTabs.splice(idx,1);
+  const cur=localStorage.getItem('tuunu_page')||'';
+  if(cur===pg){
+    const next=_openTabs[Math.min(idx,_openTabs.length-1)];
+    if(next)switchPage(next);
+    else{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));const h=document.getElementById('page-home');if(h){h.classList.add('active');localStorage.setItem('tuunu_page','home');renderHomeDashboard();}}
+  }
+  _renderTabBar();
+}
 function switchPage(name){
   // VOC 작성 진입 전 현재 페이지 기억
   if(name==='vocwrite'){
     const cur=document.querySelector('.page.active');
     if(cur&&cur.id&&cur.id!=='page-vocwrite')_vocwPrevPage=(cur.id.replace('page-',''))||'home';
   }
+  // 탭 추가
+  if(!_openTabs.includes(name))_openTabs.push(name);
   // 현재 페이지 스크롤 저장 (다른 페이지로 이동할 때만 — 같은 페이지 새로고침 시 덮어쓰기 방지)
   const cur=localStorage.getItem('tuunu_page')||'';
   if(cur&&cur!==name)_saveScroll(cur);
@@ -1179,12 +1242,21 @@ function switchPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   localStorage.setItem('tuunu_page',name);
+  _renderTabBar();
   if(name==='home')renderHomeDashboard();
   if(name==='voc'){renderVocStats();renderVocCharts();_restoreScroll('voc');}
   if(name==='voclog'){renderVocLog();_restoreScroll('voclog');}
   if(name==='vocwrite'){if(_currentUserId()==='chohee'){_showVocwList();}else{switchPage('home');return;}_restoreScroll('vocwrite');}
   if(name==='accounts'){if(_currentUserId()==='chohee'){renderAccountsPage();}else{switchPage('home');return;}}
-  if(name==='return'){renderReturnStats();renderReturnTable();_restoreScroll('return');const rw=document.getElementById('r-items-wrap');if(rw&&!rw.children.length)rw.insertAdjacentHTML('beforeend',_makeReturnItemRowHTML());}
+  if(name==='return'){
+    renderReturnStats();renderReturnTable();_restoreScroll('return');
+    const rw=document.getElementById('r-items-wrap');
+    if(rw&&!rw.children.length){
+      rw.insertAdjacentHTML('beforeend',_makeReturnItemRowHTML());
+      const optSel=rw.querySelector('.ri-option');
+      if(optSel&&!optSel._sd)makeSearchable(optSel);
+    }
+  }
   if(name==='claim'){
     _vsScrollRestored=false;
     renderClaimTable(true);
@@ -1952,7 +2024,7 @@ function clearClaimForm(){
   }
 }
 // ===== 인라인 편집 필드 정의 =====
-const _OPTION_OPTS=`<option value="">선택 또는 검색</option><option>발매트</option><option>주방매트</option><option>[40x40cm 쿠션 커버]</option><option>[50x50cm 쿠션 커버]</option><option>[40x40cm 쿠션솜]</option><option>[50x50cm 쿠션솜]</option><option>[40x40cm 방석솜]</option><option>[50x50cm 방석솜]</option><option>[40x40cm 쿠션 커버+40x40cm 쿠션 솜]</option><option>[40x40cm 쿠션 커버+40x40cm 방석 솜]</option><option>[40x40cm 쿠션 커버+50x50cm 방석 솜]</option><option>[50x50cm 쿠션 커버+50x50cm 쿠션 솜]</option><option>[50x50cm 쿠션 커버+50x50cm 방석 솜]</option><option>[S]</option><option>[M]</option><option>[L]</option><option>[S(400X400mm) 포스터]</option><option>[M(500X500mm) 포스터]</option><option>[500X700mm 포스터]</option><option>[A1 포스터]</option><option>[A2 포스터]</option><option>[A3 포스터]</option><option>[A4 포스터]</option><option>[그린 프레임]</option><option>[레드 프레임]</option><option>[블랙 프레임]</option><option>[블루 프레임]</option><option>[우드 프레임]</option><option>[옐로우 프레임]</option><option>[화이트 프레임]</option><option>[핑크 프레임]</option><option>[S (poster + frame 20.5x74.5cm) / 블랙]</option><option>[S (poster + frame 20.5x74.5cm) / 오크우드]</option><option>[S (poster + frame 20.5x74.5cm) / 화이트]</option><option>[S (poster + frame 20.5x74.5cm) / 실버]</option><option>[M (poster + frame 25.5x75.5cm) / 블랙]</option><option>[M (poster + frame 25.5x75.5cm) / 오크우드]</option><option>[M (poster + frame 25.5x75.5cm) / 화이트]</option><option>[M (poster + frame 25.5x75.5cm) / 실버]</option><option>[SS 차렵이불]</option><option>:FREE</option><option>[Q 차렵이불]</option><option>[(남녀공용 M)]</option><option>[(남녀공용 L)]</option><option>[S (50x70cm)]</option><option>[M (85x120cm)]</option><option>[L (130x150cm)]</option><option>[30x40]</option><option>[40x56]</option><option>[50x70]</option><option>[59.4x84.1]</option><option>[M (88x140cm)]</option><option>[L (140x225cm)]</option><option>[레귤러핏 (148)-블랙-S]</option><option>[레귤러핏 (148)-블랙-M]</option><option>[레귤러핏 (148)-블랙-L]</option><option>[레귤러핏 (148)-블랙-XL]</option><option>[레귤러핏 (148)-화이트-S]</option><option>[레귤러핏 (148)-화이트-M]</option><option>[레귤러핏 (148)-화이트-L]</option><option>[레귤러핏 (148)-화이트-XL]</option><option>[오버핏 (113)-블랙-S]</option><option>[오버핏 (113)-블랙-M]</option><option>[오버핏 (113)-블랙-L]</option><option>[오버핏 (113)-블랙-XL]</option><option>[오버핏 (113)-화이트-S]</option><option>[오버핏 (113)-화이트-M]</option><option>[오버핏 (113)-화이트-L]</option><option>[오버핏 (113)-화이트-XL]</option><option>[화이트 M]</option><option>[A1+그린 프레임]</option><option>[A1+레드 프레임]</option><option>[A1+블랙 프레임]</option><option>[A1+블루 프레임]</option><option>[A1+얠로우 프레임]</option><option>[A1+우드 프레임]</option><option>[A1+핑크 프레임]</option><option>[A1+화이트 프레임]</option><option>[A2+그린 프레임]</option><option>[A2+레드 프레임]</option><option>[A2+블랙 프레임]</option><option>[A2+블루 프레임]</option><option>[A2+옐로우 프레임]</option><option>[A2+우드 프레임]</option><option>[A2+핑크 프레임]</option><option>[A2+화이트 프레임]</option><option>[A3+그린 프레임]</option><option>[A3+레드 프레임]</option><option>[A3+블랙 프레임]</option><option>[A3+블루 프레임]</option><option>[A3+옐로우 프레임]</option><option>[A3+우드 프레임]</option><option>[A3+핑크 프레임]</option><option>[A3+화이트 프레임]</option><option>[A4+그린 프레임]</option><option>[A4+레드 프레임]</option><option>[A4+블랙 프레임]</option><option>[A4+블루 프레임]</option><option>[A4+옐로우 프레임]</option><option>[A4+우드 프레임]</option><option>[A4+핑크 프레임]</option><option>[A4+화이트 프레임]</option><option>[M(500X500mm)+그린 프레임]</option><option>[M(500X500mm)+레드 프레임]</option><option>[M(500X500mm)+블랙 프레임]</option><option>[M(500X500mm)+블루 프레임]</option><option>[M(500X500mm)+옐로우 프레임]</option><option>[M(500X500mm)+우드 프레임]</option><option>[M(500X500mm)+핑크 프레임]</option><option>[M(500X500mm)+화이트 프레임]</option><option>[S(400X400mm)+그린 프레임]</option><option>[S(400X400mm)+레드 프레임]</option><option>[S(400X400mm)+블랙 프레임]</option><option>[S(400X400mm)+블루 프레임]</option><option>[S(400X400mm)+옐로우 프레임]</option><option>[S(400X400mm)+우드 프레임]</option><option>[S(400X400mm)+핑크 프레임]</option><option>[S(400X400mm)+화이트 프레임]</option><option>[(500X700mm)+우드 프레임]</option><option>[(500X700mm)+화이트 프레임]</option><option>[(500X700mm)+블랙 프레임]</option><option>[테이블매트 1p]</option><option>블랙</option>`;
+const _OPTION_OPTS=`<option value=""></option><option>발매트</option><option>주방매트</option><option>[40x40cm 쿠션 커버]</option><option>[50x50cm 쿠션 커버]</option><option>[40x40cm 쿠션솜]</option><option>[50x50cm 쿠션솜]</option><option>[40x40cm 방석솜]</option><option>[50x50cm 방석솜]</option><option>[40x40cm 쿠션 커버+40x40cm 쿠션 솜]</option><option>[40x40cm 쿠션 커버+40x40cm 방석 솜]</option><option>[40x40cm 쿠션 커버+50x50cm 방석 솜]</option><option>[50x50cm 쿠션 커버+50x50cm 쿠션 솜]</option><option>[50x50cm 쿠션 커버+50x50cm 방석 솜]</option><option>[S]</option><option>[M]</option><option>[L]</option><option>[S(400X400mm) 포스터]</option><option>[M(500X500mm) 포스터]</option><option>[500X700mm 포스터]</option><option>[A1 포스터]</option><option>[A2 포스터]</option><option>[A3 포스터]</option><option>[A4 포스터]</option><option>[그린 프레임]</option><option>[레드 프레임]</option><option>[블랙 프레임]</option><option>[블루 프레임]</option><option>[우드 프레임]</option><option>[옐로우 프레임]</option><option>[화이트 프레임]</option><option>[핑크 프레임]</option><option>[S (poster + frame 20.5x74.5cm) / 블랙]</option><option>[S (poster + frame 20.5x74.5cm) / 오크우드]</option><option>[S (poster + frame 20.5x74.5cm) / 화이트]</option><option>[S (poster + frame 20.5x74.5cm) / 실버]</option><option>[M (poster + frame 25.5x75.5cm) / 블랙]</option><option>[M (poster + frame 25.5x75.5cm) / 오크우드]</option><option>[M (poster + frame 25.5x75.5cm) / 화이트]</option><option>[M (poster + frame 25.5x75.5cm) / 실버]</option><option>[SS 차렵이불]</option><option>:FREE</option><option>[Q 차렵이불]</option><option>[(남녀공용 M)]</option><option>[(남녀공용 L)]</option><option>[S (50x70cm)]</option><option>[M (85x120cm)]</option><option>[L (130x150cm)]</option><option>[30x40]</option><option>[40x56]</option><option>[50x70]</option><option>[59.4x84.1]</option><option>[M (88x140cm)]</option><option>[L (140x225cm)]</option><option>[레귤러핏 (148)-블랙-S]</option><option>[레귤러핏 (148)-블랙-M]</option><option>[레귤러핏 (148)-블랙-L]</option><option>[레귤러핏 (148)-블랙-XL]</option><option>[레귤러핏 (148)-화이트-S]</option><option>[레귤러핏 (148)-화이트-M]</option><option>[레귤러핏 (148)-화이트-L]</option><option>[레귤러핏 (148)-화이트-XL]</option><option>[오버핏 (113)-블랙-S]</option><option>[오버핏 (113)-블랙-M]</option><option>[오버핏 (113)-블랙-L]</option><option>[오버핏 (113)-블랙-XL]</option><option>[오버핏 (113)-화이트-S]</option><option>[오버핏 (113)-화이트-M]</option><option>[오버핏 (113)-화이트-L]</option><option>[오버핏 (113)-화이트-XL]</option><option>[화이트 M]</option><option>[A1+그린 프레임]</option><option>[A1+레드 프레임]</option><option>[A1+블랙 프레임]</option><option>[A1+블루 프레임]</option><option>[A1+얠로우 프레임]</option><option>[A1+우드 프레임]</option><option>[A1+핑크 프레임]</option><option>[A1+화이트 프레임]</option><option>[A2+그린 프레임]</option><option>[A2+레드 프레임]</option><option>[A2+블랙 프레임]</option><option>[A2+블루 프레임]</option><option>[A2+옐로우 프레임]</option><option>[A2+우드 프레임]</option><option>[A2+핑크 프레임]</option><option>[A2+화이트 프레임]</option><option>[A3+그린 프레임]</option><option>[A3+레드 프레임]</option><option>[A3+블랙 프레임]</option><option>[A3+블루 프레임]</option><option>[A3+옐로우 프레임]</option><option>[A3+우드 프레임]</option><option>[A3+핑크 프레임]</option><option>[A3+화이트 프레임]</option><option>[A4+그린 프레임]</option><option>[A4+레드 프레임]</option><option>[A4+블랙 프레임]</option><option>[A4+블루 프레임]</option><option>[A4+옐로우 프레임]</option><option>[A4+우드 프레임]</option><option>[A4+핑크 프레임]</option><option>[A4+화이트 프레임]</option><option>[M(500X500mm)+그린 프레임]</option><option>[M(500X500mm)+레드 프레임]</option><option>[M(500X500mm)+블랙 프레임]</option><option>[M(500X500mm)+블루 프레임]</option><option>[M(500X500mm)+옐로우 프레임]</option><option>[M(500X500mm)+우드 프레임]</option><option>[M(500X500mm)+핑크 프레임]</option><option>[M(500X500mm)+화이트 프레임]</option><option>[S(400X400mm)+그린 프레임]</option><option>[S(400X400mm)+레드 프레임]</option><option>[S(400X400mm)+블랙 프레임]</option><option>[S(400X400mm)+블루 프레임]</option><option>[S(400X400mm)+옐로우 프레임]</option><option>[S(400X400mm)+우드 프레임]</option><option>[S(400X400mm)+핑크 프레임]</option><option>[S(400X400mm)+화이트 프레임]</option><option>[(500X700mm)+우드 프레임]</option><option>[(500X700mm)+화이트 프레임]</option><option>[(500X700mm)+블랙 프레임]</option><option>[테이블매트 1p]</option><option>블랙</option>`;
 const _CATEGORY_OPTS=`<option value="">선택</option><option>쿠션 커버</option><option>미니 쿠션 커버</option><option>파우치</option><option>패브릭 포스터</option><option>쉬폰 패브릭 포스터</option><option>베개 커버</option><option>담요</option><option>니트블랭킷</option><option>티셔츠</option><option>테이블매트</option><option>파자마</option><option>에코백</option><option>극세사 발매트</option><option>극세사 주방매트</option><option>러그</option><option>이불</option><option>규조토 발매트</option><option>규조토 주방매트</option><option>포스터</option><option>포스터+액자</option><option>핸드타월</option><option>타월 발매트</option><option>액자 세트</option><option>캔버스 액자</option><option>액자 단품</option><option>컵</option><option>플레이트</option><option>양말</option><option>테크류</option><option>부자재(꼭꼬핀, 논슬립 등)</option><option>PVC 주방매트</option><option>사은품</option><option>매트리스 커버</option><option>침대 패드</option><option>쿠션 커버+쿠션 솜</option><option>쿠션 커버+방석 솜</option><option>베개 커버+베개 솜</option><option>미니 쿠션 커버+미니 쿠션 솜</option><option>냉감 침대패드</option><option>냉감 이불</option>`;
 
 function _makeProductItemHTML(isFirst){
@@ -2098,9 +2170,9 @@ const _colDefaults={
   _img:54,reason:150,
   returnYn:52,reshipYn:62,accident:86,
   costP:80,costR:80,costS:80,
-  _lead:58,status:70,_inspect:80,_sla:48,_del:115
+  _lead:58,status:70,_inspect:115,_sla:48,_del:115
 };
-const _COL_VER='v9'; // 버전 올리면 저장된 너비 초기화 → 새 기본값 적용
+const _COL_VER='v10'; // 버전 올리면 저장된 너비 초기화 → 새 기본값 적용
 const _colWidths=(()=>{
   const uid=sessionStorage.getItem('tuunu_session_v1')||'';
   const key='tuunu_colWidths_'+_COL_VER+(uid?'_'+uid:'');
@@ -2158,8 +2230,8 @@ function _applyColWidths(){
     const tdKey=_TD_FIELD[k]||k;
     const isFirst=idx===0; // _drag
     const isLast=idx===_STICKY_KEYS.length-1;
-    // 헤더 left 위치
-    css+=`#claim-sheet th[data-col="${k}"]{left:${cum}px !important;}\n`;
+    // 헤더 left 위치 + 배경 강제 적용 (스크롤 시 뒷면 비침 방지)
+    css+=`#claim-sheet th[data-col="${k}"]{left:${cum}px !important;background:#f6f6f4 !important;}\n`;
     // 바디 셀: sticky position + 명시적 배경(스크롤 시 비침 방지)
     css+=`#claim-sheet tbody td[data-field="${tdKey}"]{position:sticky !important;left:${cum}px !important;z-index:10 !important;}\n`;
     css+=`#claim-sheet tbody tr.tr-even td[data-field="${tdKey}"]{background:#fff !important;}\n`;
@@ -2596,7 +2668,9 @@ function _attachDragEvents(){
   tbody.querySelectorAll('tr[data-cid]').forEach(tr=>{
     tr.addEventListener('dragstart',e=>{
       // 핸들 셀(⠿)에서 시작한 경우에만 드래그 허용
-      if(!e.target.closest('td[data-field="_drag"]')){e.preventDefault();return;}
+      // e.target은 tr(draggable 요소)이므로 composedPath로 실제 클릭 요소 확인
+      const origin=(e.composedPath&&e.composedPath()[0])||e.target;
+      if(!origin.closest('td[data-field="_drag"]')){e.preventDefault();return;}
       _dragClaimId=+tr.dataset.cid;
       e.dataTransfer.effectAllowed='move';
       setTimeout(()=>tr.classList.add('dragging'),0);
@@ -2675,9 +2749,12 @@ function _buildClaimRow(r,i){
       const parts=[openedLabel,inspType].filter(Boolean);
       const dispText=parts.join('-');
       const isBad=inspType==='불량';
-      const color=isBad?'#dc2626':'#16a34a';
+      const chipBg=isBad?'#fee2e2':'#dcfce7';
+      const chipColor=isBad?'#dc2626':'#16a34a';
       const tooltip=isBad&&detail?detail:dispText;
-      cells+=`<td class="tdc" title="${tooltip}" style="color:${color};font-weight:600;${isBad?'cursor:help;':''}${_colW('_inspect')}">${dispText}</td>`;
+      const retImgs=cached.returnImgUrls&&cached.returnImgUrls.length?cached.returnImgUrls:null;
+      const imgIcon=retImgs?`<span style="cursor:pointer;margin-left:5px;font-size:13px;" title="${retImgs.length}장 사진 보기" onclick="viewImgUrls(${JSON.stringify(retImgs).replace(/"/g,'&quot;')},0)">🖼️${retImgs.length>1?`<sup style="font-size:9px;color:#1a73e8;">${retImgs.length}</sup>`:''}</span>`:'';
+      cells+=`<td class="tdc" title="${tooltip}" style="color:${chipColor};font-weight:700;font-size:13px;${_colW('_inspect')}">${dispText}${imgIcon}</td>`;
       return;
     }
     if(key==='_sla'){
@@ -2704,7 +2781,7 @@ function _buildClaimRow(r,i){
     let disp=val||'-';
     if(key==='orderno'&&r._grpCnt>1)disp+=` <span style="background:#1a73e8;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;">${r._grpCnt}건</span>`;
     if(key==='product'&&r.option&&r.option!=='[옵션 지정 불가]'){
-      disp=`${val||'-'}<span style="display:inline-block;background:#e8f0fe;color:#1a73e8;border-radius:4px;padding:0 5px;font-size:10px;font-weight:600;margin-left:4px;vertical-align:middle;">${r.option}</span>`;
+      disp=`${val||'-'}<span title="${r.option.replace(/"/g,'&quot;')}" style="display:inline-block;border:1px solid #1a73e8;color:#1a73e8;border-radius:10px;padding:0 7px;font-size:11px;font-weight:600;margin-left:5px;vertical-align:middle;cursor:default;background:transparent;">${r.option}</span>`;
     }
     if(['costP','costR','costS'].includes(key)){
       const num=val?parseFloat(String(val).replace(/,/g,'')):NaN;
@@ -2712,12 +2789,13 @@ function _buildClaimRow(r,i){
     }
     const _isStickyCol=_STICKY_KEYS.includes(key);
     const _styClass=_isStickyCol?' sty':'';
-    cells+=`<td class="tdc${_styClass}${isLeft?' td-left':''}" title="${val||'-'}" data-id="${r.id}" data-field="${key}" data-val="${val.replace(/"/g,'&quot;')}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)" style="${_colW(key)}">${disp}</td>`;
+    const _bgInline=_isStickyCol?`background:${bg};`:'';
+    cells+=`<td class="tdc${_styClass}${isLeft?' td-left':''}" title="${val||'-'}" data-id="${r.id}" data-field="${key}" data-val="${val.replace(/"/g,'&quot;')}" onclick="editCell(this,+this.dataset.id,this.dataset.field,this.dataset.val)" style="${_bgInline}${_colW(key)}">${disp}</td>`;
   });
   cells+=`<td class="tdc" style="white-space:nowrap;${_colW('_del')}"><button style="padding:2px 7px;font-size:11px;border:1px solid #c5cae9;border-radius:4px;background:#f3f4fd;cursor:pointer;color:#3949ab;margin-right:3px;" onclick="duplicateClaim(${r.id})" title="이 행 복사">복사</button><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
   const bgVal=bg||'#fff';
   const trClass=i%2===0?'tr-even':'tr-odd';
-  const dragTd=`<td class="tdc sty" data-field="_drag" style="position:sticky;left:0;z-index:11;box-sizing:border-box;${_colW('_drag')}">⠿</td>`;
+  const dragTd=`<td class="tdc sty" data-field="_drag" style="position:sticky;left:0;z-index:11;background:${bg};box-sizing:border-box;${_colW('_drag')}">⠿</td>`;
   return`<tr draggable="true" class="${trClass}" data-cid="${r.id}" style="background:${bgVal};">${dragTd}${cells}</tr>`;
 }
 
@@ -2737,7 +2815,7 @@ function _doRenderClaimTable(){
   _vsClaims=claims;
   // 반품 → 검수 결과 맵 (orderno 기준, inspect + opened 저장)
   _returnInspectCache={};
-  try{loadReturns().forEach(r=>{if(r.orderno&&(r.inspect||r.opened))_returnInspectCache[r.orderno.trim()]={inspect:r.inspect||'',opened:r.opened||''};});}catch(e){}
+  try{loadReturns().forEach(r=>{if(r.orderno&&(r.inspect||r.opened||r.returnImgUrls)){const key=r.orderno.trim();if(!_returnInspectCache[key]||r.inspect){_returnInspectCache[key]={inspect:r.inspect||'',opened:r.opened||'',returnImgUrls:Array.isArray(r.returnImgUrls)?r.returnImgUrls:[]};}else if(Array.isArray(r.returnImgUrls)&&r.returnImgUrls.length){(_returnInspectCache[key].returnImgUrls||[]).push(...r.returnImgUrls);}}});}catch(e){}
   _buildClaimMonthTabs(allClaims);
   _vsInit();
   // 스크롤 복원: tbody가 비어있을 때는 scrollTop이 클램핑되므로
@@ -2757,26 +2835,104 @@ function _doRenderClaimTable(){
 }
 function _updateLoadMore(){}
 // ===== 반품 CRUD =====
+const _returnRowImgs={};
 function _makeReturnItemRowHTML(){
-  return `<div class="r-item-row" style="display:grid;grid-template-columns:2fr 2fr 56px 56px 1fr 30px;gap:5px;align-items:start;padding:7px 0;border-bottom:1px solid #f0f0ee;">
+  const rowId='rrow_'+(Date.now()+Math.floor(Math.random()*1000));
+  return `<div class="r-item-row" data-rowid="${rowId}" style="display:grid;grid-template-columns:2fr 2fr 56px 56px 1fr 30px;gap:5px;align-items:start;padding:7px 0;border-bottom:1px solid #f0f0ee;">
     <input type="text" class="ri-product" placeholder="상품명" style="padding:6px 9px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;">
-    <input type="text" class="ri-option" placeholder="옵션/기종" style="padding:6px 9px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;">
+    <select class="ri-option" style="padding:6px 4px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;">${_OPTION_OPTS}</select>
     <input type="number" class="ri-qty" value="1" min="1" style="padding:6px 4px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;text-align:center;">
     <select class="ri-opened" style="padding:6px 4px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;"><option value="">-</option><option>Y</option><option>N</option></select>
     <div>
       <select class="ri-inspect-type" onchange="_toggleInspectDetail(this)" style="padding:6px 4px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;"><option value="">-</option><option>정상</option><option>불량</option></select>
       <textarea class="ri-inspect-detail" placeholder="불량 상세 사유" style="display:none;margin-top:4px;width:100%;box-sizing:border-box;padding:5px 8px;border:1.5px solid #fca5a5;border-radius:7px;font-size:12px;font-family:inherit;resize:vertical;min-height:34px;"></textarea>
+      <div class="ri-img-area" style="display:none;margin-top:4px;">
+        <div class="ri-img-preview" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px;"></div>
+        <button type="button" onclick="_addReturnRowImg(this)" style="font-size:11px;padding:3px 8px;border:1px solid #e0d0d0;border-radius:5px;background:#fff5f5;cursor:pointer;color:#666;font-family:inherit;width:100%;">📎 사진 첨부</button>
+      </div>
     </div>
     <button type="button" onclick="this.closest('.r-item-row').remove()" style="padding:6px 5px;border:1px solid #e0d0d0;border-radius:7px;font-size:13px;background:#fff5f5;cursor:pointer;color:#dc2626;line-height:1;" title="삭제">✕</button>
   </div>`;
 }
+function _addReturnRowImg(btn){
+  const row=btn.closest('.r-item-row');if(!row)return;
+  const rowId=row.dataset.rowid;
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;
+  inp.onchange=async()=>{
+    const files=[...inp.files];if(!files.length)return;
+    btn.textContent='⏳';btn.disabled=true;
+    try{
+      const b64s=await Promise.all(files.map(f=>_compressImgToBase64(f,800,0.7)));
+      const existing=_returnRowImgs[rowId]||[];
+      _returnRowImgs[rowId]=[...existing,...b64s];
+      _renderReturnRowPreview(row,_returnRowImgs[rowId]);
+    }catch(e){alert('이미지 첨부 실패: '+e.message);}
+    finally{btn.textContent='📎 사진 첨부';btn.disabled=false;}
+  };
+  inp.click();
+}
+function _renderReturnRowPreview(row,imgs){
+  const p=row.querySelector('.ri-img-preview');if(!p)return;
+  const rowId=row.dataset.rowid;
+  p.innerHTML=imgs.map((b64,i)=>`<span style="position:relative;display:inline-block;"><img src="${b64}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #e0d0d0;cursor:pointer;" onclick="viewImgUrls(${JSON.stringify(_returnRowImgs[this&&'${rowId}']||[]).replace(/"/g,'&quot;')},${i})" title="클릭하여 확대"><span onclick="_removeReturnRowImg('${rowId}',${i})" style="position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;border:none;background:#dc2626;color:#fff;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;">✕</span></span>`).join('');
+  // rebuild onclick properly
+  p.querySelectorAll('img').forEach((img,i)=>{img.onclick=()=>viewImgUrls(_returnRowImgs[rowId]||[],i);});
+}
+function _removeReturnRowImg(rowId,idx){
+  if(!_returnRowImgs[rowId])return;
+  _returnRowImgs[rowId].splice(idx,1);
+  const row=document.querySelector(`.r-item-row[data-rowid="${rowId}"]`);
+  if(row)_renderReturnRowPreview(row,_returnRowImgs[rowId]);
+}
+function viewImgUrls(urls,startIdx){
+  if(!urls||!urls.length)return;
+  if(typeof urls==='string')try{urls=JSON.parse(urls);}catch(e){return;}
+  let cur=startIdx||0;
+  const overlay=document.createElement('div');
+  overlay.className='img-gallery-overlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;';
+  overlay.onclick=e=>{if(e.target===overlay)overlay.remove();};
+  const counter=document.createElement('div');
+  counter.style.cssText='color:#fff;font-size:13px;margin-bottom:12px;opacity:0.7;';
+  const imgWrap=document.createElement('div');
+  imgWrap.style.cssText='position:relative;display:flex;align-items:center;gap:16px;';
+  const img=document.createElement('img');
+  img.style.cssText='max-width:82vw;max-height:78vh;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,0.5);display:block;';
+  const btnPrev=document.createElement('button');
+  btnPrev.innerHTML='&#8249;';btnPrev.style.cssText='font-size:36px;color:#fff;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+  const btnNext=document.createElement('button');
+  btnNext.innerHTML='&#8250;';btnNext.style.cssText=btnPrev.style.cssText;
+  function showImg(i){cur=i;img.src=urls[cur];counter.textContent=`${cur+1} / ${urls.length}장`;btnPrev.style.visibility=cur>0?'visible':'hidden';btnNext.style.visibility=cur<urls.length-1?'visible':'hidden';}
+  btnPrev.onclick=e=>{e.stopPropagation();if(cur>0)showImg(cur-1);};
+  btnNext.onclick=e=>{e.stopPropagation();if(cur<urls.length-1)showImg(cur+1);};
+  imgWrap.appendChild(btnPrev);imgWrap.appendChild(img);imgWrap.appendChild(btnNext);
+  const closeBtn=document.createElement('button');
+  closeBtn.textContent='닫기';closeBtn.style.cssText='margin-top:16px;padding:8px 24px;background:#fff;color:#1a1a1a;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;border:none;';
+  closeBtn.onclick=e=>{e.stopPropagation();overlay.remove();};
+  overlay.appendChild(counter);overlay.appendChild(imgWrap);overlay.appendChild(closeBtn);
+  showImg(cur);
+  document.querySelector('.img-gallery-overlay')?.remove();
+  document.body.appendChild(overlay);
+}
 function _toggleInspectDetail(sel){
-  const detail=sel.parentElement.querySelector('.ri-inspect-detail');
-  if(detail)detail.style.display=sel.value==='불량'?'':'none';
+  const parent=sel.parentElement;
+  const detail=parent.querySelector('.ri-inspect-detail');
+  const imgArea=parent.querySelector('.ri-img-area');
+  const isBad=sel.value==='불량';
+  if(detail)detail.style.display=isBad?'':'none';
+  if(imgArea)imgArea.style.display=isBad?'':'none';
 }
 function addReturnItemRow(){
   const wrap=document.getElementById('r-items-wrap');
-  if(wrap){wrap.insertAdjacentHTML('beforeend',_makeReturnItemRowHTML());wrap.querySelector('.r-item-row:last-child .ri-product').focus();}
+  if(wrap){
+    wrap.insertAdjacentHTML('beforeend',_makeReturnItemRowHTML());
+    const last=wrap.querySelector('.r-item-row:last-child');
+    if(last){
+      const optSel=last.querySelector('.ri-option');
+      if(optSel&&!optSel._sd)makeSearchable(optSel);
+      last.querySelector('.ri-product').focus();
+    }
+  }
 }
 function addReturn(){
   const date=document.getElementById('r-date').value;
@@ -2798,11 +2954,16 @@ function addReturn(){
     const inspType=row.querySelector('.ri-inspect-type').value;
     const inspDetail=(row.querySelector('.ri-inspect-detail').value||'').trim();
     const inspect=inspType==='불량'?(inspDetail?`불량 - ${inspDetail}`:'불량'):inspType;
+    const rowId=row.dataset.rowid||'';
+    const returnImgUrls=_returnRowImgs[rowId]||[];
+    if(rowId)delete _returnRowImgs[rowId];
     const rec={id:base+i,date,orig,retno,name,product,option,qty,opened,inspect,orderno,note};
+    if(returnImgUrls.length)rec.returnImgUrls=returnImgUrls;
     _fsSet('returns',String(rec.id),rec).catch(e=>console.error(e));
     saved++;
   });
   if(!saved){alert('상품명을 입력해 주세요.');return;}
+  closeReturnRegModal();
   clearReturnForm();
 }
 function deleteReturn(id){
@@ -2813,7 +2974,12 @@ function clearReturnForm(){
   ['r-orig','r-retno','r-name','r-orderno','r-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const rd=document.getElementById('r-date');if(rd)rd.value=todayStr();
   const wrap=document.getElementById('r-items-wrap');
-  if(wrap){wrap.innerHTML='';wrap.insertAdjacentHTML('beforeend',_makeReturnItemRowHTML());}
+  if(wrap){
+    wrap.innerHTML='';
+    wrap.insertAdjacentHTML('beforeend',_makeReturnItemRowHTML());
+    const optSel=wrap.querySelector('.ri-option');
+    if(optSel&&!optSel._sd)makeSearchable(optSel);
+  }
 }
 function renderReturnStats(){
   const r=loadReturns(),t=todayStr(),yd=offsetDay(-1);
@@ -2829,14 +2995,27 @@ function renderReturnStats(){
   ss('sr-week',countIn(r,'date',ws,we),cmp(countIn(r,'date',ws,we),countIn(r,'date',lws,lwe)),fmt(ws)+'~'+fmt(t));
   ss('sr-month',countIn(r,'date',ms,me),cmp(countIn(r,'date',ms,me),countIn(r,'date',lms,lme)),fmt(ms)+'~'+fmt(t));
 }
+let _returnActiveMonth='';
+function _buildReturnMonthTabs(returns){
+  const tabsEl=document.getElementById('return-month-tabs');
+  if(!tabsEl)return;
+  const months=[...new Set(returns.map(r=>(r.date||'').slice(0,7)).filter(m=>m&&m.length===7))].sort((a,b)=>b.localeCompare(a));
+  if(!months.length){tabsEl.innerHTML='';return;}
+  if(!months.includes(_returnActiveMonth))_returnActiveMonth=months[0];
+  tabsEl.innerHTML=months.map(m=>{
+    const [y,mo]=m.split('-');
+    return`<button class="cmt-tab${_returnActiveMonth===m?' active':''}" onclick="_setReturnMonthTab('${m}')">${y.slice(2)}년 ${parseInt(mo,10)}월</button>`;
+  }).join('');
+}
+function _setReturnMonthTab(month){_returnActiveMonth=month;renderReturnTable();}
 function renderReturnTable(){
-  const filterDate=(document.getElementById('r-filter-date')||{}).value||'';
-  let returns=loadReturns().slice().sort((a,b)=>{
+  let allReturns=loadReturns().slice().sort((a,b)=>{
     if((a.date||'')>(b.date||''))return -1;
     if((a.date||'')<(b.date||''))return 1;
     return (b.id||0)-(a.id||0);
   });
-  if(filterDate)returns=returns.filter(r=>r.date===filterDate);
+  _buildReturnMonthTabs(allReturns);
+  let returns=_returnActiveMonth?allReturns.filter(r=>(r.date||'').slice(0,7)===_returnActiveMonth):allReturns;
   const tbody=document.getElementById('return-tbody'),empty=document.getElementById('return-empty');
   if(!returns.length){tbody.innerHTML='';empty.style.display='';return;}
   empty.style.display='none';
@@ -2849,22 +3028,36 @@ function renderReturnTable(){
       lastDate=r.date||'';
       let label=lastDate||'날짜 없음';
       if(lastDate){const d=new Date(lastDate);label=lastDate+' ('+DOW[d.getDay()]+')';}
-      html+=`<tr><td colspan="10" style="background:#f2f3f5;padding:5px 12px;font-size:11px;font-weight:700;color:#555;border-top:2px solid #e0e0de;">📅 ${label}</td></tr>`;
+      html+=`<tr><td colspan="11" style="background:#f2f3f5;padding:5px 12px;font-size:11px;font-weight:700;color:#555;border-top:2px solid #e0e0de;">📅 ${label}</td></tr>`;
     }
     const ono=(r.orderno||'').trim();
     if(ono&&orderColorMap[ono]===undefined){orderColorMap[ono]=orderBg[colorIdx%orderBg.length];colorIdx++;}
     const bg=ono?orderColorMap[ono]:'';
+    const retImgs=Array.isArray(r.returnImgUrls)&&r.returnImgUrls.length?r.returnImgUrls:null;
+    const retImgIcon=retImgs?`<span style="cursor:pointer;margin-left:4px;font-size:12px;" title="사진 ${retImgs.length}장" onclick='viewImgUrls(${JSON.stringify(retImgs)},0)'>🖼️${retImgs.length>1?`<sup style="font-size:9px;color:#1a73e8;">${retImgs.length}</sup>`:''}</span>`:'';
+    // 입고 여부 셀
+    const ws=r.warehouseStatus||'';
+    const wr=r.warehouseReason||'';
+    let warehouseCell='';
+    if(ws==='Y'){
+      warehouseCell=`<span style="color:#16a34a;font-weight:700;cursor:pointer;" onclick="editReturn(${r.id})" title="수정">Y</span>`;
+    } else if(ws==='N'){
+      warehouseCell=`<span style="color:#dc2626;font-weight:700;cursor:pointer;" onclick="editReturn(${r.id})" title="수정">N</span>${wr?`<br><span style="font-size:10px;color:#888;">${wr}</span>`:''}`;
+    } else {
+      warehouseCell=`<span style="color:#ccc;cursor:pointer;" onclick="editReturn(${r.id})" title="수정">-</span>`;
+    }
     html+=`<tr style="background:${bg};">
       <td style="color:#999;font-size:11px;">${r.date||'-'}</td>
       <td>${r.name||'-'}</td>
       <td>${r.product||'-'}</td>
-      <td>${r.option?`<span style="background:#e8f0fe;color:#1a73e8;border-radius:4px;padding:1px 6px;font-size:11px;font-weight:600;">${r.option}</span>`:'-'}</td>
+      <td>${r.option?`<span style="border:1px solid #1a73e8;color:#1a73e8;border-radius:10px;padding:0 7px;font-size:11px;font-weight:600;">${r.option}</span>`:'-'}</td>
       <td style="text-align:center;">${r.qty||'-'}</td>
       <td style="text-align:center;font-weight:600;color:${r.opened==='Y'?'#dc2626':r.opened==='N'?'#16a34a':'#aaa'};">${r.opened==='Y'?'개봉':r.opened==='N'?'미개봉':'-'}</td>
-      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.inspect||''}">${r.inspect||'-'}</td>
+      <td title="${r.inspect||''}">${r.inspect?`<span style="color:${r.inspect.startsWith('불량')?'#dc2626':'#16a34a'};font-weight:700;font-size:12px;">${r.inspect}</span>`:'-'}${retImgIcon}</td>
+      <td style="text-align:center;font-size:12px;">${warehouseCell}</td>
       <td style="font-size:11px;font-weight:${ono?'600':'400'};">${ono||'-'}</td>
       <td>${r.note||'-'}</td>
-      <td><button class="btn-danger" onclick="deleteReturn(${r.id})">삭제</button></td>
+      <td style="white-space:nowrap;"><button style="padding:2px 7px;font-size:11px;border:1px solid #c5cae9;border-radius:4px;background:#f3f4fd;cursor:pointer;color:#3949ab;margin-right:3px;" onclick="editReturn(${r.id})">수정</button><button class="btn-danger" onclick="deleteReturn(${r.id})">삭제</button></td>
     </tr>`;
   });
   tbody.innerHTML=html;
@@ -3795,9 +3988,123 @@ function importClaimsXLSX(input){
   };
   reader.readAsArrayBuffer(file);
 }
-function exportReturns(){
+// ===== 반품 모달 =====
+function openReturnRegModal(){
+  const m=document.getElementById('return-reg-modal');if(!m)return;
+  m.style.display='';
+  const rd=document.getElementById('r-date');if(rd&&!rd.value)rd.value=todayStr();
+  const wrap=document.getElementById('r-items-wrap');
+  if(wrap&&!wrap.children.length){
+    wrap.insertAdjacentHTML('beforeend',_makeReturnItemRowHTML());
+    const optSel=wrap.querySelector('.ri-option');
+    if(optSel&&!optSel._sd)makeSearchable(optSel);
+  }
+}
+function closeReturnRegModal(){
+  const m=document.getElementById('return-reg-modal');if(m)m.style.display='none';
+}
+function openReturnEditModal(){document.getElementById('return-edit-modal').style.display='';}
+function closeReturnEditModal(){document.getElementById('return-edit-modal').style.display='none';}
+
+function editReturn(id){
+  const all=loadReturns();
+  const r=all.find(x=>x.id===id||String(x.id)===String(id));
+  if(!r){alert('데이터를 찾을 수 없습니다.');return;}
+  document.getElementById('re-id').value=r.id;
+  document.getElementById('re-date').value=r.date||'';
+  document.getElementById('re-orig').value=r.orig||'';
+  document.getElementById('re-retno').value=r.retno||'';
+  document.getElementById('re-name').value=r.name||'';
+  document.getElementById('re-orderno').value=r.orderno||'';
+  document.getElementById('re-product').value=r.product||'';
+  document.getElementById('re-option').value=r.option||'';
+  document.getElementById('re-qty').value=r.qty||'';
+  document.getElementById('re-opened').value=r.opened||'';
+  document.getElementById('re-inspect').value=r.inspect||'';
+  document.getElementById('re-note').value=r.note||'';
+  const ws=r.warehouseStatus||'';
+  document.getElementById('re-warehouseStatus').value=ws;
+  document.getElementById('re-warehouseReason').value=r.warehouseReason||'';
+  document.getElementById('re-warehouseReason-wrap').style.display=ws==='N'?'':'none';
+  openReturnEditModal();
+}
+function saveReturnEdit(){
+  const id=document.getElementById('re-id').value;
+  const updated={
+    date:document.getElementById('re-date').value,
+    orig:document.getElementById('re-orig').value,
+    retno:document.getElementById('re-retno').value,
+    name:document.getElementById('re-name').value,
+    orderno:document.getElementById('re-orderno').value,
+    product:document.getElementById('re-product').value,
+    option:document.getElementById('re-option').value,
+    qty:document.getElementById('re-qty').value,
+    opened:document.getElementById('re-opened').value,
+    inspect:document.getElementById('re-inspect').value,
+    note:document.getElementById('re-note').value,
+    warehouseStatus:document.getElementById('re-warehouseStatus').value,
+    warehouseReason:document.getElementById('re-warehouseReason').value,
+  };
+  const all=loadReturns();
+  const idx=all.findIndex(x=>String(x.id)===String(id));
+  if(idx<0){alert('데이터를 찾을 수 없습니다.');return;}
+  Object.assign(all[idx],updated);
+  _fsSet('returns',String(id),all[idx]).then(()=>{closeReturnEditModal();}).catch(e=>console.error(e));
+}
+function deleteReturnFromEdit(){
+  const id=document.getElementById('re-id').value;
+  if(!confirm('삭제하시겠습니까?'))return;
+  _fsDelete('returns',id).then(()=>closeReturnEditModal()).catch(e=>console.error(e));
+}
+
+// ===== xlsx 내보내기/가져오기 =====
+function exportReturnsXlsx(){
+  if(typeof XLSX==='undefined'){alert('xlsx 라이브러리가 로드되지 않았습니다.');return;}
   const r=loadReturns();if(!r.length){alert('데이터가 없습니다.');return;}
-  dlCSV('반품_입고_'+todayStr()+'.csv',['입고일','원송장 번호','반송장 번호','고객명','상품명','옵션/기종','수량','개봉 여부','검수 결과','주문번호','비고'],r.map(x=>[x.date,x.orig,x.retno,x.name,x.product,x.option,x.qty,x.opened,x.inspect,x.orderno,x.note]));
+  const headers=['입고일','원송장 번호','반송장 번호','고객명','상품명','옵션','수량','개봉 여부','검수 결과','입고 여부','미입고 사유','주문번호','비고'];
+  const rows=r.map(x=>[x.date,x.orig,x.retno,x.name,x.product,x.option,x.qty,x.opened,x.inspect,x.warehouseStatus,x.warehouseReason,x.orderno,x.note]);
+  const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'반품입고');
+  XLSX.writeFile(wb,'반품_입고_'+todayStr()+'.xlsx');
+}
+function importReturnsXlsx(input){
+  if(typeof XLSX==='undefined'){alert('xlsx 라이브러리가 로드되지 않았습니다.');return;}
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      if(data.length<2){alert('데이터가 없습니다.');return;}
+      const [header,...rows]=data;
+      const col=h=>header.indexOf(h);
+      const base=Date.now();
+      const newRecords=rows.filter(row=>row.some(Boolean)).map((row,i)=>({
+        id:base+i,
+        date:row[col('입고일')]||'',
+        orig:row[col('원송장 번호')]||'',
+        retno:row[col('반송장 번호')]||'',
+        name:row[col('고객명')]||'',
+        product:row[col('상품명')]||'',
+        option:row[col('옵션')]||'',
+        qty:row[col('수량')]||'',
+        opened:row[col('개봉 여부')]||'',
+        inspect:row[col('검수 결과')]||'',
+        warehouseStatus:row[col('입고 여부')]||'',
+        warehouseReason:row[col('미입고 사유')]||'',
+        orderno:row[col('주문번호')]||'',
+        note:row[col('비고')]||'',
+      }));
+      if(!newRecords.length){alert('가져올 데이터가 없습니다.');return;}
+      if(!confirm(`${newRecords.length}건을 가져오시겠습니까? 기존 데이터에 추가됩니다.`))return;
+      Promise.all(newRecords.map(rec=>_fsSet('returns',String(rec.id),rec)))
+        .then(()=>alert(newRecords.length+'건 가져오기 완료'))
+        .catch(err=>alert('저장 오류: '+err));
+    }catch(err){alert('파일 읽기 오류: '+err);}
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 const FOOTER = `※ 추가로 궁금하신 내용이 있으시면 언제든 뚜누 고객센터로 연락 부탁드립니다.
@@ -3846,6 +4153,7 @@ const EMPATHY = {
 
 const SHIPPING_FEE = {
   '반품_전체': '반품 배송비 6,000원은 환불금에서 공제되어 처리될 예정이며,',
+  '반품_전체_발생': '반품 배송비 3,000원은 환불금에서 공제되어 처리될 예정이며,',
   '반품_부분_무배충족': '반품 배송비 3,000원은 환불금에서 공제되어 처리될 예정이며,',
   '반품_부분_무배미충족': '부분 반품으로 인해 잔여 상품이 무료 배송 조건에 해당되지 않아, 초도 배송비 및 회수 배송비를 포함한 반품 배송비 6,000원이 환불금에서 공제될 예정입니다.'
 };
@@ -3899,7 +4207,8 @@ function initChips() {
 
 const SUB_OPTIONS = {
   '반품': [
-    ['반품_전체', '전체'],
+    ['반품_전체', '전체(초도 배송비 미발생)'],
+    ['반품_전체_발생', '전체(초도 배송비 발생)'],
     ['반품_부분_무배충족', '변심 부분 (무배 충족)'],
     ['반품_부분_무배미충족', '변심 부분 (무배 미충족)'],
     ['반품불가', '반품 불가 안내']
@@ -4009,7 +4318,7 @@ function onMainTypeChange() {
   } else if (main === '반품') {
     if (selectedIssue === '클레임_불량 주장' || selectedIssue === '클레임_오출고') {
       rowSub.className = 'conditional-row visible';
-      [['반품_전체','전체 반품'],['반품_부분_무배충족','부분 반품 (무배 충족)'],['반품_부분_무배미충족','부분 반품 (무배 미충족)']].forEach(([val, label]) => {
+      [['반품_전체','전체 반품(초도 배송비 미발생)'],['반품_전체_발생','전체 반품(초도 배송비 발생)'],['반품_부분_무배충족','부분 반품 (무배 충족)'],['반품_부분_무배미충족','부분 반품 (무배 미충족)']].forEach(([val, label]) => {
         const o = document.createElement('option'); o.value = val; o.textContent = label; subSel.appendChild(o);
       });
     } else if (selectedIssue === '클레임_파손/훼손') {
@@ -4026,7 +4335,7 @@ function onMainTypeChange() {
       subSel.value = '누락_반품';
     } else {
       rowSub.className = 'conditional-row visible';
-      [['반품_전체','전체 반품'],['반품_부분_무배충족','부분 반품 (무배 충족)'],['반품_부분_무배미충족','부분 반품 (무배 미충족)']].forEach(([val, label]) => {
+      [['반품_전체','전체 반품(초도 배송비 미발생)'],['반품_전체_발생','전체 반품(초도 배송비 발생)'],['반품_부분_무배충족','부분 반품 (무배 충족)'],['반품_부분_무배미충족','부분 반품 (무배 미충족)']].forEach(([val, label]) => {
         const o = document.createElement('option'); o.value = val; o.textContent = label; subSel.appendChild(o);
       });
     }
@@ -4099,17 +4408,18 @@ function onClaimTypeChange() {
   document.getElementById('rowTracking').className = 'conditional-row' + (v === '교환_재출고완료_분실' || v === '교환_재출고완료_배송후' || v === '교환_재출고완료_반송후' || v === '교환_재출고완료_배송전' || v === '교환_변심교환' ? ' visible' : '');
   document.getElementById('rowPhotoAttached').className = 'conditional-row' + (isPhotoType ? ' visible' : '');
   const isDansoExchange = selectedIssue === '클레임_단순변심' && v.includes('교환');
-  const showExchangeType = v.includes('교환') && !isDansoExchange
+  const absenceVal = document.getElementById('absence').value;
+  const isDansoExchangeNoAbsence = v === '단순변심교환_부재' && absenceVal === '부재없음';
+  const showExchangeType = (v.includes('교환') && !isDansoExchange
     && (v !== '불량주장_교환' || defectJudge === '불량확인')
     && !(v === '누락_교환' && shipCheckVal2 === '발송확인')
     && !(v === '파손훼손_교환' && photoVal !== '첨부')
     && !isTracking
     && !(v === '오출고_교환' && photoVal !== '첨부')
-    && !(v === '분실_교환' && document.getElementById('lostStatus').value === '부재');
+    && !(v === '분실_교환' && document.getElementById('lostStatus').value === '부재'))
+    || isDansoExchangeNoAbsence;
   document.getElementById('rowDefectJudge').className = 'conditional-row' + (selectedIssue === '클레임_불량 주장' && photoVal === '첨부' && (v === '불량주장_교환' || claimMainVal === '반품') ? ' visible' : '');
   document.getElementById('rowExchangeType').className = 'conditional-row' + (showExchangeType ? ' visible' : '');
-  const absenceVal = document.getElementById('absence').value;
-  const isDansoExchangeNoAbsence = v === '단순변심교환_부재' && absenceVal === '부재없음';
   document.getElementById('rowChangeOption').className = 'conditional-row' + (isDansoExchangeNoAbsence ? ' visible' : '');
   document.getElementById('rowExchangeShipDate').className = 'conditional-row' + (isDansoExchangeNoAbsence || (v === '파손훼손_교환' && photoVal === '첨부') || (v === '파손훼손_교환배송전') || (v === '분실_교환' && document.getElementById('lostStatus').value === '종결') || (v === '오출고_교환' && photoVal === '첨부') || (v === '누락_교환' && shipCheckVal2 === '누락확인') || (v === '불량주장_교환' && photoVal === '첨부' && defectJudge === '불량확인') ? ' visible' : '');
   document.getElementById('rowReturnDeny').className = 'conditional-row' + (v === '반품불가' ? ' visible' : '');
@@ -4268,7 +4578,13 @@ function buildText() {
       lines.push('금일 자동회수접수 되었으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
       lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
       lines.push('');
-      lines.push(`교환 상품은 회수 수거 확인 후 발송 도와드리고 있어 ${exchangeShipDate}에 발송 될 예정으로 시간 양해 부탁드립니다.`);
+      const dansoExchType = document.getElementById('exchangeType').value;
+      if (dansoExchType === 'POD') {
+        lines.push('교환 상품은 주문 제작 상품으로 재제작 후 발송이 진행 될 예정입니다.');
+        lines.push(`교환 상품은 ${exchangeShipDate} 발송 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+      } else {
+        lines.push(`교환 상품은 회수 수거 확인 후 발송 도와드리고 있어 ${exchangeShipDate}에 발송 될 예정으로 시간 양해 부탁드립니다.`);
+      }
       lines.push('');
       lines.push('발송 진행시 운송장 번호 안내 드릴 수 있도록 하겠습니다.');
       lines.push('감사합니다.');
@@ -4367,7 +4683,7 @@ function buildText() {
       lines.push('해당 상품은 배송 중 파손으로 확인되어 반송 처리되었으며, 재발송 진행 예정입니다.');
       lines.push('');
       lines.push('다만 해당 상품은 주문 제작 상품으로 재제작 후 발송이 진행될 예정인 점 양해 부탁드립니다.');
-      lines.push(`교환 상품은 ${exchShipDate} 출고 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+      lines.push(`교환 상품은 ${exchShipDate} 발송 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
     }
     lines.push('전산상 처리를 위해 주문 내역에서 \'교환\'이 접수될 예정이나, 별도의 회수 절차 없이 상품 재발송만 진행되오니 혼선 없으시길 바랍니다.');
     lines.push('');
@@ -4396,7 +4712,7 @@ function buildText() {
       lines.push('');
       if (exchangeTypePason === 'POD') {
         lines.push('다만 해당 상품은 주문 제작 상품으로, 재제작 후 발송이 진행될 예정입니다.');
-        lines.push(`교환 상품은 ${exchShipDate} 출고 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+        lines.push(`교환 상품은 ${exchShipDate} 발송 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
       } else {
         lines.push(`교환 상품은 회수 수거 확인 후 발송 도와드리고 있어 ${exchShipDate} 에 발송 될 예정으로 시간 양해 부탁드립니다.`);
       }
@@ -4433,7 +4749,7 @@ function buildText() {
     const photoAttached = document.getElementById('photoAttached').value;
     const obTime = document.getElementById('obTime').value.trim() || '[OB 예정 시간]';
     lines.push('');
-    lines.push('먼저, 잘못된 상품이 발송되어 불편을 드려 죄송합니다.');
+    lines.push('먼저, 이용에 불편을 드려 죄송합니다.');
     lines.push('교환 신청하신 상품 확인차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
     lines.push('');
     lines.push(`- 상품명 : ${product}`);
@@ -4447,7 +4763,7 @@ function buildText() {
       const exchangeTypeOchulgo = document.getElementById('exchangeType').value;
       if (exchangeTypeOchulgo === 'POD') {
         lines.push('교환 상품은 주문 제작 상품으로 재제작 후 발송이 진행 될 예정입니다.');
-        lines.push(`교환 상품은 ${exchShipDate} 출고 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+        lines.push(`교환 상품은 ${exchShipDate} 발송 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
         lines.push('');
         lines.push('발송 진행시 운송장 번호 안내 드릴 수 있도록 하겠습니다.');
         skipBlankBeforeThx = true;
@@ -4496,7 +4812,7 @@ function buildText() {
         lines.push(`교환 상품은 회수 수거 확인 후 발송 도와드리고 있어 ${exchShipDate} 에 발송 될 예정으로 시간 양해 부탁드립니다.`);
       } else {
         lines.push('다만 해당 상품은 주문 제작 상품으로, 재제작 후 발송이 진행될 예정입니다.');
-        lines.push(`교환 상품은 ${exchShipDate} 출고 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+        lines.push(`교환 상품은 ${exchShipDate} 발송 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
       }
       lines.push('');
       lines.push('발송 진행시 운송장 번호 안내 드릴 수 있도록 하겠습니다.');
@@ -4537,7 +4853,7 @@ function buildText() {
   if (selectedIssue === '클레임_오출고' && claimType.startsWith('반품_')) {
     const photoAttached = document.getElementById('photoAttached').value;
     const obTime = document.getElementById('obTime').value.trim() || '[OB 예정 시간]';
-    const fee = claimType === '반품_부분_무배충족' ? '3,000' : '6,000';
+    const fee = (claimType === '반품_부분_무배충족' || claimType === '반품_전체_발생') ? '3,000' : '6,000';
     lines.push('');
     lines.push('먼저, 잘못된 상품이 발송되어 불편을 드려 죄송합니다.');
     lines.push('반품 신청하신 상품 확인차 연락 드렸으나 부재로 부득이 문자 발송 드리는 점 양해 부탁드립니다.');
@@ -4578,7 +4894,7 @@ function buildText() {
     lines.push('');
     lines.push(`- 상품명 : ${product}`);
     lines.push('');
-    const fee = claimType === '반품_부분_무배충족' ? '3,000' : '6,000';
+    const fee = (claimType === '반품_부분_무배충족' || claimType === '반품_전체_발생') ? '3,000' : '6,000';
     const defectJudgeR = document.getElementById('defectJudge') ? document.getElementById('defectJudge').value : '';
     if (photoAttached === '첨부' && defectJudgeR === '불량확인') {
       lines.push('전달해주신 사진 확인 결과 불량으로 확인되어 반품 처리 도와드릴 예정입니다.');
@@ -4676,7 +4992,7 @@ function buildText() {
         lines.push('해당 상품은 배송 중 분실로 확인되어 재발송 진행 예정입니다.');
         lines.push('');
         lines.push('다만 해당 상품은 주문 제작 상품으로 재제작 후 발송이 진행될 예정인 점 양해 부탁드립니다.');
-        lines.push(`교환 상품은 ${exchShipDate} 출고 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+        lines.push(`교환 상품은 ${exchShipDate} 발송 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
       }
       lines.push('전산상 처리를 위해 주문 내역에서 \'교환\'이 접수될 예정이나, 별도의 회수 절차 없이 상품 재발송만 진행되오니 혼선 없으시길 바랍니다.');
       lines.push('');
@@ -4719,7 +5035,7 @@ function buildText() {
         } else {
           lines.push('확인 결과 해당 상품은 발송 과정에서 누락된 것으로 확인되었습니다.');
           lines.push('다만 해당 상품은 주문 제작 상품으로, 재제작 후 발송이 진행될 예정입니다.');
-          lines.push(`교환 상품은 ${exchShipDate} 출고 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+          lines.push(`교환 상품은 ${exchShipDate} 발송 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
         }
         lines.push('');
         lines.push('발송 진행시 운송장 번호 안내 드릴 수 있도록 하겠습니다.');
@@ -4958,7 +5274,7 @@ function makeSearchable(selectId){
 
   // Build DOM
   const wrap=document.createElement('div');wrap.className='sd-wrap';
-  const inp=document.createElement('input');inp.type='text';inp.className='sd-input';inp.autocomplete='off';inp.placeholder='선택 또는 검색';
+  const inp=document.createElement('input');inp.type='text';inp.className='sd-input';inp.autocomplete='off';inp.placeholder='';
   const list=document.createElement('div');list.className='sd-list';
 
   sel.parentNode.insertBefore(wrap,sel);
@@ -5022,7 +5338,7 @@ function makeSearchable(selectId){
 }
 
 function initSearchables(){
-  ['c-channel','c-platform','c-issue','c-liability','c-type','c-nature','c-return-yn','c-reship-yn','c-accident','c-status','r-opened'].forEach(makeSearchable);
+  ['c-channel','c-platform','c-issue','c-liability','c-type','c-nature','c-return-yn','c-reship-yn','c-accident','c-status'].forEach(makeSearchable);
 }
 
 // ===== 바로가기 링크 =====
