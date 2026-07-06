@@ -619,9 +619,9 @@ tr:hover td{background:#fafafa;}
   <div style="margin-bottom:16px;">
     <input type="text" id="vocw-title" placeholder="제목 입력 (예: 2026년 7월 1주차 위클리)" style="width:100%;font-size:16px;font-weight:600;padding:8px 12px;border:1.5px solid #e0e0de;border-radius:8px;font-family:inherit;color:#1a1a1a;background:#fff;outline:none;" onfocus="this.style.borderColor='#1a1a1a'" onblur="this.style.borderColor='#e0e0de'">
   </div>
-  <div class="card" style="padding:0;overflow:hidden;">
+  <div class="card" style="padding:0;">
     <!-- 툴바 -->
-    <div id="vocw-toolbar" style="display:flex;align-items:center;gap:2px;padding:8px 14px;background:#f8f8f6;border-bottom:1px solid #f0f0ee;flex-wrap:wrap;position:sticky;top:0;z-index:50;">
+    <div id="vocw-toolbar" style="display:flex;align-items:center;gap:2px;padding:8px 14px;background:#f8f8f6;border-bottom:1px solid #f0f0ee;flex-wrap:wrap;position:sticky;top:0;z-index:50;border-radius:10px 10px 0 0;">
       <!-- 인라인 서식 -->
       <button id="vocw-btn-bold" onclick="vocwToggle('bold')" title="굵게 (Ctrl+B)" style="padding:4px 9px;font-size:13px;font-weight:700;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">B</button>
       <button id="vocw-btn-italic" onclick="vocwToggle('italic')" title="기울임 (Ctrl+I)" style="padding:4px 9px;font-size:13px;font-style:italic;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">I</button>
@@ -4002,7 +4002,10 @@ function _initVocwEditor(){
       const offset=sel.anchorOffset;
       const lineStart=text.slice(0,offset);
       if(lineStart==='-'||(lineStart.startsWith('-')&&lineStart.trim()==='-')){
-        node.textContent=text.slice(offset);
+        // - 이후 남은 텍스트에서 앞의 원문자/특수 번호(①②③ 등) 제거
+        let remaining=text.slice(offset);
+        remaining=remaining.replace(/^[①-⑳❶-❿Ⓐ-ⓙ❶-❿⓪-⓿]\s*/,'');
+        node.textContent=remaining;
         sel.collapse(node,0);
         document.execCommand('insertUnorderedList',false,null);
       }
@@ -4013,7 +4016,255 @@ function _initVocwEditor(){
   ed.addEventListener('keyup',()=>{vocwSaveEditorSel();_updateVocwToolbarState();});
   ed.addEventListener('blur',vocwSaveEditorSel);
   ed.addEventListener('focus',_updateVocwToolbarState);
+  // 표 컬럼 너비 드래그 조정
+  _initTableColResize(ed);
+  // 표 이동 핸들
+  _initTableMoveHandle(ed);
 }
+
+// 표 셀 우측 경계 드래그로 컬럼 너비 조정
+(function(){
+  let _resizing=false,_startX=0,_startW=0,_resizeCell=null,_resizeEd=null;
+  window._initTableColResize=function(ed){
+    // 커서 변경: 셀 우측 6px 안에 있을 때 col-resize
+    ed.addEventListener('mousemove',function(e){
+      if(_resizing)return;
+      const td=e.target.closest('td,th');
+      if(td&&td.closest('#vocw-editor')){
+        const rect=td.getBoundingClientRect();
+        ed.style.cursor=(e.clientX>=rect.right-6&&e.clientX<=rect.right+2)?'col-resize':'';
+      } else {
+        ed.style.cursor='';
+      }
+    });
+    ed.addEventListener('mouseleave',function(){if(!_resizing)ed.style.cursor='';});
+    ed.addEventListener('mousedown',function(e){
+      const td=e.target.closest('td,th');
+      if(!td)return;
+      const rect=td.getBoundingClientRect();
+      if(e.clientX<rect.right-6||e.clientX>rect.right+2)return;
+      e.preventDefault();
+      e.stopPropagation();
+      _resizing=true;
+      _startX=e.clientX;
+      _startW=td.getBoundingClientRect().width;
+      _resizeCell=td;
+      _resizeEd=ed;
+    });
+  };
+  document.addEventListener('mousemove',function(e){
+    if(!_resizing||!_resizeCell)return;
+    const dx=e.clientX-_startX;
+    const newW=Math.max(30,_startW+dx);
+    _resizeCell.style.width=newW+'px';
+    _resizeCell.style.minWidth=newW+'px';
+  });
+  document.addEventListener('mouseup',function(){
+    if(_resizing){
+      _resizing=false;
+      if(_resizeEd)_resizeEd.style.cursor='';
+      _resizeCell=null;_resizeEd=null;
+    }
+  });
+})();
+
+// ===== 표 편집 헬퍼 =====
+// 현재 커서 또는 핸들 기준으로 표 찾기
+function _vocwFindTable(){
+  const ed=document.getElementById('vocw-editor');
+  if(!ed)return null;
+  const sel=window.getSelection();
+  if(sel&&sel.rangeCount){
+    let n=sel.anchorNode;
+    while(n&&n!==ed){if(n.nodeName==='TABLE')return n;n=n.parentElement;}
+  }
+  // 핸들에 저장된 참조
+  return window._vocwActiveTable||null;
+}
+function _vocwFindCellAndIndex(){
+  const ed=document.getElementById('vocw-editor');
+  if(!ed)return{cell:null,rowIdx:-1,colIdx:-1,table:null};
+  const sel=window.getSelection();
+  let cell=null,table=null;
+  if(sel&&sel.rangeCount){
+    let n=sel.anchorNode;
+    while(n&&n!==ed){
+      if((n.nodeName==='TD'||n.nodeName==='TH')&&!cell)cell=n;
+      if(n.nodeName==='TABLE'){table=n;break;}
+      n=n.parentElement;
+    }
+  }
+  if(!cell||!table)return{cell,rowIdx:-1,colIdx:-1,table};
+  const row=cell.parentElement;
+  const colIdx=Array.from(row.children).indexOf(cell);
+  const rows=Array.from(table.querySelectorAll('tr'));
+  const rowIdx=rows.indexOf(row);
+  return{cell,row,rowIdx,colIdx,table};
+}
+// 행 추가
+window.vocwAddRow=function(where){
+  const{cell,row,table}=_vocwFindCellAndIndex();
+  if(!table)return;
+  const rows=table.querySelectorAll('tr');
+  const colCount=rows[0]?rows[0].querySelectorAll('td,th').length:1;
+  const newTr=document.createElement('tr');
+  for(let i=0;i<colCount;i++){
+    const td=document.createElement('td');
+    td.style.cssText='border:1px solid #e0e0de;padding:6px 10px;min-width:60px;';
+    td.innerHTML='<br>';
+    newTr.appendChild(td);
+  }
+  if(where==='above'&&row)row.parentNode.insertBefore(newTr,row);
+  else if(where==='below'&&row)row.parentNode.insertBefore(newTr,row.nextSibling);
+  else{const tbody=table.querySelector('tbody')||table;tbody.appendChild(newTr);}
+  // 첫 셀에 포커스
+  const firstCell=newTr.querySelector('td');
+  if(firstCell){
+    const sel=window.getSelection();
+    const range=document.createRange();
+    range.setStart(firstCell,0);range.collapse(true);
+    sel.removeAllRanges();sel.addRange(range);
+  }
+  _vocwRefreshTableUI(table);
+};
+// 열 추가
+window.vocwAddCol=function(where){
+  const{colIdx,table}=_vocwFindCellAndIndex();
+  if(!table)return;
+  const rows=table.querySelectorAll('tr');
+  rows.forEach(function(row,ri){
+    const isHeader=!!row.closest('thead')||(ri===0&&row.querySelector('th'));
+    const newCell=document.createElement(isHeader?'th':'td');
+    newCell.style.cssText=isHeader
+      ?'border:1px solid #e0e0de;padding:6px 10px;background:#f6f6f4;font-weight:600;min-width:60px;text-align:center;'
+      :'border:1px solid #e0e0de;padding:6px 10px;min-width:60px;text-align:center;';
+    newCell.innerHTML='<br>';
+    const cells=row.querySelectorAll('td,th');
+    if(where==='left'&&cells[colIdx])row.insertBefore(newCell,cells[colIdx]);
+    else if(where==='right'&&cells[colIdx])cells[colIdx].insertAdjacentElement('afterend',newCell);
+    else row.appendChild(newCell);
+  });
+  _vocwRefreshTableUI(table);
+};
+// 행 삭제
+window.vocwDelRow=function(){
+  const{row,table}=_vocwFindCellAndIndex();
+  if(!row||!table)return;
+  if(table.querySelectorAll('tr').length<=1){alert('마지막 행은 삭제할 수 없습니다.');return;}
+  row.remove();
+  _vocwRefreshTableUI(table);
+};
+// 열 삭제
+window.vocwDelCol=function(){
+  const{colIdx,table}=_vocwFindCellAndIndex();
+  if(colIdx<0||!table)return;
+  const rows=table.querySelectorAll('tr');
+  if(rows[0]&&rows[0].querySelectorAll('td,th').length<=1){alert('마지막 열은 삭제할 수 없습니다.');return;}
+  rows.forEach(function(row){
+    const cells=row.querySelectorAll('td,th');
+    if(cells[colIdx])cells[colIdx].remove();
+  });
+  _vocwRefreshTableUI(table);
+};
+
+// 표 이동 핸들 + 행/열 편집 패널
+function _initTableMoveHandle(ed){
+  let _handleTimer=null;
+  function _getHandle(){
+    let h=document.getElementById('_vocw-table-handle');
+    if(!h){
+      h=document.createElement('div');
+      h.id='_vocw-table-handle';
+      h.style.cssText='position:fixed;z-index:9990;display:none;background:#fff;border:1px solid #d0d0ce;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.13);padding:4px 6px;align-items:center;gap:3px;flex-wrap:wrap;max-width:400px;';
+      h.innerHTML=`
+        <span style="font-size:11px;color:#bbb;padding:0 3px;cursor:default;user-select:none;flex-shrink:0;">표</span>
+        <span style="width:1px;height:16px;background:#eee;display:inline-block;margin:0 2px;flex-shrink:0;"></span>
+        <button onmousedown="event.preventDefault()" onclick="vocwMoveTable(-1)" style="padding:2px 7px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#f8f8f6;cursor:pointer;" title="표 위로 이동">↑</button>
+        <button onmousedown="event.preventDefault()" onclick="vocwMoveTable(1)" style="padding:2px 7px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#f8f8f6;cursor:pointer;" title="표 아래로 이동">↓</button>
+        <span style="width:1px;height:16px;background:#eee;display:inline-block;margin:0 2px;flex-shrink:0;"></span>
+        <button onmousedown="event.preventDefault()" onclick="vocwAddRow('above')" style="padding:2px 7px;font-size:11px;border:1px solid #e0e0de;border-radius:5px;background:#f0f7ff;color:#1a73e8;cursor:pointer;font-family:inherit;" title="위에 행 추가">행↑+</button>
+        <button onmousedown="event.preventDefault()" onclick="vocwAddRow('below')" style="padding:2px 7px;font-size:11px;border:1px solid #e0e0de;border-radius:5px;background:#f0f7ff;color:#1a73e8;cursor:pointer;font-family:inherit;" title="아래에 행 추가">행↓+</button>
+        <button onmousedown="event.preventDefault()" onclick="vocwDelRow()" style="padding:2px 7px;font-size:11px;border:1px solid #ffd0d0;border-radius:5px;background:#fff5f5;color:#c0392b;cursor:pointer;font-family:inherit;" title="현재 행 삭제">행−</button>
+        <span style="width:1px;height:16px;background:#eee;display:inline-block;margin:0 2px;flex-shrink:0;"></span>
+        <button onmousedown="event.preventDefault()" onclick="vocwAddCol('left')" style="padding:2px 7px;font-size:11px;border:1px solid #e0e0de;border-radius:5px;background:#f0fff4;color:#1a7340;cursor:pointer;font-family:inherit;" title="왼쪽에 열 추가">←열+</button>
+        <button onmousedown="event.preventDefault()" onclick="vocwAddCol('right')" style="padding:2px 7px;font-size:11px;border:1px solid #e0e0de;border-radius:5px;background:#f0fff4;color:#1a7340;cursor:pointer;font-family:inherit;" title="오른쪽에 열 추가">열+→</button>
+        <button onmousedown="event.preventDefault()" onclick="vocwDelCol()" style="padding:2px 7px;font-size:11px;border:1px solid #ffd0d0;border-radius:5px;background:#fff5f5;color:#c0392b;cursor:pointer;font-family:inherit;" title="현재 열 삭제">열−</button>
+      `;
+      document.body.appendChild(h);
+      // 하단 + 버튼 (행 추가)
+      const bAdd=document.createElement('div');
+      bAdd.id='_vocw-table-add-row';
+      bAdd.style.cssText='position:fixed;z-index:9989;display:none;cursor:pointer;';
+      bAdd.innerHTML='<div onmousedown="event.preventDefault()" onclick="vocwAddRow(\'end\')" style="background:#fff;border:1.5px dashed #b0c4de;border-radius:20px;padding:2px 18px;font-size:18px;color:#1a73e8;line-height:1.5;box-shadow:0 1px 6px rgba(0,0,0,0.09);user-select:none;" title="행 추가">+</div>';
+      document.body.appendChild(bAdd);
+      // 우측 + 버튼 (열 추가)
+      const cAdd=document.createElement('div');
+      cAdd.id='_vocw-table-add-col';
+      cAdd.style.cssText='position:fixed;z-index:9989;display:none;cursor:pointer;';
+      cAdd.innerHTML='<div onmousedown="event.preventDefault()" onclick="vocwAddCol(\'end\')" style="background:#fff;border:1.5px dashed #b0c4de;border-radius:20px;padding:6px 6px;font-size:18px;color:#1a73e8;line-height:1;writing-mode:vertical-rl;box-shadow:0 1px 6px rgba(0,0,0,0.09);user-select:none;" title="열 추가">+</div>';
+      document.body.appendChild(cAdd);
+    }
+    return h;
+  }
+  function _showTableUI(table){
+    window._vocwActiveTable=table;
+    const h=_getHandle();
+    const rect=table.getBoundingClientRect();
+    h.style.display='flex';
+    h.style.left=rect.left+'px';
+    h.style.top=Math.max(4,rect.top-36)+'px';
+    // 행 추가 버튼 (하단 중앙)
+    const bAdd=document.getElementById('_vocw-table-add-row');
+    if(bAdd){bAdd.style.display='block';bAdd.style.left=(rect.left+rect.width/2-25)+'px';bAdd.style.top=(rect.bottom+4)+'px';}
+    // 열 추가 버튼 (우측 중앙)
+    const cAdd=document.getElementById('_vocw-table-add-col');
+    if(cAdd){cAdd.style.display='block';cAdd.style.left=(rect.right+4)+'px';cAdd.style.top=(rect.top+rect.height/2-16)+'px';}
+  }
+  function _hideAll(){
+    const h=document.getElementById('_vocw-table-handle');
+    if(h)h.style.display='none';
+    const b=document.getElementById('_vocw-table-add-row');
+    if(b)b.style.display='none';
+    const c=document.getElementById('_vocw-table-add-col');
+    if(c)c.style.display='none';
+    window._vocwActiveTable=null;
+  }
+  window._vocwRefreshTableUI=function(table){setTimeout(()=>{if(table)_showTableUI(table);},50);};
+  ed.addEventListener('mousemove',function(e){
+    const uiIds=['_vocw-table-handle','_vocw-table-add-row','_vocw-table-add-col'];
+    if(uiIds.some(id=>e.target.closest('#'+id)))return;
+    const td=e.target.closest('td,th');
+    const table=td?td.closest('table'):null;
+    if(table&&table.closest('#vocw-editor')){
+      if(_handleTimer){clearTimeout(_handleTimer);_handleTimer=null;}
+      _showTableUI(table);
+    } else {
+      if(!_handleTimer)_handleTimer=setTimeout(_hideAll,400);
+    }
+  });
+  ed.addEventListener('mouseleave',function(){if(!_handleTimer)_handleTimer=setTimeout(_hideAll,500);});
+  document.addEventListener('mousemove',function(e){
+    const uiIds=['_vocw-table-handle','_vocw-table-add-row','_vocw-table-add-col'];
+    if(uiIds.some(id=>e.target.closest&&e.target.closest('#'+id))){
+      if(_handleTimer){clearTimeout(_handleTimer);_handleTimer=null;}
+    }
+  });
+  _getHandle(); // 미리 생성
+}
+window.vocwMoveTable=function(dir){
+  const table=_vocwFindTable();
+  if(!table)return;
+  if(dir<0){
+    let prev=table.previousSibling;
+    while(prev&&prev.nodeType===3&&!prev.textContent.trim())prev=prev.previousSibling;
+    if(prev)table.parentNode.insertBefore(table,prev);
+  } else {
+    let next=table.nextSibling;
+    while(next&&next.nodeType===3&&!next.textContent.trim())next=next.nextSibling;
+    if(next)table.parentNode.insertBefore(table,next.nextSibling);
+  }
+  _vocwRefreshTableUI(table);
+};
 
 // 더 이상 모달 사용 안 함 (호환성 유지용 stub)
 function openVocWriteModal(){switchPage('vocwrite');}
