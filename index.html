@@ -621,7 +621,7 @@ tr:hover td{background:#fafafa;}
   </div>
   <div class="card" style="padding:0;">
     <!-- 툴바 -->
-    <div id="vocw-toolbar" style="display:flex;align-items:center;gap:2px;padding:8px 14px;background:#f8f8f6;border-bottom:1px solid #f0f0ee;flex-wrap:wrap;position:sticky;top:0;z-index:50;border-radius:10px 10px 0 0;">
+    <div id="vocw-toolbar" style="display:flex;align-items:center;gap:2px;padding:8px 14px;background:#f8f8f6;border-bottom:1px solid #f0f0ee;flex-wrap:wrap;position:sticky;top:56px;z-index:90;border-radius:10px 10px 0 0;">
       <!-- 인라인 서식 -->
       <button id="vocw-btn-bold" onclick="vocwToggle('bold')" title="굵게 (Ctrl+B)" style="padding:4px 9px;font-size:13px;font-weight:700;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">B</button>
       <button id="vocw-btn-italic" onclick="vocwToggle('italic')" title="기울임 (Ctrl+I)" style="padding:4px 9px;font-size:13px;font-style:italic;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">I</button>
@@ -2565,8 +2565,8 @@ function getFilteredClaims(){
     const _SEARCH_FIELDS=['orderno','buyer','product','option','category','issue','liability','type','nature','reason','channel','platform','status'];
     claims=claims.filter(r=>_SEARCH_FIELDS.some(f=>String(r[f]||'').toLowerCase().includes(q)));
   }
-  // 월별 탭 필터 (발생월 기준) — 날짜 범위 필터 활성시 탭 무시
-  if(_activeClaimMonth&&!dateFrom&&!dateTo){
+  // 월별 탭 필터 (발생월 기준) — '전체' 탭이거나 날짜 범위 필터 활성시 탭 무시
+  if(_activeClaimMonth&&_activeClaimMonth!=='all'&&!dateFrom&&!dateTo){
     claims=claims.filter(r=>_getClaimMonthKey(r)===_activeClaimMonth);
   }
   if(_groupByOrder){
@@ -2618,17 +2618,17 @@ function _getClaimMonthKey(r){
 function _buildClaimMonthTabs(claims){
   const tabsEl=document.getElementById('claim-month-tabs');
   if(!tabsEl)return;
-  // 발생월(month 필드) 기준으로 YYYY-MM 추출
   const months=[...new Set(claims.map(r=>_getClaimMonthKey(r)).filter(m=>m&&m.length===7))].sort((a,b)=>b.localeCompare(a));
   if(!months.length){tabsEl.innerHTML='';return;}
-  // 활성 월이 목록에 없으면 최신 월로 초기화
-  if(!months.includes(_activeClaimMonth)){_activeClaimMonth=months[0];}
+  // 활성 월이 목록에 없고 '전체'도 아니면 최신 월로 초기화
+  if(_activeClaimMonth&&_activeClaimMonth!=='all'&&!months.includes(_activeClaimMonth)){_activeClaimMonth=months[0];}
+  const allTab=`<button class="cmt-tab${_activeClaimMonth==='all'?' active':''}" onclick="_setClaimMonthTab('all')">전체</button>`;
   const monthBtns=months.map(m=>{
     const [y,mo]=m.split('-');
     const lbl=`${y.slice(2)}년 ${parseInt(mo,10)}월`;
     return`<button class="cmt-tab${_activeClaimMonth===m?' active':''}" onclick="_setClaimMonthTab('${m}')">${lbl}</button>`;
   }).join('');
-  tabsEl.innerHTML=monthBtns;
+  tabsEl.innerHTML=allTab+monthBtns;
 }
 function _setClaimMonthTab(month){
   _activeClaimMonth=month;
@@ -6153,6 +6153,7 @@ function doLogout(){
   // Firestore 세션 offline 처리
   try{if(uid&&typeof db!=='undefined'){db.collection('_sys').doc('sessions').set({[uid]:{online:false,logoutAt:new Date().toISOString()}},{merge:true}).catch(()=>{});}}catch(e){}
   sessionStorage.removeItem(SESSION_KEY);
+  sessionStorage.setItem('_tuunu_did_logout','1'); // 재로그인 시 대시보드로
   document.getElementById('login-id').value='';
   document.getElementById('login-pw').value='';
   document.getElementById('login-err').style.display='none';
@@ -6215,9 +6216,19 @@ function init(){
   // 키보드 닫기
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&cfp&&cfp.style.display!=='none')closeColFilter();});
   setupFirebaseListeners();
-  localStorage.removeItem('tuunu_page');
-  _openTabs=[];
-  switchPage('home');
+  // 새로고침이면 마지막 페이지 복원, 창 닫고 켰거나 재로그인이면 대시보드
+  const _isRefresh=sessionStorage.getItem('_tuunu_session')==='1'&&sessionStorage.getItem('_tuunu_did_logout')!=='1';
+  sessionStorage.setItem('_tuunu_session','1');
+  sessionStorage.removeItem('_tuunu_did_logout');
+  if(_isRefresh){
+    const savedPage=localStorage.getItem('tuunu_page');
+    if(savedPage&&savedPage!=='home'){_openTabs=[];switchPage(savedPage);}
+    else{_openTabs=[];switchPage('home');}
+  } else {
+    localStorage.removeItem('tuunu_page');
+    _openTabs=[];
+    switchPage('home');
+  }
 }
 
 // ===== 계정 Firestore 동기화 =====
