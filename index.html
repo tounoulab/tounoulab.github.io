@@ -3325,6 +3325,10 @@ let _vocwType='weekly';
 let _vocwPrevPage='voclog'; // VOC 작성 진입 전 페이지
 // VOC 목록뷰 ↔ 에디터뷰 전환
 function _showVocwList(){
+  // 에디터에 내용이 있으면 자동 저장 후 목록으로
+  const editor=document.getElementById('vocw-editor');
+  if(editor&&editor.innerHTML.trim())saveVocWriteReport(true);
+  if(_vocwAutoSaveTimer){clearInterval(_vocwAutoSaveTimer);_vocwAutoSaveTimer=null;}
   document.getElementById('vocw-list-view').style.display='';
   document.getElementById('vocw-edit-view').style.display='none';
   _loadVocwReportList();
@@ -3362,10 +3366,10 @@ function _loadVocwReportList(){
     db.collection('_sys').where('type','in',['weekly','monthly']).limit(50).get().then(function(snap){
       if(snap.empty){listEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">저장된 보고서가 없습니다.<br><br><button onclick="_openVocwEditor(null,\'weekly\')" style="font-size:13px;padding:8px 20px;border:none;border-radius:8px;background:#1a1a1a;color:#fff;cursor:pointer;">✍️ 첫 보고서 작성</button></div>';return;}
       const docs=[];snap.forEach(d=>docs.push({id:d.id,...d.data()}));
-      // 날짜 기준 정렬 (최신순) + YYYY-MM 형식인 문서만 표시
       docs.sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
       const validDocs=docs.filter(doc=>/^\d{4}-\d{2}$/.test(doc.month||''));
-      if(!validDocs.length){listEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">저장된 보고서가 없습니다.</div>';return;}
+      const brokenDocs=docs.filter(doc=>!/^\d{4}-\d{2}$/.test(doc.month||''));
+      if(!validDocs.length&&!brokenDocs.length){listEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">저장된 보고서가 없습니다.</div>';return;}
       listEl.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;">
         ${validDocs.map(doc=>{
           const m=doc.month||doc.id.split('_').pop()||'-';
@@ -3375,15 +3379,50 @@ function _loadVocwReportList(){
           return`<div style="border:1px solid #e8e8e6;border-radius:10px;padding:14px;background:#fafaf8;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
               <span style="font-size:13px;font-weight:700;">${t} ${m}</span>
-              <button onclick="_openVocwEditor('${m}','${doc.type}')" style="font-size:11px;padding:4px 10px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;cursor:pointer;">열기</button>
+              <button onclick="_openVocwEditor('${m}','${doc.type}')" style="font-size:11px;padding:4px 10px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;cursor:pointer;">편집</button>
             </div>
             <div style="font-size:11px;color:#aaa;margin-bottom:6px;">최종 수정: ${upd}</div>
             <div style="font-size:12px;color:#777;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${preview}</div>
           </div>`;
         }).join('')}
+        ${brokenDocs.map(doc=>{
+          const t=doc.type==='weekly'?'📅 위클리':'📊 먼슬리';
+          const upd=doc.updatedAt?doc.updatedAt.slice(0,10):'날짜 미상';
+          const preview=(doc.html||'').replace(/<[^>]+>/g,'').slice(0,60)||'(내용 없음)';
+          return`<div style="border:1.5px dashed #f59e0b;border-radius:10px;padding:14px;background:#fffbeb;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:12px;font-weight:700;color:#92400e;">${t} ⚠️ 날짜 미설정</span>
+            </div>
+            <div style="font-size:11px;color:#aaa;margin-bottom:6px;">최종 수정: ${upd}</div>
+            <div style="font-size:12px;color:#777;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:10px;">${preview}</div>
+            <div style="display:flex;gap:6px;">
+              <input type="month" id="fix-month-${doc.id.replace(/[^a-z0-9]/gi,'_')}" style="flex:1;font-size:11px;padding:3px 6px;border:1px solid #e0d9cc;border-radius:6px;font-family:inherit;" placeholder="월 선택">
+              <button onclick="_recoverBrokenVocDoc('${doc.id}','${doc.type}','fix-month-${doc.id.replace(/[^a-z0-9]/gi,'_')}')" style="font-size:11px;padding:3px 10px;background:#f59e0b;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">복구</button>
+            </div>
+          </div>`;
+        }).join('')}
       </div>`;
     }).catch(()=>{listEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">목록을 불러오지 못했습니다.</div>';});
   }catch(e){listEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">Firestore 연결 오류</div>';}
+}
+function _recoverBrokenVocDoc(oldDocId,type,monthInputId){
+  const inp=document.getElementById(monthInputId);
+  const newMonth=(inp&&inp.value)||'';
+  if(!newMonth||!/^\d{4}-\d{2}$/.test(newMonth)){alert('월을 선택해 주세요 (예: 2026-06)');return;}
+  const newDocId='vl_report_'+(type||'weekly')+'_'+newMonth;
+  try{
+    db.collection('_sys').doc(oldDocId).get().then(function(snap){
+      if(!snap.exists){alert('문서를 찾을 수 없습니다.');return;}
+      const data=snap.data();
+      data.month=newMonth;data.updatedAt=new Date().toISOString();
+      db.collection('_sys').doc(newDocId).set(data).then(function(){
+        db.collection('_sys').doc(oldDocId).delete().then(function(){
+          alert('복구 완료! '+type+'_'+newMonth+'으로 저장됐습니다.');
+          _loadVocwReportList();
+        }).catch(()=>{alert('복구됐지만 구 문서 삭제에 실패했습니다.');_loadVocwReportList();});
+      }).catch(()=>alert('저장 실패'));
+    });
+  }catch(e){alert('복구 중 오류: '+e.message);}
 }
 function switchVocWriteTab(type){
   _vocwType=type;
@@ -3403,6 +3442,17 @@ function _vocwCurrentMonth(){
 // Firestore 문서 ID: vl_report_weekly_2026-07 형태
 function _vocwDocId(type){return'vl_report_'+(type||'weekly')+'_'+_vocwCurrentMonth();}
 
+let _vocwAutoSaveTimer=null;
+function _startVocwAutoSave(){
+  if(_vocwAutoSaveTimer)clearInterval(_vocwAutoSaveTimer);
+  _vocwAutoSaveTimer=setInterval(()=>{
+    const editor=document.getElementById('vocw-editor');
+    if(!editor||!editor.innerHTML.trim())return;
+    const ind=document.getElementById('vocw-edit-view');
+    if(!ind||ind.style.display==='none')return;
+    saveVocWriteReport(true); // 조용히 저장
+  },30000);
+}
 function _loadVocwContent(type){
   const editor=document.getElementById('vocw-editor');
   if(!editor)return;
@@ -3416,10 +3466,11 @@ function _loadVocwContent(type){
       editor.innerHTML=html||'';
       if(!html)editor.focus();
       _initVocwEditor();
-    }).catch(function(){editor.innerHTML='';_initVocwEditor();});
+      _startVocwAutoSave();
+    }).catch(function(){editor.innerHTML='';_initVocwEditor();_startVocwAutoSave();});
   }catch(e){editor.innerHTML='';_initVocwEditor();}
 }
-function saveVocWriteReport(){
+function saveVocWriteReport(silent){
   const editor=document.getElementById('vocw-editor');
   if(!editor)return;
   const html=editor.innerHTML;
@@ -3427,13 +3478,14 @@ function saveVocWriteReport(){
   const docId=_vocwDocId(_vocwType);
   try{
     db.collection('_sys').doc(docId).set({html,type:_vocwType,month,updatedAt:new Date().toISOString()}).then(function(){
+      if(silent)return;
       const msg=document.createElement('div');
       msg.style.cssText='position:fixed;top:70px;right:24px;background:#1a1a1a;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;';
       msg.textContent='저장되었습니다.';
       document.body.appendChild(msg);
       setTimeout(()=>msg.remove(),2000);
-    }).catch(function(){alert('저장 중 오류가 발생했습니다.');});
-  }catch(e){alert('저장할 수 없습니다.');}
+    }).catch(function(){if(!silent)alert('저장 중 오류가 발생했습니다.');});
+  }catch(e){if(!silent)alert('저장할 수 없습니다.');}
 }
 
 // 기본 execCommand 래퍼
@@ -3496,16 +3548,36 @@ function _updateVocwToolbarState(){
 // 글자 크기 설정 (선택 영역에 span 적용)
 function vocwSetFontSize(sizeStr){
   if(!sizeStr)return;
-  const ed=document.getElementById('vocw-editor');
-  if(!ed)return;
+  const ed=document.getElementById('vocw-editor');if(!ed)return;
   ed.focus();
+  vocwRestoreEditorSel();
   const sel=window.getSelection();
-  if(!sel||!sel.rangeCount||sel.isCollapsed)return;
+  if(!sel||!sel.rangeCount)return;
   const range=sel.getRangeAt(0);
+  // 표 안에 있으면 td에 직접 font-size 적용
+  let node=sel.anchorNode;
+  let inTd=false,tdEl=null;
+  while(node&&node!==ed){if(node.nodeName==='TD'||node.nodeName==='TH'){inTd=true;tdEl=node;break;}node=node.parentElement;}
+  if(inTd&&tdEl){
+    // 선택된 텍스트가 있으면 span으로 감싸기, 없으면 td 전체에 적용
+    if(!range.collapsed){
+      // selection이 한 td 안에 완전히 있는지 확인
+      if(tdEl.contains(range.commonAncestorContainer)){
+        document.execCommand('styleWithCSS',false,true);
+        // 선택 범위만 span으로 감싸기 (cloneContents 쓰지 않음)
+        const span=document.createElement('span');
+        span.style.fontSize=sizeStr;
+        try{range.surroundContents(span);}catch(e){tdEl.style.fontSize=sizeStr;}
+      }else{tdEl.style.fontSize=sizeStr;}
+    }else{tdEl.style.fontSize=sizeStr;}
+    return;
+  }
+  // 표 밖: 기존 방식 (단, table 태그 포함 여부 체크)
+  if(range.collapsed)return;
   const frag=range.cloneContents();
-  const div=document.createElement('div');
-  div.appendChild(frag);
+  const div=document.createElement('div');div.appendChild(frag);
   const innerHtml=div.innerHTML||sel.toString();
+  if(/<(table|tr|td|th)/i.test(innerHtml))return; // 표 구조 포함 시 무시
   document.execCommand('insertHTML',false,`<span style="font-size:${sizeStr}">${innerHtml}</span>`);
 }
 
