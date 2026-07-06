@@ -586,7 +586,7 @@ tr:hover td{background:#fafafa;}
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
       <button onclick="switchPage(_vocwPrevPage||'home')" style="font-size:13px;padding:5px 12px;border:1px solid #e0e0de;border-radius:8px;background:#fff;cursor:pointer;color:#555;font-family:inherit;">← 뒤로</button>
       <span style="font-size:18px;font-weight:700;">📋 VOC 보고서 목록</span>
-      <button onclick="_openVocwEditor(null,'weekly')" style="margin-left:auto;font-size:13px;padding:6px 18px;border:none;border-radius:8px;background:#1a1a1a;color:#fff;cursor:pointer;font-weight:600;font-family:inherit;">✍️ 새 작성</button>
+      <button onclick="_openVocwEditor(null,'weekly',true)" style="margin-left:auto;font-size:13px;padding:6px 18px;border:none;border-radius:8px;background:#1a1a1a;color:#fff;cursor:pointer;font-weight:600;font-family:inherit;">✍️ 새 작성</button>
     </div>
     <div id="vocw-report-list" class="card" style="padding:20px;">
       <div style="color:#bbb;text-align:center;padding:24px;">로딩 중...</div>
@@ -3305,7 +3305,7 @@ function _showVocwList(){
   document.getElementById('vocw-edit-view').style.display='none';
   _loadVocwReportList();
 }
-function _openVocwEditor(month,type){
+function _openVocwEditor(month,type,isNew){
   document.getElementById('vocw-list-view').style.display='none';
   document.getElementById('vocw-edit-view').style.display='';
   // 월 설정
@@ -3314,7 +3314,19 @@ function _openVocwEditor(month,type){
     if(month){inp.value=month;}
     else{const d=new Date();inp.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
   }
-  switchVocWriteTab(type||_vocwType||'weekly');
+  if(isNew){
+    // 새 작성: 기존 내용 로드 없이 빈 에디터로 시작
+    _vocwType=type||'weekly';
+    const tw=document.getElementById('vocw-tab-weekly');
+    const tm=document.getElementById('vocw-tab-monthly');
+    if(tw){tw.style.background=_vocwType==='weekly'?'#1a1a1a':'#fff';tw.style.color=_vocwType==='weekly'?'#fff':'#888';tw.style.borderColor=_vocwType==='weekly'?'#1a1a1a':'#e0e0de';tw.style.fontWeight=_vocwType==='weekly'?'600':'400';}
+    if(tm){tm.style.background=_vocwType==='monthly'?'#1a1a1a':'#fff';tm.style.color=_vocwType==='monthly'?'#fff':'#888';tm.style.borderColor=_vocwType==='monthly'?'#1a1a1a':'#e0e0de';tm.style.fontWeight=_vocwType==='monthly'?'600':'400';}
+    const editor=document.getElementById('vocw-editor');
+    if(editor){editor.innerHTML='';editor.focus();}
+    _initVocwEditor();
+  }else{
+    switchVocWriteTab(type||_vocwType||'weekly');
+  }
 }
 // 최근 보고서 목록 로드
 function _loadVocwReportList(){
@@ -3326,10 +3338,12 @@ function _loadVocwReportList(){
     db.collection('_sys').where('type','in',['weekly','monthly']).limit(50).get().then(function(snap){
       if(snap.empty){listEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">저장된 보고서가 없습니다.<br><br><button onclick="_openVocwEditor(null,\'weekly\')" style="font-size:13px;padding:8px 20px;border:none;border-radius:8px;background:#1a1a1a;color:#fff;cursor:pointer;">✍️ 첫 보고서 작성</button></div>';return;}
       const docs=[];snap.forEach(d=>docs.push({id:d.id,...d.data()}));
-      // 날짜 기준 정렬 (최신순)
+      // 날짜 기준 정렬 (최신순) + YYYY-MM 형식인 문서만 표시
       docs.sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
+      const validDocs=docs.filter(doc=>/^\d{4}-\d{2}$/.test(doc.month||''));
+      if(!validDocs.length){listEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">저장된 보고서가 없습니다.</div>';return;}
       listEl.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;">
-        ${docs.map(doc=>{
+        ${validDocs.map(doc=>{
           const m=doc.month||doc.id.split('_').pop()||'-';
           const t=doc.type==='weekly'?'📅 위클리':'📊 먼슬리';
           const upd=doc.updatedAt?doc.updatedAt.slice(0,10):'날짜 미상';
