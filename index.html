@@ -874,6 +874,7 @@ tr:hover td{background:#fafafa;}
     <div class="section-label">기본 정보</div>
     <div class="grid2 form-row"><div><label>발생 월</label><select id="c-month"><option value="">선택</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></div><div><label>작성일 *</label><input type="date" id="c-date"/></div></div>
     <div class="grid2 form-row"><div><label>클레임 인입일</label><input type="date" id="c-indate"/></div><div><label>배송 일자</label><input type="date" id="c-shipdate"/></div></div>
+    <div class="form-row"><label>티켓번호</label><input type="text" id="c-ticketno" placeholder="숫자만 입력 → T 자동 추가" oninput="const v=this.value.replace(/^T/i,'').replace(/\D/g,'');this.value=v?'T'+v:''" style="max-width:200px;"/></div>
     <div class="divider"></div>
     <div class="section-label">채널 / 주문</div>
     <div class="grid2 form-row">
@@ -1907,7 +1908,7 @@ function openEditModal(id){
   set('c-issue',r.issue);set('c-liability',r.liability);
   set('c-type',r.type);set('c-nature',r.nature);set('c-reason',r.reason);
   set('c-return-yn',r.returnYn);set('c-reship-yn',r.reshipYn);set('c-accident',r.accident);
-  set('c-status',r.status);set('c-cost-return',r.costR);set('c-cost-reship',r.costS);
+  set('c-status',r.status);set('c-cost-return',r.costR);set('c-cost-reship',r.costS);set('c-ticketno',r.ticketNo||'');
   // 상품 항목 1개로 채우기
   const c=document.getElementById('c-products-container');
   if(c){
@@ -1951,6 +1952,7 @@ function addClaim(){
     status:document.getElementById('c-status').value,
     costR:document.getElementById('c-cost-return').value,
     costS:document.getElementById('c-cost-reship').value,
+    ticketNo:document.getElementById('c-ticketno').value,
   };
   const productItems=document.querySelectorAll('#c-products-container .product-item');
   if(_editClaimId){
@@ -2010,7 +2012,7 @@ function duplicateClaim(id){
 function clearClaimForm(){
   ['c-month','c-indate','c-shipdate','c-channel','c-platform','c-orderno','c-buyer',
    'c-issue','c-liability','c-type','c-nature','c-reason','c-return-yn','c-reship-yn',
-   'c-accident','c-status','c-cost-return','c-cost-reship'].forEach(id=>{
+   'c-accident','c-status','c-cost-return','c-cost-reship','c-ticketno'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     el.value='';if(el._sdInput)el._sdInput.value='';
   });
@@ -2661,16 +2663,16 @@ function _vsRender(scrollTopOverride){
 }
 
 // ===== 드래그 & 드롭 순서 변경 =====
-let _dragClaimId=null;
+let _dragClaimId=null,_dragMousedownEl=null;
+// mousedown으로 실제 클릭 요소 추적 (dragstart의 e.target은 항상 tr이라 체크 불가)
+document.addEventListener('mousedown',e=>{_dragMousedownEl=e.target;},{passive:true});
 function _attachDragEvents(){
   const tbody=document.getElementById('claim-tbody');
   if(!tbody)return;
   tbody.querySelectorAll('tr[data-cid]').forEach(tr=>{
     tr.addEventListener('dragstart',e=>{
-      // 핸들 셀(⠿)에서 시작한 경우에만 드래그 허용
-      // e.target은 tr(draggable 요소)이므로 composedPath로 실제 클릭 요소 확인
-      const origin=(e.composedPath&&e.composedPath()[0])||e.target;
-      if(!origin.closest('td[data-field="_drag"]')){e.preventDefault();return;}
+      // 핸들 셀(⠿)에서 mousedown이 시작된 경우에만 드래그 허용
+      if(!_dragMousedownEl||!_dragMousedownEl.closest('td[data-field="_drag"]')){e.preventDefault();return;}
       _dragClaimId=+tr.dataset.cid;
       e.dataTransfer.effectAllowed='move';
       setTimeout(()=>tr.classList.add('dragging'),0);
@@ -2802,7 +2804,9 @@ function _buildClaimRow(r,i){
 function _doRenderClaimTable(){
   const tbody=document.getElementById('claim-tbody'),empty=document.getElementById('claim-empty');
   if(!tbody)return;
-  const allClaims=loadClaims(),claims=getFilteredClaims();
+  const allClaims=loadClaims();
+  _buildClaimMonthTabs(allClaims); // 탭 먼저 구성 → _activeClaimMonth 확정 후 필터 적용
+  const claims=getFilteredClaims();
   const badge=document.getElementById('claim-count-badge');
   const _df=document.getElementById('claim-date-from')?.value||'';
   const _dt=document.getElementById('claim-date-to')?.value||'';
@@ -2816,7 +2820,6 @@ function _doRenderClaimTable(){
   // 반품 → 검수 결과 맵 (orderno 기준, inspect + opened 저장)
   _returnInspectCache={};
   try{loadReturns().forEach(r=>{if(r.orderno&&(r.inspect||r.opened||r.returnImgUrls)){const key=r.orderno.trim();if(!_returnInspectCache[key]||r.inspect){_returnInspectCache[key]={inspect:r.inspect||'',opened:r.opened||'',returnImgUrls:Array.isArray(r.returnImgUrls)?r.returnImgUrls:[]};}else if(Array.isArray(r.returnImgUrls)&&r.returnImgUrls.length){(_returnInspectCache[key].returnImgUrls||[]).push(...r.returnImgUrls);}}});}catch(e){}
-  _buildClaimMonthTabs(allClaims);
   _vsInit();
   // 스크롤 복원: tbody가 비어있을 때는 scrollTop이 클램핑되므로
   // _vsRender(sc)로 먼저 올바른 위치의 행을 렌더한 뒤 scrollTop을 설정
