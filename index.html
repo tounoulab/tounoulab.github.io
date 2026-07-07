@@ -1147,7 +1147,7 @@ tr:hover td{background:#fafafa;}
 <!-- ===== PAGE: 반품 입고 ===== -->
 <div id="page-return" class="page">
 <div style="padding:0 24px 24px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;position:sticky;top:56px;z-index:99;background:#fff;border-bottom:1px solid #f0f0ee;margin-bottom:8px;">
+  <div id="ret-sticky-bar" style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;position:sticky;top:56px;z-index:99;background:#fff;border-bottom:1px solid #f0f0ee;margin-bottom:8px;">
     <span style="font-size:18px;font-weight:700;">반품 입고</span>
     <div style="display:flex;gap:6px;align-items:center;">
       <button class="btn-secondary" style="height:32px;background:#1a1a1a;color:#fff;border-color:#1a1a1a;font-weight:600;" onclick="openReturnRegModal()">+ 입고 등록</button>
@@ -1301,7 +1301,7 @@ function switchPage(name){
   if(name==='vocwrite'){if(_currentUserId()==='chohee'){_showVocwList();}else{switchPage('home');return;}_restoreScroll('vocwrite');}
   if(name==='accounts'){if(_currentUserId()==='chohee'){renderAccountsPage();}else{switchPage('home');return;}}
   if(name==='return'){
-    renderReturnStats();renderReturnTable();_restoreScroll('return');
+    renderReturnStats();renderReturnTable();_retUpdateStickyTop();_restoreScroll('return');
     const rw=document.getElementById('r-items-wrap');
     if(rw&&!rw.children.length){
       rw.insertAdjacentHTML('beforeend',_makeReturnItemRowHTML());
@@ -3164,6 +3164,13 @@ function _retCtxSplit(){
   if(!target)return;
   delete target._rGroupId;
   _fsSet('returns',String(target.id),target).catch(e=>console.error(e));
+}
+function _retUpdateStickyTop(){
+  const bar=document.getElementById('ret-sticky-bar');
+  if(!bar)return;
+  const tabBar=document.getElementById('page-tab-bar');
+  const gnbH=56,tabH=(tabBar&&tabBar.offsetHeight>0)?tabBar.offsetHeight:0;
+  bar.style.top=(gnbH+tabH)+'px';
 }
 function _toggleReturnDateSection(secId){
   const sec=document.getElementById(secId);
@@ -5525,25 +5532,27 @@ function _retWarehousePick(td,id){
     _fsSet('returns',String(id),r).catch(e=>console.error(e));
     td.innerHTML=_retWarehouseDisplay(val,reason||'');
   };
-  const _showReasonPicker=(val)=>{
+  const _showReasonPicker=(val,origHtml)=>{
     // 인라인 사유 선택 (prompt() 대체)
     const reasons=['고객 반송','업체 반송','사고 접수','CX 전달','폐기','3PL 전달'];
     const cur=r.warehouseReason||'';
+    // origHtml을 복원용으로 저장
+    if(origHtml!=null)td.dataset.retOrigHtml=origHtml;
     let rHtml=`<div style="padding:4px 0;font-size:11px;color:#666;margin-bottom:4px;">미입고 사유 선택</div>`;
     rHtml+=`<select id="_ret_reason_sel_${id}" style="font-family:inherit;font-size:12px;border:1.5px solid #1a73e8;border-radius:5px;padding:3px 4px;background:#fff;width:140px;">`;
     reasons.forEach(rs=>{rHtml+=`<option value="${rs}"${rs===cur?' selected':''}>${rs}</option>`;});
     rHtml+=`</select>`;
     rHtml+=`<button onclick="_retReasonConfirm('${id}','${val}')" style="margin-left:6px;font-size:11px;padding:3px 10px;border:none;border-radius:5px;background:#1a1a1a;color:#fff;cursor:pointer;">확인</button>`;
-    rHtml+=`<button onclick="document.getElementById('_ret_reason_wrap_${id}').closest('td').innerHTML=_retWarehouseDisplay('${val.replace(/'/g,"\\'")}','${cur.replace(/'/g,"\\'")}');" style="margin-left:4px;font-size:11px;padding:3px 8px;border:1px solid #ccc;border-radius:5px;background:#fff;cursor:pointer;">취소</button>`;
+    rHtml+=`<button onclick="_retReasonCancel('${id}')" style="margin-left:4px;font-size:11px;padding:3px 8px;border:1px solid #ccc;border-radius:5px;background:#fff;cursor:pointer;">취소</button>`;
     td.innerHTML=`<div id="_ret_reason_wrap_${id}" style="text-align:left;padding:2px;">${rHtml}</div>`;
   };
   sel.addEventListener('change',()=>{
     if(saved)return;
     const val=sel.value;
-    if(val==='N'){_showReasonPicker(val);}
+    if(val==='N'){saved=true;_showReasonPicker(val,origHTML);}
     else{_doSave(val,'');}
   });
-  sel.addEventListener('blur',()=>{if(!saved)td.innerHTML=origHTML;});
+  sel.addEventListener('blur',()=>{setTimeout(()=>{if(!saved)td.innerHTML=origHTML;},200);});
   sel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();td.innerHTML=origHTML;}});
 }
 function _retReasonConfirm(id,val){
@@ -5556,6 +5565,19 @@ function _retReasonConfirm(id,val){
   _fsSet('returns',String(id),r).catch(e=>console.error(e));
   const wrap=document.getElementById('_ret_reason_wrap_'+id);
   if(wrap)wrap.closest('td').innerHTML=_retWarehouseDisplay(val,reason);
+}
+function _retReasonCancel(id){
+  const wrap=document.getElementById('_ret_reason_wrap_'+id);
+  if(!wrap)return;
+  const td=wrap.closest('td');
+  if(!td)return;
+  const orig=td.dataset.retOrigHtml;
+  if(orig!=null){td.innerHTML=orig;}
+  else{
+    const all=loadReturns();
+    const r=all.find(x=>String(x.id)===String(id));
+    td.innerHTML=_retWarehouseDisplay(r?r.warehouseStatus||'':'',(r&&r.warehouseReason)||'');
+  }
 }
 function _retCxChange(id,sel){
   const val=sel.value;
