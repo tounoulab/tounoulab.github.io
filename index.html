@@ -3242,8 +3242,7 @@ function renderReturnTable(){
     // 그룹 내 첫 번째 비어있지 않은 원송장·주문번호 사용
     const dispOrig=(group.find(r=>(r.orig||'').trim()&&r.orig!=='-')||f).orig||'-';
     const dispOrdno=(group.find(r=>(r.orderno||'').trim()&&r.orderno!=='-')||f).orderno||'-';
-    const safeOrdno=dispOrdno.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    const cxSel=`<select onchange="_retCxChangeGroup('${safeOrdno}',this)" style="padding:2px 4px;font-size:12px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;background:#fff;text-align:center;width:58px;"><option value=""${!cx?' selected':''}>-</option><option value="Y"${cx==='Y'?' selected':''}>Y</option><option value="N"${cx==='N'?' selected':''}>N</option></select>`;
+    const cxSel=`<select onchange="_retCxChangeGroup('${f.id}',this)" style="padding:2px 4px;font-size:12px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;background:#fff;text-align:center;width:58px;"><option value=""${!cx?' selected':''}>-</option><option value="Y"${cx==='Y'?' selected':''}>Y</option><option value="N"${cx==='N'?' selected':''}>N</option></select>`;
     group.forEach((r,i)=>{
       const isFirst=i===0;
       const rowBg=cx==='N'?'background:#fefce8;':'background:#fff;';
@@ -3290,18 +3289,15 @@ function renderReturnTable(){
   _attachReturnDragEvents();
   _attachReturnContextMenu();
 }
-// ===== 반품 목록 CX 그룹 저장 (주문번호 단위) =====
-function _retCxChangeGroup(orderno,sel){
+// ===== 반품 목록 CX 그룹 저장 (그룹 단위) =====
+function _retCxChangeGroup(retId,sel){
   const val=sel.value;
   const all=loadReturns();
-  const ono=(orderno||'').trim();
-  const toUpdate=ono?all.filter(r=>(r.orderno||'').trim()===ono):[];
-  if(!toUpdate.length){
-    // fallback: 현재 tr의 id로 저장
-    const tr=sel.closest('tr');
-    if(tr){const id=tr.dataset.retId;_retSaveField(id,'cxChecked',val,tr);}
-    return;
-  }
+  const base=all.find(r=>String(r.id)===String(retId));
+  if(!base){const tr=sel.closest('tr');if(tr){const id=tr.dataset.retId;_retSaveField(id,'cxChecked',val,tr);}return;}
+  // 같은 그룹 전체에 저장
+  const baseGK=_retGroupKey(base);
+  const toUpdate=all.filter(r=>_retGroupKey(r)===baseGK);
   toUpdate.forEach(r=>{
     r.cxChecked=val;
     _fsSet('returns',String(r.id),r).catch(e=>console.error(e));
@@ -3337,9 +3333,18 @@ function _attachReturnDragEvents(){
     tr.addEventListener('dragover',e=>{
       if(!_dragReturnId)return;
       e.preventDefault();e.dataTransfer.dropEffect='move';
-      if(tr.dataset.retId&&+tr.dataset.retId!==_dragReturnId){
+      if(tr.dataset.retId&&String(tr.dataset.retId)!==String(_dragReturnId)){
         container.querySelectorAll('tr[data-ret-id]').forEach(r=>r.classList.remove('drag-over'));
-        tr.classList.add('drag-over');
+        // 같은 그룹의 모든 행 하이라이트
+        const allR=loadReturns();
+        const toItem=allR.find(x=>String(x.id)===tr.dataset.retId);
+        if(toItem){
+          const toGK=_retGroupKey(toItem);
+          container.querySelectorAll('tr[data-ret-id]').forEach(r=>{
+            const ri=allR.find(x=>String(x.id)===r.dataset.retId);
+            if(ri&&_retGroupKey(ri)===toGK)r.classList.add('drag-over');
+          });
+        } else {tr.classList.add('drag-over');}
       }
     });
     tr.addEventListener('drop',e=>{
@@ -3350,23 +3355,48 @@ function _attachReturnDragEvents(){
     });
   });
 }
+function _retGroupKey(r){
+  const d=r.date||'';
+  if(r._rGroupId)return d+'\x00_gid_\x00'+r._rGroupId;
+  return [d,r.retno||'',r.name||''].join('\x00');
+}
 async function _handleReturnDrop(fromId,toId){
   const allR=loadReturns().slice();
+  // _rowOrder 없으면 인덱스 기반 초기화
   allR.forEach((r,i)=>{if(r._rowOrder==null)r._rowOrder=i*1000;r._ro=r._rowOrder;});
   allR.sort((a,b)=>a._ro-b._ro);
-  const fromIdx=allR.findIndex(r=>r.id===fromId);
-  const toIdx=allR.findIndex(r=>r.id===toId);
-  if(fromIdx===-1||toIdx===-1)return;
-  let prevOrder,nextOrder;
-  if(fromIdx<toIdx){
-    prevOrder=allR[toIdx]._ro;
-    nextOrder=toIdx<allR.length-1?allR[toIdx+1]._ro:allR[toIdx]._ro+2000;
+  const fromItem=allR.find(r=>String(r.id)===String(fromId));
+  const toItem=allR.find(r=>String(r.id)===String(toId));
+  if(!fromItem||!toItem)return;
+  const fromGK=_retGroupKey(fromItem),toGK=_retGroupKey(toItem);
+  if(fromGK===toGK)return;
+  // 그룹별 정렬된 리스트 생성
+  const seenGK=new Map();
+  const groups=[];
+  allR.forEach(r=>{
+    const gk=_retGroupKey(r);
+    if(!seenGK.has(gk)){seenGK.set(gk,{key:gk,items:[],min:r._ro,max:r._ro});groups.push(seenGK.get(gk));}
+    const g=seenGK.get(gk);g.items.push(r);
+    g.min=Math.min(g.min,r._ro);g.max=Math.max(g.max,r._ro);
+  });
+  const fromGIdx=groups.findIndex(g=>g.key===fromGK);
+  const toGIdx=groups.findIndex(g=>g.key===toGK);
+  if(fromGIdx===-1||toGIdx===-1)return;
+  // 이동 방향에 따라 삽입 위치 결정
+  let prevMax,nextMin;
+  if(fromGIdx<toGIdx){
+    // 아래로 이동 → toGroup 뒤에 삽입
+    prevMax=groups[toGIdx].max;
+    nextMin=toGIdx<groups.length-1?groups[toGIdx+1].min:groups[toGIdx].max+10000;
   }else{
-    prevOrder=toIdx>0?allR[toIdx-1]._ro:allR[toIdx]._ro-2000;
-    nextOrder=allR[toIdx]._ro;
+    // 위로 이동 → toGroup 앞에 삽입
+    prevMax=toGIdx>0?groups[toGIdx-1].max:groups[toGIdx].min-10000;
+    nextMin=groups[toGIdx].min;
   }
-  const newOrder=(prevOrder+nextOrder)/2;
-  await _fsUpdate('returns',String(fromId),{_rowOrder:newOrder}).catch(e=>console.error(e));
+  // fromGroup 전체 아이템에 균등 배분
+  const fromItems=groups[fromGIdx].items;
+  const gap=(nextMin-prevMax)/(fromItems.length+1);
+  await Promise.all(fromItems.map((r,i)=>_fsUpdate('returns',String(r.id),{_rowOrder:prevMax+gap*(i+1)}))).catch(e=>console.error(e));
 }
 // ===== VOC =====
 function renderVocStats(){
@@ -5363,21 +5393,23 @@ function _retEdit(td){
   if(!r)return;
   let cur=String(r[field]||'');
   const origHTML=td.innerHTML;
+  // 클릭 전 셀 너비 고정 → 입력 시 레이아웃 이동 방지
+  const fixedW=td.offsetWidth+'px';
+  td.style.width=fixedW;td.style.minWidth=fixedW;td.style.maxWidth=fixedW;
+  const inputW='100%';
   let el;
   if(type==='inspect'){
     // 검수결과: 정상/불량 선택 후 불량이면 사유 직접 입력
     const wrap=document.createElement('div');
-    wrap.style.cssText='display:flex;flex-direction:column;gap:3px;';
+    wrap.style.cssText='display:flex;flex-direction:column;gap:3px;width:100%;box-sizing:border-box;';
     const sel=document.createElement('select');
-    sel.style.cssText='width:100%;font-family:inherit;font-size:12px;border:1.5px solid #1a73e8;border-radius:5px;padding:2px;background:#fff;';
+    sel.style.cssText='width:'+inputW+';font-family:inherit;font-size:12px;border:1.5px solid #1a73e8;border-radius:5px;padding:2px;background:#fff;box-sizing:border-box;';
     ['','정상','불량'].forEach(o=>{const opt=document.createElement('option');opt.value=o;opt.textContent=o||'-';sel.appendChild(opt);});
-    // 현재값이 불량으로 시작하면 선택값 설정, 사유 추출
     const isCurBad=cur.startsWith('불량');
     sel.value=cur==='정상'?'정상':(isCurBad?'불량':'');
     const detailInp=document.createElement('input');
     detailInp.type='text';detailInp.placeholder='불량 사유 직접 입력';
-    detailInp.style.cssText='display:none;width:100%;font-family:inherit;font-size:12px;border:1.5px solid #fca5a5;border-radius:5px;padding:2px 4px;box-sizing:border-box;';
-    // 현재 불량 사유가 있으면 초기 표시
+    detailInp.style.cssText='display:none;width:'+inputW+';font-family:inherit;font-size:12px;border:1.5px solid #fca5a5;border-radius:5px;padding:2px 4px;box-sizing:border-box;';
     if(isCurBad){
       const reason=cur.replace(/^불량[-\s]*/,'');
       detailInp.value=reason;
@@ -5397,39 +5429,44 @@ function _retEdit(td){
       const r2=loadReturns().find(x=>String(x.id)===String(id));
       const ri2=r2&&Array.isArray(r2.returnImgUrls)&&r2.returnImgUrls.length?r2.returnImgUrls:null;
       const ig2=ri2?`<span style="cursor:pointer;font-size:11px;margin-left:2px;" onclick='viewImgUrls(${JSON.stringify(ri2)},0)'>🖼️</span>`:'';
+      td.style.width='';td.style.minWidth='';td.style.maxWidth='';
       td.innerHTML=`<span style="font-weight:${val?'700':'400'};color:${c};">${val||'-'}</span>${ig2}`;
     };
-    detailInp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveInspect();}if(e.key==='Escape'){e.preventDefault();td.innerHTML=origHTML;}});
+    detailInp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveInspect();}if(e.key==='Escape'){e.preventDefault();td.style.width='';td.style.minWidth='';td.style.maxWidth='';td.innerHTML=origHTML;}});
     sel.addEventListener('blur',()=>{if(sel.value!=='불량')setTimeout(saveInspect,100);});
     detailInp.addEventListener('blur',()=>setTimeout(saveInspect,100));
     return;
   } else if(type==='select'){
     const opts=(td.dataset.retOpts||'').split('|');
     el=document.createElement('select');
-    el.style.cssText='width:100%;font-family:inherit;font-size:12px;border:1.5px solid #1a73e8;border-radius:5px;padding:2px;background:#fff;';
+    el.style.cssText='width:'+inputW+';font-family:inherit;font-size:12px;border:1.5px solid #1a73e8;border-radius:5px;padding:2px;background:#fff;box-sizing:border-box;';
     opts.forEach(o=>{const opt=document.createElement('option');opt.value=o;opt.textContent=o||'-';if(o===cur)opt.selected=true;el.appendChild(opt);});
   } else if(type==='date'){
     el=document.createElement('input');el.type='date';el.value=cur;
-    el.style.cssText='width:100%;font-family:inherit;font-size:11px;border:1.5px solid #1a73e8;border-radius:5px;padding:2px;box-sizing:border-box;';
+    el.style.cssText='width:'+inputW+';font-family:inherit;font-size:11px;border:1.5px solid #1a73e8;border-radius:5px;padding:2px;box-sizing:border-box;';
   } else {
     el=document.createElement('input');el.type='text';el.value=cur;
-    el.style.cssText='width:100%;font-family:inherit;font-size:12px;border:1.5px solid #1a73e8;border-radius:5px;padding:2px 4px;box-sizing:border-box;';
+    el.style.cssText='width:'+inputW+';font-family:inherit;font-size:12px;border:1.5px solid #1a73e8;border-radius:5px;padding:2px 4px;box-sizing:border-box;';
   }
   td.innerHTML='';td.appendChild(el);el.focus();
   if(el.select&&type==='text')el.select();
+  const resetTdWidth=()=>{td.style.width='';td.style.minWidth='';td.style.maxWidth='';};
   const save=()=>{
     const val=el.value;
-    _retSaveField(id,field,val,tr);
-    if(field==='opened'){
-      td.innerHTML=val||'-';
-    } else if(field==='inspect'){
+    // orig·retno·name·orderno는 그룹 전체에 적용 (rowspan 공유 필드)
+    const groupFields=['orig','retno','name','orderno'];
+    if(groupFields.includes(field)){
+      _retSaveFieldGroup(id,field,val);
+    } else {
+      _retSaveField(id,field,val,tr);
+    }
+    resetTdWidth();
+    if(field==='inspect'){
       const c=val.startsWith('불량')?'#dc2626':(val==='정상'?'#16a34a':'#555');
       const r2=loadReturns().find(x=>String(x.id)===String(id));
       const ri2=r2&&Array.isArray(r2.returnImgUrls)&&r2.returnImgUrls.length?r2.returnImgUrls:null;
       const ig2=ri2?`<span style="cursor:pointer;font-size:11px;margin-left:2px;" onclick='viewImgUrls(${JSON.stringify(ri2)},0)'>🖼️</span>`:'';
       td.innerHTML=`<span style="font-weight:${val?'700':'400'};color:${c};">${val||'-'}</span>${ig2}`;
-    } else if(field==='product'){
-      td.innerHTML=val||'-';
     } else {
       td.innerHTML=val||'-';
     }
@@ -5437,9 +5474,24 @@ function _retEdit(td){
   el.addEventListener('blur',save);
   el.addEventListener('keydown',e=>{
     if(e.key==='Enter'){e.preventDefault();save();}
-    if(e.key==='Escape'){e.preventDefault();td.innerHTML=origHTML;}
+    if(e.key==='Escape'){e.preventDefault();resetTdWidth();td.innerHTML=origHTML;}
   });
   if(type==='select')el.addEventListener('change',()=>save());
+}
+function _retSaveFieldGroup(id,field,value){
+  // rowspan 공유 필드(orig·retno·name·orderno)는 같은 그룹 전원에게 저장
+  const all=loadReturns();
+  const base=all.find(x=>String(x.id)===String(id));
+  if(!base)return;
+  // 같은 그룹: _rGroupId 있으면 그것으로, 없으면 date+retno+name
+  let peers;
+  if(base._rGroupId){
+    peers=all.filter(x=>x._rGroupId===base._rGroupId&&(x.date||'')===(base.date||''));
+  } else {
+    peers=all.filter(x=>(x.date||'')===(base.date||'')&&(x.retno||'')===(base.retno||'')&&(x.name||'')===(base.name||''));
+  }
+  if(!peers.length)peers=[base];
+  peers.forEach(r=>{r[field]=value;_fsSet('returns',String(r.id),r).catch(e=>console.error(e));});
 }
 function _retSaveField(id,field,value,tr){
   const all=loadReturns();
