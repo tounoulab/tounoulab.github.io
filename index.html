@@ -991,7 +991,7 @@ tr:hover td{background:#fafafa;}
       <input type="date" id="claim-date-from" style="height:32px;padding:0 8px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;width:130px;outline:none;box-sizing:border-box;color:#333;" onchange="_applyClaimDateFilter()"/>
       <span style="font-size:11px;color:#aaa;line-height:32px;">~</span>
       <input type="date" id="claim-date-to" style="height:32px;padding:0 8px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;width:130px;outline:none;box-sizing:border-box;color:#333;" onchange="_applyClaimDateFilter()"/>
-      <button onclick="_clearClaimDateFilter()" style="height:32px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;background:#f5f5f3;color:#888;cursor:pointer;font-family:inherit;">날짜 초기화</button>
+      <button onclick="_clearClaimDateFilter()" style="height:32px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;background:#f5f5f3;color:#888;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;box-sizing:border-box;">날짜 초기화</button>
       <input id="claim-search-input" type="text" placeholder="🔍 주문번호·구매자·상품명 검색" oninput="_applyClaimSearch(this.value)" style="height:32px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:13px;width:200px;outline:none;box-sizing:border-box;"/>
       <button onclick="openClaimModal()" class="btn-secondary" style="height:32px;background:#1a1a1a;color:#fff;border-color:#1a1a1a;font-weight:600;white-space:nowrap;">+ 클레임 등록</button>
       <button id="btn-group-order" class="btn-secondary" onclick="toggleGroupByOrder()" title="같은 주문번호를 1건으로 묶어서 표시" style="height:32px;white-space:nowrap;">주문별 보기</button>
@@ -1146,8 +1146,8 @@ tr:hover td{background:#fafafa;}
 
 <!-- ===== PAGE: 반품 입고 ===== -->
 <div id="page-return" class="page">
-<div style="padding:24px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+<div style="padding:0 24px 24px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0;position:sticky;top:56px;z-index:99;background:#fff;border-bottom:1px solid #f0f0ee;margin-bottom:8px;">
     <span style="font-size:18px;font-weight:700;">반품 입고</span>
     <div style="display:flex;gap:6px;align-items:center;">
       <button class="btn-secondary" style="height:32px;background:#1a1a1a;color:#fff;border-color:#1a1a1a;font-weight:600;" onclick="openReturnRegModal()">+ 입고 등록</button>
@@ -1184,8 +1184,8 @@ tr:hover td{background:#fafafa;}
       <label style="font-size:12px;font-weight:700;color:#555;">상품 목록</label>
       <button type="button" onclick="addReturnItemRow()" style="font-size:11px;padding:3px 12px;border:1px solid #1a1a1a;border-radius:6px;background:#fff;cursor:pointer;font-family:inherit;font-weight:600;">+ 상품 추가</button>
     </div>
-    <div style="display:grid;grid-template-columns:2fr 2fr 56px 56px 1fr 30px;gap:5px;padding:0 2px 5px;border-bottom:1.5px solid #e8e8e6;">
-      <span style="font-size:11px;color:#aaa;">상품명</span><span style="font-size:11px;color:#aaa;">옵션</span><span style="font-size:11px;color:#aaa;text-align:center;">수량</span><span style="font-size:11px;color:#aaa;text-align:center;">개봉</span><span style="font-size:11px;color:#aaa;">검수결과</span><span style="font-size:11px;color:#aaa;text-align:center;">순서</span>
+    <div style="display:grid;grid-template-columns:2fr 2fr 56px 56px 1fr 28px;gap:5px;padding:0 2px 5px;border-bottom:1.5px solid #e8e8e6;">
+      <span style="font-size:11px;color:#aaa;">상품명</span><span style="font-size:11px;color:#aaa;">옵션</span><span style="font-size:11px;color:#aaa;text-align:center;">수량</span><span style="font-size:11px;color:#aaa;text-align:center;">개봉</span><span style="font-size:11px;color:#aaa;">검수결과</span><span></span>
     </div>
     <div id="r-items-wrap"></div>
     <div class="form-row" style="margin-top:10px;"><label>비고</label><input type="text" id="r-note" placeholder="비고"/></div>
@@ -2828,7 +2828,7 @@ function _buildClaimRow(r,i){
       const tooltip=isBad&&detail?detail:dispText;
       const retImgs=cached.returnImgUrls&&cached.returnImgUrls.length?cached.returnImgUrls:null;
       const imgIcon=retImgs?`<span style="cursor:pointer;margin-left:5px;font-size:13px;" title="${retImgs.length}장 사진 보기" onclick="viewImgUrls(${JSON.stringify(retImgs).replace(/"/g,'&quot;')},0)">🖼️${retImgs.length>1?`<sup style="font-size:9px;color:#1a73e8;">${retImgs.length}</sup>`:''}</span>`:'';
-      cells+=`<td class="tdc" title="${tooltip}" style="color:${chipColor};font-weight:700;font-size:13px;${_colW('_inspect')}">${dispText}${imgIcon}</td>`;
+      cells+=`<td class="tdc" style="color:${chipColor};font-weight:700;font-size:13px;${_colW('_inspect')}">${dispText}${imgIcon}</td>`;
       return;
     }
     if(key==='_sla'){
@@ -2914,7 +2914,7 @@ function _updateLoadMore(){}
 const _returnRowImgs={};
 function _makeReturnItemRowHTML(){
   const rowId='rrow_'+(Date.now()+Math.floor(Math.random()*1000));
-  return `<div class="r-item-row" data-rowid="${rowId}" style="display:grid;grid-template-columns:2fr 2fr 56px 56px 1fr 30px;gap:5px;align-items:start;padding:7px 0;border-bottom:1px solid #f0f0ee;">
+  return `<div class="r-item-row" data-rowid="${rowId}" style="display:grid;grid-template-columns:2fr 2fr 56px 56px 1fr 28px;gap:5px;align-items:start;padding:7px 0;border-bottom:1px solid #f0f0ee;">
     <input type="text" class="ri-product" placeholder="상품명" style="padding:6px 9px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;">
     <select class="ri-option" style="padding:6px 4px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;">${_OPTION_OPTS}</select>
     <input type="number" class="ri-qty" value="1" min="1" style="padding:6px 4px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;text-align:center;">
@@ -2927,10 +2927,8 @@ function _makeReturnItemRowHTML(){
         <button type="button" onclick="_addReturnRowImg(this)" style="font-size:11px;padding:3px 8px;border:1px solid #e0d0d0;border-radius:5px;background:#fff5f5;cursor:pointer;color:#666;font-family:inherit;width:100%;">📎 사진 첨부</button>
       </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:2px;align-items:center;">
-      <button type="button" onclick="_retItemRowUp(this)" style="padding:2px 7px;font-size:11px;border:1px solid #d1d5db;border-radius:4px;background:#f8f8f8;cursor:pointer;line-height:1.4;" title="위로">↑</button>
-      <button type="button" onclick="_retItemRowDown(this)" style="padding:2px 7px;font-size:11px;border:1px solid #d1d5db;border-radius:4px;background:#f8f8f8;cursor:pointer;line-height:1.4;" title="아래로">↓</button>
-      <button type="button" onclick="this.closest('.r-item-row').remove()" style="padding:2px 7px;font-size:11px;border:1px solid #e0d0d0;border-radius:4px;background:#fff5f5;cursor:pointer;color:#dc2626;line-height:1.4;" title="삭제">✕</button>
+    <div style="display:flex;align-items:flex-start;justify-content:center;padding-top:4px;">
+      <button type="button" onclick="this.closest('.r-item-row').remove()" style="padding:2px 6px;font-size:11px;border:1px solid #e0d0d0;border-radius:4px;background:#fff5f5;cursor:pointer;color:#dc2626;line-height:1.4;" title="삭제">✕</button>
     </div>
   </div>`;
 }
@@ -3099,6 +3097,7 @@ function renderReturnStats(){
   ss('sr-month',countIn(r,'date',ms,me),cmp(countIn(r,'date',ms,me),countIn(r,'date',lms,lme)),fmt(ms)+'~'+fmt(t));
 }
 let _returnActiveMonth='';
+let _retCollapsedDates=new Set();
 function _buildReturnMonthTabs(returns){
   const tabsEl=document.getElementById('return-month-tabs');
   if(!tabsEl)return;
@@ -3118,6 +3117,8 @@ function _toggleReturnDateSection(secId){
   const hidden=sec.style.display==='none';
   sec.style.display=hidden?'':'none';
   if(arrow)arrow.textContent=hidden?'▼':'▶';
+  if(hidden) _retCollapsedDates.delete(secId);
+  else _retCollapsedDates.add(secId);
 }
 function _retWarehouseDisplay(ws,wr){
   const map={'Y(정상)':'#16a34a','Y(리퍼)':'#7c3aed','Y(폐기/불량 이동)':'#ea580c','N':'#dc2626'};
@@ -3151,8 +3152,13 @@ function renderReturnTable(){
     if(ono&&ono!=='-')dateStats[d].orders.add(ono);
     dateStats[d].qty+=parseInt(r.qty||'0',10)||0;
   });
-  // 같은 입고일+반송장+고객명 → 같은 그룹 (원송장·주문번호 달라도 같은 반품 건으로 묶음)
-  const gKey=r=>[r.date||'',r.retno||'',r.name||''].join('\x00');
+  // 주문번호 있으면 주문번호 기준으로 그룹핑, 없으면 반송장+이름으로 그룹핑
+  const gKey=r=>{
+    const d=r.date||'';
+    const ono=(r.orderno||'').trim();
+    if(ono&&ono!=='-') return d+'\x00_ono_\x00'+ono;
+    return [d,(r.retno||'').trim()||'_nk_'+r.id,(r.name||'').trim()].join('\x00');
+  };
   const groups=[],seen=new Map();
   returns.forEach(r=>{const k=gKey(r);if(!seen.has(k)){const a=[];seen.set(k,a);groups.push(a);}seen.get(k).push(r);});
   const DOW=['일','월','화','수','목','금','토'];
@@ -3202,7 +3208,7 @@ function renderReturnTable(){
       sectionRows+=`<td style="${ES}font-size:11px;" data-ret-field="option" onclick="_retEdit(this)">${r.option||'-'}</td>`;
       sectionRows+=`<td style="${ES}" data-ret-field="qty" onclick="_retEdit(this)">${r.qty||'-'}</td>`;
       sectionRows+=`<td style="${ES}" data-ret-field="opened" data-ret-type="select" data-ret-opts="|개봉|미개봉" onclick="_retEdit(this)">${openedTxt}</td>`;
-      sectionRows+=`<td style="${ES}" data-ret-field="inspect" data-ret-type="select" data-ret-opts="|정상|불량-배송|불량-제품|불량-포장|기타" onclick="_retEdit(this)"><span style="font-weight:${insp?'700':'400'};color:${inspColor};">${insp||'-'}</span>${imgIcon}</td>`;
+      sectionRows+=`<td style="${ES}" data-ret-field="inspect" data-ret-type="inspect" onclick="_retEdit(this)"><span style="font-weight:${insp?'700':'400'};color:${inspColor};">${insp||'-'}</span>${imgIcon}</td>`;
       sectionRows+=`<td style="${CS}cursor:pointer;" onclick="_retWarehousePick(this,'${r.id}')">${wDisp}</td>`;
       if(isFirst){
         sectionRows+=`<td rowspan="${rs}" style="${CS}">${cxSel}</td>`;
@@ -3216,6 +3222,13 @@ function renderReturnTable(){
   // 마지막 섹션 닫기
   if(lastDate!==''){sectionsHtml+=sectionRows+'</tbody></table></div>';}
   container.innerHTML=sectionsHtml;
+  // 접기 상태 복원
+  _retCollapsedDates.forEach(secId=>{
+    const sec=document.getElementById(secId);
+    if(sec)sec.style.display='none';
+    const arrow=document.getElementById(secId+'-arrow');
+    if(arrow)arrow.textContent='▶';
+  });
   _attachReturnDragEvents();
 }
 // ===== 반품 목록 CX 그룹 저장 (주문번호 단위) =====
@@ -3962,6 +3975,9 @@ function _startVocwAutoSave(){
 function _loadVocwContent(type){
   const editor=document.getElementById('vocw-editor');
   if(!editor)return;
+  // 에디터에 내용이 이미 있으면 로드 건너뜀 (제목도 유지)
+  const existingContent=editor.innerHTML.trim();
+  if(existingContent&&existingContent!=='<span style="color:#bbb;">로딩 중...</span>'){return;}
   // 월 입력 기본값 설정
   const inp=document.getElementById('vocw-month');
   if(inp&&!inp.value){const d=new Date();inp.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
@@ -5289,7 +5305,46 @@ function _retEdit(td){
   let cur=String(r[field]||'');
   const origHTML=td.innerHTML;
   let el;
-  if(type==='select'){
+  if(type==='inspect'){
+    // 검수결과: 정상/불량 선택 후 불량이면 사유 직접 입력
+    const wrap=document.createElement('div');
+    wrap.style.cssText='display:flex;flex-direction:column;gap:3px;';
+    const sel=document.createElement('select');
+    sel.style.cssText='width:100%;font-family:inherit;font-size:12px;border:1.5px solid #1a73e8;border-radius:5px;padding:2px;background:#fff;';
+    ['','정상','불량'].forEach(o=>{const opt=document.createElement('option');opt.value=o;opt.textContent=o||'-';sel.appendChild(opt);});
+    // 현재값이 불량으로 시작하면 선택값 설정, 사유 추출
+    const isCurBad=cur.startsWith('불량');
+    sel.value=cur==='정상'?'정상':(isCurBad?'불량':'');
+    const detailInp=document.createElement('input');
+    detailInp.type='text';detailInp.placeholder='불량 사유 직접 입력';
+    detailInp.style.cssText='display:none;width:100%;font-family:inherit;font-size:12px;border:1.5px solid #fca5a5;border-radius:5px;padding:2px 4px;box-sizing:border-box;';
+    // 현재 불량 사유가 있으면 초기 표시
+    if(isCurBad){
+      const reason=cur.replace(/^불량[-\s]*/,'');
+      detailInp.value=reason;
+      detailInp.style.display='';
+    }
+    sel.addEventListener('change',()=>{
+      detailInp.style.display=sel.value==='불량'?'':'none';
+      if(sel.value==='불량')detailInp.focus();
+    });
+    wrap.appendChild(sel);wrap.appendChild(detailInp);
+    td.innerHTML='';td.appendChild(wrap);sel.focus();
+    const saveInspect=()=>{
+      let val=sel.value;
+      if(val==='불량'){const r2=detailInp.value.trim();val=r2?'불량-'+r2:'불량';}
+      _retSaveField(id,field,val,tr);
+      const c=val.startsWith('불량')?'#dc2626':(val==='정상'?'#16a34a':'#555');
+      const r2=loadReturns().find(x=>String(x.id)===String(id));
+      const ri2=r2&&Array.isArray(r2.returnImgUrls)&&r2.returnImgUrls.length?r2.returnImgUrls:null;
+      const ig2=ri2?`<span style="cursor:pointer;font-size:11px;margin-left:2px;" onclick='viewImgUrls(${JSON.stringify(ri2)},0)'>🖼️</span>`:'';
+      td.innerHTML=`<span style="font-weight:${val?'700':'400'};color:${c};">${val||'-'}</span>${ig2}`;
+    };
+    detailInp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveInspect();}if(e.key==='Escape'){e.preventDefault();td.innerHTML=origHTML;}});
+    sel.addEventListener('blur',()=>{if(sel.value!=='불량')setTimeout(saveInspect,100);});
+    detailInp.addEventListener('blur',()=>setTimeout(saveInspect,100));
+    return;
+  } else if(type==='select'){
     const opts=(td.dataset.retOpts||'').split('|');
     el=document.createElement('select');
     el.style.cssText='width:100%;font-family:inherit;font-size:12px;border:1.5px solid #1a73e8;border-radius:5px;padding:2px;background:#fff;';
