@@ -1169,6 +1169,11 @@ tr:hover td{background:#fafafa;}
 </div>
 </div><!-- /page-return -->
 
+<!-- ===== 반품 행 우클릭 컨텍스트 메뉴 ===== -->
+<div id="ret-ctx-menu" style="display:none;position:fixed;z-index:9999;background:#fff;border:1px solid #e0e0de;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:4px 0;min-width:150px;">
+  <div onclick="_retCtxMerge()" style="padding:8px 16px;font-size:13px;cursor:pointer;color:#1a1a1a;" onmouseenter="this.style.background='#f5f5f3'" onmouseleave="this.style.background=''">⊕ 위 항목과 병합</div>
+  <div onclick="_retCtxSplit()" style="padding:8px 16px;font-size:13px;cursor:pointer;color:#dc2626;" onmouseenter="this.style.background='#fff5f5'" onmouseleave="this.style.background=''">⊘ 그룹 분리</div>
+</div>
 <!-- ===== 반품 입고 등록 모달 ===== -->
 <div id="return-reg-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.4);overflow-y:auto;">
   <div style="background:#fff;border-radius:12px;max-width:860px;margin:40px auto;padding:28px;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
@@ -3110,6 +3115,56 @@ function _buildReturnMonthTabs(returns){
   }).join('');
 }
 function _setReturnMonthTab(month){_returnActiveMonth=month;renderReturnTable();}
+// ===== 반품 행 우클릭 병합/분리 =====
+let _retCtxTargetId=null,_retCtxAboveId=null;
+function _attachReturnContextMenu(){
+  const container=document.getElementById('return-table-container');
+  if(!container)return;
+  const menu=document.getElementById('ret-ctx-menu');
+  container.querySelectorAll('tr[data-ret-id]').forEach(tr=>{
+    tr.addEventListener('contextmenu',e=>{
+      e.preventDefault();
+      _retCtxTargetId=tr.dataset.retId;
+      // 위 행의 ret-id 찾기
+      const rows=[...container.querySelectorAll('tr[data-ret-id]')];
+      const idx=rows.indexOf(tr);
+      _retCtxAboveId=idx>0?rows[idx-1].dataset.retId:null;
+      menu.style.display='';
+      menu.style.left=e.clientX+'px';
+      menu.style.top=e.clientY+'px';
+    });
+  });
+  document.addEventListener('click',()=>{if(menu)menu.style.display='none';},{once:false});
+  document.addEventListener('contextmenu',e=>{
+    if(!e.target.closest('#ret-ctx-menu')&&!e.target.closest('#return-table-container'))menu.style.display='none';
+  });
+}
+function _retCtxMerge(){
+  const menu=document.getElementById('ret-ctx-menu');if(menu)menu.style.display='none';
+  if(!_retCtxTargetId||!_retCtxAboveId){alert('위 항목이 없습니다.');return;}
+  const all=loadReturns();
+  const above=all.find(x=>String(x.id)===String(_retCtxAboveId));
+  const target=all.find(x=>String(x.id)===String(_retCtxTargetId));
+  if(!above||!target)return;
+  // 위 행의 그룹ID (없으면 retno 기반 생성)
+  const gid=above._rGroupId||(above.retno||above.id);
+  // 위 행도 동일 그룹ID로 설정
+  above._rGroupId=gid;
+  target._rGroupId=gid;
+  Promise.all([
+    _fsSet('returns',String(above.id),above),
+    _fsSet('returns',String(target.id),target)
+  ]).catch(e=>console.error(e));
+}
+function _retCtxSplit(){
+  const menu=document.getElementById('ret-ctx-menu');if(menu)menu.style.display='none';
+  if(!_retCtxTargetId)return;
+  const all=loadReturns();
+  const target=all.find(x=>String(x.id)===String(_retCtxTargetId));
+  if(!target)return;
+  delete target._rGroupId;
+  _fsSet('returns',String(target.id),target).catch(e=>console.error(e));
+}
 function _toggleReturnDateSection(secId){
   const sec=document.getElementById(secId);
   if(!sec)return;
@@ -3152,12 +3207,11 @@ function renderReturnTable(){
     if(ono&&ono!=='-')dateStats[d].orders.add(ono);
     dateStats[d].qty+=parseInt(r.qty||'0',10)||0;
   });
-  // 주문번호 있으면 주문번호 기준으로 그룹핑, 없으면 반송장+이름으로 그룹핑
+  // _rGroupId 있으면 수동 병합 우선, 없으면 반송장+고객명 자동 그룹핑
   const gKey=r=>{
     const d=r.date||'';
-    const ono=(r.orderno||'').trim();
-    if(ono&&ono!=='-') return d+'\x00_ono_\x00'+ono;
-    return [d,(r.retno||'').trim()||'_nk_'+r.id,(r.name||'').trim()].join('\x00');
+    if(r._rGroupId)return d+'\x00_gid_\x00'+r._rGroupId;
+    return [d,r.retno||'',r.name||''].join('\x00');
   };
   const groups=[],seen=new Map();
   returns.forEach(r=>{const k=gKey(r);if(!seen.has(k)){const a=[];seen.set(k,a);groups.push(a);}seen.get(k).push(r);});
@@ -3185,7 +3239,10 @@ function renderReturnTable(){
       sectionsHtml+=`<div id="${secId}">`+THEAD;
     }
     const cx=f.cxChecked||'';
-    const safeOrdno=(f.orderno||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    // 그룹 내 첫 번째 비어있지 않은 원송장·주문번호 사용
+    const dispOrig=(group.find(r=>(r.orig||'').trim()&&r.orig!=='-')||f).orig||'-';
+    const dispOrdno=(group.find(r=>(r.orderno||'').trim()&&r.orderno!=='-')||f).orderno||'-';
+    const safeOrdno=dispOrdno.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const cxSel=`<select onchange="_retCxChangeGroup('${safeOrdno}',this)" style="padding:2px 4px;font-size:12px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;background:#fff;text-align:center;width:58px;"><option value=""${!cx?' selected':''}>-</option><option value="Y"${cx==='Y'?' selected':''}>Y</option><option value="N"${cx==='N'?' selected':''}>N</option></select>`;
     group.forEach((r,i)=>{
       const isFirst=i===0;
@@ -3198,9 +3255,10 @@ function renderReturnTable(){
       const ws=r.warehouseStatus||'',wr=r.warehouseReason||'';
       const wDisp=_retWarehouseDisplay(ws,wr);
       sectionRows+=`<tr style="${rowBg}" data-ret-id="${r.id}">`;
-      sectionRows+=`<td data-field="_ret_drag" style="${CS}cursor:grab;color:#ccc;font-size:16px;user-select:none;">⠿</td>`;
+      if(isFirst){sectionRows+=`<td rowspan="${rs}" data-field="_ret_drag" style="${CS}cursor:grab;color:#ccc;font-size:16px;user-select:none;vertical-align:middle;">⠿</td>`;}
+      else{/* drag cell merged into first row */}
       if(isFirst){
-        sectionRows+=`<td rowspan="${rs}" style="${ES}font-size:11px;" data-ret-field="orig" onclick="_retEdit(this)">${f.orig||'-'}</td>`;
+        sectionRows+=`<td rowspan="${rs}" style="${ES}font-size:11px;" data-ret-field="orig" onclick="_retEdit(this)">${dispOrig}</td>`;
         sectionRows+=`<td rowspan="${rs}" style="${ES}font-size:11px;" data-ret-field="retno" onclick="_retEdit(this)">${f.retno||'-'}</td>`;
         sectionRows+=`<td rowspan="${rs}" style="${ES}" data-ret-field="name" onclick="_retEdit(this)">${f.name||'-'}</td>`;
       }
@@ -3212,7 +3270,7 @@ function renderReturnTable(){
       sectionRows+=`<td style="${CS}cursor:pointer;" onclick="_retWarehousePick(this,'${r.id}')">${wDisp}</td>`;
       if(isFirst){
         sectionRows+=`<td rowspan="${rs}" style="${CS}">${cxSel}</td>`;
-        sectionRows+=`<td rowspan="${rs}" style="${ES}font-size:11px;" data-ret-field="orderno" onclick="_retEdit(this)">${f.orderno||'-'}</td>`;
+        sectionRows+=`<td rowspan="${rs}" style="${ES}font-size:11px;" data-ret-field="orderno" onclick="_retEdit(this)">${dispOrdno}</td>`;
         sectionRows+=`<td rowspan="${rs}" style="${ES}" data-ret-field="note" onclick="_retEdit(this)">${f.note||'-'}</td>`;
       }
       sectionRows+=`<td style="${CS}"><button class="btn-danger" style="font-size:11px;padding:2px 8px;" onclick="deleteReturn(${r.id})">삭제</button></td>`;
@@ -3230,6 +3288,7 @@ function renderReturnTable(){
     if(arrow)arrow.textContent='▶';
   });
   _attachReturnDragEvents();
+  _attachReturnContextMenu();
 }
 // ===== 반품 목록 CX 그룹 저장 (주문번호 단위) =====
 function _retCxChangeGroup(orderno,sel){
