@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" href="logo.png.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic Neo',sans-serif;background:#f2f3f5;color:#1a1a1a;min-height:100vh;overflow-x:hidden;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic Neo',sans-serif;background:#f2f3f5;color:#1a1a1a;min-height:100vh;overflow-x:hidden;display:flex;flex-direction:column;}
 /* Login */
 #login-screen{position:fixed;inset:0;background:#f2f3f5;z-index:99999;display:flex;align-items:center;justify-content:center;}
 #login-screen.hidden{display:none;}
@@ -73,8 +73,9 @@ details summary:after{content:'';display:none;}
 .ptab-x:hover{background:#c8c8c6;color:#444;}
 /* Pages */
 .page{display:none;}
-.page.active{display:block;}
+.page.active{display:block;flex:1;}
 .page-inner{max-width:100%;margin:0;padding:24px;}
+nav.gnb,#page-tab-bar{flex-shrink:0;}
 /* Home layout */
 .home-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:auto auto auto auto auto;gap:16px 20px;align-items:stretch;}
 .home-layout>.status-section{grid-column:1;grid-row:1;margin-bottom:0;}
@@ -270,7 +271,7 @@ tr:hover td{background:#fafafa;}
 /* 인용 블록 */
 #vocw-editor blockquote{margin:10px 0;padding:10px 16px;background:#f6f6f4;border-left:4px solid #bbb;border-radius:0 6px 6px 0;color:#555;font-style:normal;}
 /* 코드 블록 */
-#vocw-editor pre{margin:10px 0;padding:12px 16px;background:#1e1e2e;color:#cdd6f4;border-radius:8px;font-family:'Courier New',Consolas,monospace;font-size:13px;line-height:1.6;overflow-x:auto;white-space:pre-wrap;word-break:break-all;}
+#vocw-editor pre{margin:10px 0;padding:12px 16px;background:#fff0f4;color:#9b2335;border-radius:8px;font-family:'Courier New',Consolas,monospace;font-size:13px;line-height:1.6;overflow-x:auto;white-space:pre-wrap;word-break:break-all;border:1px solid #fcd0d8;}
 #vocw-editor pre code{background:none;padding:0;color:inherit;font-size:inherit;}
 #vocw-editor code{background:#f0f0ee;padding:2px 5px;border-radius:4px;font-family:'Courier New',Consolas,monospace;font-size:12.5px;color:#c0392b;}
 /* 표 색상 팔레트 */
@@ -603,6 +604,7 @@ tr:hover td{background:#fafafa;}
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
       <button onclick="switchPage(_vocwPrevPage||'home')" style="font-size:13px;padding:5px 12px;border:1px solid #e0e0de;border-radius:8px;background:#fff;cursor:pointer;color:#555;font-family:inherit;">← 뒤로</button>
       <span style="font-size:18px;font-weight:700;">📋 VOC 보고서 목록</span>
+      <button onclick="_showVocwTrash()" style="font-size:13px;padding:5px 12px;border:1px solid #e0e0de;border-radius:8px;background:#fff;cursor:pointer;color:#888;font-family:inherit;">🗑️ 휴지통</button>
       <button onclick="_openVocwEditor(null,'weekly',true)" style="margin-left:auto;font-size:13px;padding:6px 18px;border:none;border-radius:8px;background:#1a1a1a;color:#fff;cursor:pointer;font-weight:600;font-family:inherit;">✍️ 새 작성</button>
     </div>
     <div id="vocw-report-list" class="card" style="padding:20px;">
@@ -610,9 +612,20 @@ tr:hover td{background:#fafafa;}
     </div>
   </div>
 
-  <!-- 에디터 뷰 — 뷰포트 전체 높이 고정, 툴바 상단 고정, 에디터만 내부 스크롤 -->
-  <div id="vocw-edit-view" style="display:none;display:flex;flex-direction:column;height:calc(100vh - 56px);box-sizing:border-box;padding:16px 0 0;">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-shrink:0;padding:0 0 0 0;">
+  <!-- 휴지통 뷰 -->
+  <div id="vocw-trash-view" style="display:none;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <button onclick="_showVocwList()" style="font-size:13px;padding:5px 12px;border:1px solid #e0e0de;border-radius:8px;background:#fff;cursor:pointer;color:#555;font-family:inherit;">← 목록으로</button>
+      <span style="font-size:18px;font-weight:700;">🗑️ VOC 휴지통</span>
+    </div>
+    <div id="vocw-trash-list" class="card" style="padding:20px;">
+      <div style="color:#bbb;text-align:center;padding:24px;">로딩 중...</div>
+    </div>
+  </div>
+
+  <!-- 에디터 뷰 — 툴바 sticky 고정, 에디터 body 스크롤 -->
+  <div id="vocw-edit-view" style="display:none;padding:16px 0 0;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:0 0 0 0;">
     <button onclick="_showVocwList()" style="font-size:13px;padding:5px 12px;border:1px solid #e0e0de;border-radius:8px;background:#fff;cursor:pointer;color:#555;font-family:inherit;">← 목록으로</button>
     <span style="font-size:18px;font-weight:700;">✍️ VOC 작성</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
@@ -631,10 +644,10 @@ tr:hover td{background:#fafafa;}
   <div style="margin-bottom:10px;flex-shrink:0;">
     <input type="text" id="vocw-title" placeholder="제목 입력 (예: 2026년 7월 1주차 위클리)" style="width:100%;font-size:16px;font-weight:600;padding:8px 12px;border:1.5px solid #e0e0de;border-radius:8px;font-family:inherit;color:#1a1a1a;background:#fff;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='#1a1a1a'" onblur="this.style.borderColor='#e0e0de'">
   </div>
-  <!-- 카드: flex column, 남은 높이 전부 차지, 내부 스크롤 -->
-  <div class="card" style="padding:0;flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;">
-    <!-- 툴바: flex-shrink:0 → 항상 상단 고정 -->
-    <div id="vocw-toolbar" style="display:flex;align-items:center;gap:2px;padding:8px 14px;background:#f8f8f6;border-bottom:1px solid #f0f0ee;flex-wrap:wrap;flex-shrink:0;border-radius:10px 10px 0 0;z-index:1;">
+  <!-- 카드: 자연스럽게 늘어남, 툴바는 sticky로 고정 -->
+  <div class="card" style="padding:0;display:flex;flex-direction:column;">
+    <!-- 툴바: sticky → GNB 아래에 항상 표시 -->
+    <div id="vocw-toolbar" style="display:flex;align-items:center;gap:2px;padding:8px 14px;background:#f8f8f6;border-bottom:1px solid #f0f0ee;flex-wrap:wrap;border-radius:10px 10px 0 0;position:sticky;top:56px;z-index:50;">
       <!-- 인라인 서식 -->
       <button id="vocw-btn-bold" onclick="vocwToggle('bold')" title="굵게 (Ctrl+B)" style="padding:4px 9px;font-size:13px;font-weight:700;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">B</button>
       <button id="vocw-btn-italic" onclick="vocwToggle('italic')" title="기울임 (Ctrl+I)" style="padding:4px 9px;font-size:13px;font-style:italic;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">I</button>
@@ -734,9 +747,9 @@ tr:hover td{background:#fafafa;}
         </div>
       </div>
     </div>
-    <!-- 에디터 본문: flex:1 + overflow-y:auto → 내부 스크롤 -->
+    <!-- 에디터 본문: 자연 높이로 늘어남, body 스크롤 -->
     <div id="vocw-editor" contenteditable="true"
-      style="flex:1;overflow-y:auto;padding:24px 32px;font-size:15px;line-height:1.8;color:#1a1a1a;outline:none;background:#fff;min-height:0;"
+      style="padding:24px 32px;font-size:15px;line-height:1.8;color:#1a1a1a;outline:none;background:#fff;min-height:70vh;"
       placeholder="여기에 리포트를 작성하세요..."></div>
   </div>
   </div><!-- /vocw-edit-view -->
@@ -975,7 +988,7 @@ tr:hover td{background:#fafafa;}
       <input type="date" id="claim-date-to" style="height:32px;padding:0 8px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;width:130px;outline:none;box-sizing:border-box;color:#333;" onchange="_applyClaimDateFilter()"/>
       <button onclick="_clearClaimDateFilter()" style="height:32px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:12px;background:#f5f5f3;color:#888;cursor:pointer;font-family:inherit;">날짜 초기화</button>
       <input id="claim-search-input" type="text" placeholder="🔍 주문번호·구매자·상품명 검색" oninput="_applyClaimSearch(this.value)" style="height:32px;padding:0 10px;border:1px solid #e0e0de;border-radius:8px;font-size:13px;width:200px;outline:none;box-sizing:border-box;"/>
-      <button onclick="openClaimModal()" style="height:32px;padding:0 14px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;">+ 클레임 등록</button>
+      <button onclick="openClaimModal()" class="btn-secondary" style="height:32px;background:#1a1a1a;color:#fff;border-color:#1a1a1a;font-weight:600;white-space:nowrap;">+ 클레임 등록</button>
       <button id="btn-group-order" class="btn-secondary" onclick="toggleGroupByOrder()" title="같은 주문번호를 1건으로 묶어서 표시" style="height:32px;white-space:nowrap;">주문별 보기</button>
       <button class="btn-secondary" onclick="exportClaimsXLSX()" style="height:32px;white-space:nowrap;">XLSX 내보내기</button>
       <button class="btn-secondary" onclick="document.getElementById('xlsx-import-input').click()" style="height:32px;white-space:nowrap;">XLSX 가져오기</button>
@@ -1132,7 +1145,7 @@ tr:hover td{background:#fafafa;}
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
     <span style="font-size:18px;font-weight:700;">반품 입고</span>
     <div style="display:flex;gap:6px;align-items:center;">
-      <button class="btn-primary" style="width:auto;padding:9px 16px;" onclick="openReturnRegModal()">+ 입고 등록</button>
+      <button class="btn-secondary" style="background:#1a1a1a;color:#fff;border-color:#1a1a1a;font-weight:600;" onclick="openReturnRegModal()">+ 입고 등록</button>
       <input type="file" id="r-xlsx-import-input" accept=".xlsx" style="display:none;" onchange="importReturnsXlsx(this)">
       <button class="btn-secondary" onclick="document.getElementById('r-xlsx-import-input').click()">xlsx 가져오기</button>
       <button class="btn-secondary" onclick="exportReturnsXlsx()">xlsx 내보내기</button>
@@ -1143,7 +1156,8 @@ tr:hover td{background:#fafafa;}
       <div class="card-title" style="margin-bottom:0;">입고 목록</div>
     </div>
     <div id="return-month-tabs" style="display:flex;gap:0;overflow-x:auto;border-top:2px solid #e8e8e6;scrollbar-width:none;padding:0;"></div>
-    <div class="table-wrap" style="padding:0;overflow-x:auto;"><table style="min-width:1000px;border-collapse:collapse;width:100%;"><thead><tr>
+    <div class="table-wrap" style="padding:0;overflow-x:auto;"><table style="min-width:1080px;border-collapse:collapse;width:100%;"><thead><tr>
+      <th style="width:28px;"></th>
       <th style="text-align:center;white-space:nowrap;">원송장</th>
       <th style="text-align:center;white-space:nowrap;">반송장</th>
       <th style="text-align:center;white-space:nowrap;">고객명</th>
@@ -2101,6 +2115,12 @@ function _syncProductDelBtns(){
   });
 }
 
+// 옵션 뱃지 HTML 생성 헬퍼 — 파란 원형 뱃지, 옵션명 중앙 표시
+function _optBadgeHtml(opt){
+  if(!opt||opt==='[옵션 지정 불가]')return'';
+  const txt=opt.length>8?opt.slice(0,7)+'…':opt;
+  return`<span title="${opt.replace(/"/g,'&quot;')}" style="display:inline-flex;align-items:center;justify-content:center;background:#1a73e8;color:#fff;border-radius:100px;padding:2px 8px;font-size:10px;font-weight:600;margin-left:5px;vertical-align:middle;white-space:nowrap;cursor:default;line-height:1.5;">${txt}</span>`;
+}
 const CF={
   month:{type:'select',opts:['1','2','3','4','5','6','7','8','9','10','11','12']},date:{type:'date'},indate:{type:'date'},shipdate:{type:'date'},donedate:{type:'date'},
   channel:{type:'select',opts:['채팅','일반 접수건','게시판','CS 메모','유선 인입','CS 확인','내부 점검(타부서)','이메일','헬프센터','리뷰 대응']},
@@ -2147,26 +2167,29 @@ function editCell(td,claimId,field,curVal){
   const save=()=>{
     if(_saved)return;
     const val=el.value;
+    // 변경 없이 블러: 원본 HTML 복원 (뱃지 포함)
+    if(val===curVal&&!_dateUserEdited){td.innerHTML=origHTML;return;}
     // 날짜 필드: 피커만 열고 선택 안 한 경우 원래값 복원
     if(type==='date'&&!val&&!_dateUserEdited){td.innerHTML=origHTML;return;}
     _saved=true;
     let disp=val||'-';
     if(['costP','costR','costS'].includes(field)){const n=parseFloat(String(val).replace(/,/g,''));disp=!isNaN(n)&&val?n.toLocaleString():'-';}
-    // 상품명 편집 후 ⓞ 뱃지 복원
+    // 상품명 편집 후 옵션 뱃지 복원
     if(field==='product'){
       const claim=loadClaims().find(c=>String(c.id)===String(claimId));
       const opt=claim?claim.option:'';
       if(opt&&opt!=='[옵션 지정 불가]'){
-        disp=`${val||'-'}<span title="${opt.replace(/"/g,'&quot;')}" style="display:inline-block;color:#1a73e8;font-size:15px;margin-left:4px;vertical-align:middle;cursor:default;line-height:1;">ⓞ</span>`;
+        disp=`${val||'-'}${_optBadgeHtml(opt)}`;
       }
     }
     td.innerHTML=disp;
     const upd={[field]:val};
-    if(field==='donedate'&&val){
-      upd.status='처리 완료';
-      // 같은 행의 status 셀 즉시 업데이트 (Firestore 리렌더 전에도 반영)
+    if(field==='donedate'){
+      // 완료일 설정 → 처리 완료, 완료일 삭제 → 처리 중
+      const newStatus=val?'처리 완료':'처리 중';
+      upd.status=newStatus;
       const tr=td.closest('tr');
-      if(tr){const sTd=tr.querySelector('[data-field="status"]');if(sTd){sTd.innerHTML='처리 완료';sTd.dataset.val='처리 완료';}}
+      if(tr){const sTd=tr.querySelector('[data-field="status"]');if(sTd){sTd.innerHTML=newStatus;sTd.dataset.val=newStatus;}}
     }
     _fsUpdate('claims',claimId,upd).catch(e=>console.error(e));
   };
@@ -2840,7 +2863,7 @@ function _buildClaimRow(r,i){
     let disp=val||'-';
     if(key==='orderno'&&r._grpCnt>1)disp+=` <span style="background:#1a73e8;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;">${r._grpCnt}건</span>`;
     if(key==='product'&&r.option&&r.option!=='[옵션 지정 불가]'){
-      disp=`${val||'-'}<span title="${r.option.replace(/"/g,'&quot;')}" style="display:inline-block;color:#1a73e8;font-size:15px;margin-left:4px;vertical-align:middle;cursor:default;line-height:1;">ⓞ</span>`;
+      disp=`${val||'-'}${_optBadgeHtml(r.option)}`;
     }
     if(['costP','costR','costS'].includes(key)){
       const num=val?parseFloat(String(val).replace(/,/g,'')):NaN;
@@ -2903,7 +2926,7 @@ function _makeReturnItemRowHTML(){
     <input type="text" class="ri-product" placeholder="상품명" style="padding:6px 9px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;">
     <select class="ri-option" style="padding:6px 4px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;">${_OPTION_OPTS}</select>
     <input type="number" class="ri-qty" value="1" min="1" style="padding:6px 4px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;text-align:center;">
-    <select class="ri-opened" style="padding:6px 4px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;"><option value="">-</option><option>Y</option><option>N</option></select>
+    <select class="ri-opened" style="padding:6px 4px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;"><option value="">-</option><option value="개봉">개봉</option><option value="미개봉">미개봉</option></select>
     <div>
       <select class="ri-inspect-type" onchange="_toggleInspectDetail(this)" style="padding:6px 4px;border:1.5px solid #e0e0de;border-radius:7px;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box;"><option value="">-</option><option>정상</option><option>불량</option></select>
       <textarea class="ri-inspect-detail" placeholder="불량 상세 사유" style="display:none;margin-top:4px;width:100%;box-sizing:border-box;padding:5px 8px;border:1.5px solid #fca5a5;border-radius:7px;font-size:12px;font-family:inherit;resize:vertical;min-height:34px;"></textarea>
@@ -3104,20 +3127,22 @@ function _retWarehouseDisplay(ws,wr){
   return `<span style="color:${color};font-weight:700;font-size:12px;">${ws}</span>${reasonHtml}`;
 }
 function renderReturnTable(){
-  let allReturns=loadReturns().slice().sort((a,b)=>{
-    const da=a.date||'',db=b.date||'';
-    if(da>db)return -1;if(da<db)return 1;
-    const ga=(a.orig||'')+'|'+(a.orderno||'');
-    const gb=(b.orig||'')+'|'+(b.orderno||'');
-    if(ga<gb)return -1;if(ga>gb)return 1;
+  let allReturns=loadReturns().slice();
+  // _rowOrder 있으면 우선, 없으면 날짜 내림차순+id 오름차순
+  const _baseSort=(a,b)=>{
+    const da=a.date||'',db2=b.date||'';
+    if(da>db2)return -1;if(da<db2)return 1;
     return (a.id||0)-(b.id||0);
-  });
+  };
+  allReturns.sort(_baseSort);
+  allReturns.forEach((r,i)=>{r._ro=(r._rowOrder!=null)?r._rowOrder:i*1000;});
+  allReturns.sort((a,b)=>a._ro-b._ro);
   _buildReturnMonthTabs(allReturns);
   let returns=_returnActiveMonth?allReturns.filter(r=>(r.date||'').slice(0,7)===_returnActiveMonth):allReturns;
   const tbody=document.getElementById('return-tbody'),empty=document.getElementById('return-empty');
   if(!returns.length){tbody.innerHTML='';empty.style.display='';return;}
   empty.style.display='none';
-  // 날짜별 통계 — 건수(주문번호 unique), 수량(qty 합계)
+  // 날짜별 통계
   const dateStats={};
   returns.forEach(r=>{
     const d=r.date||'';
@@ -3131,51 +3156,134 @@ function renderReturnTable(){
   const groups=[],seen=new Map();
   returns.forEach(r=>{const k=gKey(r);if(!seen.has(k)){const a=[];seen.set(k,a);groups.push(a);}seen.get(k).push(r);});
   const DOW=['일','월','화','수','목','금','토'];
+  const CS='padding:6px 5px;vertical-align:middle;text-align:center;font-size:13px;border-bottom:1px solid #f0f0ee;white-space:nowrap;';
+  const ES=CS+'cursor:pointer;';
   let lastDate='',html='';
   groups.forEach(group=>{
     const f=group[0];
+    const rs=group.length;
     if((f.date||'')!==lastDate){
       lastDate=f.date||'';
       let lbl=lastDate||'날짜 없음';
       if(lastDate){const d=new Date(lastDate);lbl=lastDate+' ('+DOW[d.getDay()]+')';}
       const st=dateStats[lastDate]||{orders:new Set(),qty:0};
-      html+=`<tr><td colspan="13" style="background:#f2f3f5;padding:6px 14px;font-size:11px;font-weight:700;color:#444;border-top:2px solid #e0e0de;">📅 ${lbl}<span style="margin-left:14px;font-weight:400;color:#666;">${st.orders.size}건 &middot; 수량 ${st.qty}개</span></td></tr>`;
+      html+=`<tr><td colspan="14" style="background:#f2f3f5;padding:7px 16px;font-size:15px;font-weight:700;color:#333;border-top:2px solid #d8d8d6;">📅 ${lbl}<span style="margin-left:16px;font-size:13px;font-weight:500;color:#666;">입고 ${st.orders.size}건 / 상품 수령 ${st.qty}개</span></td></tr>`;
     }
+    const cx=f.cxChecked||'';
+    const safeOrdno=(f.orderno||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const cxSel=`<select onchange="_retCxChangeGroup('${safeOrdno}',this)" style="padding:2px 4px;font-size:12px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;background:#fff;text-align:center;width:58px;"><option value=""${!cx?' selected':''}>-</option><option value="Y"${cx==='Y'?' selected':''}>Y</option><option value="N"${cx==='N'?' selected':''}>N</option></select>`;
     group.forEach((r,i)=>{
       const isFirst=i===0;
-      const cx=r.cxChecked||'';
       const rowBg=cx==='N'?'background:#fefce8;':'background:#fff;';
-      // CX 확인 드롭다운
-      const cxSel=`<select onchange="_retCxChange('${r.id}',this)" style="padding:2px 4px;font-size:12px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;background:#fff;"><option value=""${!cx?' selected':''}>-</option><option value="Y"${cx==='Y'?' selected':''}>Y</option><option value="N"${cx==='N'?' selected':''}>N</option></select>`;
-      // 검수 결과
+      const openedTxt=r.opened==='Y'||r.opened==='개봉'?'개봉':r.opened==='N'||r.opened==='미개봉'?'미개봉':r.opened||'-';
       const insp=r.inspect||'';
-      const inspColor=insp.startsWith('불량')?'#dc2626':(insp==='정상'?'#16a34a':'#333');
+      const inspColor=insp.startsWith('불량')?'#dc2626':(insp==='정상'?'#16a34a':'#555');
       const retImgs=Array.isArray(r.returnImgUrls)&&r.returnImgUrls.length?r.returnImgUrls:null;
-      const imgIcon=retImgs?`<span style="cursor:pointer;margin-left:3px;font-size:12px;" title="${retImgs.length}장 사진" onclick='viewImgUrls(${JSON.stringify(retImgs)},0)'>🖼️${retImgs.length>1?`<sup style="font-size:9px;color:#1a73e8;">${retImgs.length}</sup>`:''}</span>`:'';
-      // 개봉 여부 — 검정 텍스트
-      const openedTxt=r.opened==='Y'?'개봉':r.opened==='N'?'미개봉':'-';
-      // 입고 여부 칩 표시
+      const imgIcon=retImgs?`<span style="cursor:pointer;font-size:11px;margin-left:2px;" onclick='viewImgUrls(${JSON.stringify(retImgs)},0)' title="${retImgs.length}장">🖼️</span>`:'';
       const ws=r.warehouseStatus||'',wr=r.warehouseReason||'';
       const wDisp=_retWarehouseDisplay(ws,wr);
-      const eStyle='cursor:pointer;';
-      html+=`<tr style="${rowBg}" data-ret-id="${r.id}">
-        <td style="font-size:11px;${isFirst?eStyle:''}"${isFirst?` data-ret-field="orig" onclick="_retEdit(this)"`:''}>${isFirst?r.orig||'-':''}</td>
-        <td style="font-size:11px;${isFirst?eStyle:''}"${isFirst?` data-ret-field="retno" onclick="_retEdit(this)"`:''}>${isFirst?r.retno||'-':''}</td>
-        <td style="${isFirst?eStyle:''}"${isFirst?` data-ret-field="name" onclick="_retEdit(this)"`:''}>${isFirst?r.name||'-':''}</td>
-        <td style="${eStyle}" data-ret-field="product" onclick="_retEdit(this)">${r.product||'-'}${(r.option&&r.option!=='[옵션 지정 불가]')?`<span title="${(r.option||'').replace(/"/g,'&quot;')}" style="display:inline-block;color:#1a73e8;font-size:15px;margin-left:4px;vertical-align:middle;cursor:default;line-height:1;">ⓞ</span>`:''}</td>
-        <td style="font-size:12px;vertical-align:middle;${eStyle}" data-ret-field="option" onclick="_retEdit(this)">${r.option||'-'}</td>
-        <td style="text-align:center;${eStyle}" data-ret-field="qty" onclick="_retEdit(this)">${r.qty||'-'}</td>
-        <td style="text-align:center;color:#333;${eStyle}" data-ret-field="opened" data-ret-type="select" data-ret-opts="|Y|N" data-ret-val="${r.opened||''}" onclick="_retEdit(this)">${openedTxt}</td>
-        <td style="${eStyle}" data-ret-field="inspect" onclick="_retEdit(this)" title="${insp}"><span style="color:${inspColor};font-weight:700;">${insp||'-'}</span>${imgIcon}</td>
-        <td style="text-align:center;cursor:pointer;" onclick="_retWarehousePick(this,'${r.id}')">${wDisp}</td>
-        <td style="text-align:center;">${cxSel}</td>
-        <td style="font-size:11px;text-align:center;${isFirst?eStyle:''}"${isFirst?` data-ret-field="orderno" onclick="_retEdit(this)"`:''}>${isFirst?r.orderno||'-':''}</td>
-        <td style="${isFirst?eStyle:''}"${isFirst?` data-ret-field="note" onclick="_retEdit(this)"`:''}>${isFirst?r.note||'-':''}</td>
-        <td><button class="btn-danger" style="font-size:11px;padding:2px 8px;" onclick="deleteReturn(${r.id})">삭제</button></td>
-      </tr>`;
+      html+=`<tr style="${rowBg}" data-ret-id="${r.id}">`;
+      html+=`<td data-field="_ret_drag" style="${CS}cursor:grab;color:#ccc;font-size:16px;user-select:none;">⠿</td>`;
+      if(isFirst){
+        html+=`<td rowspan="${rs}" style="${ES}font-size:11px;" data-ret-field="orig" onclick="_retEdit(this)">${f.orig||'-'}</td>`;
+        html+=`<td rowspan="${rs}" style="${ES}font-size:11px;" data-ret-field="retno" onclick="_retEdit(this)">${f.retno||'-'}</td>`;
+        html+=`<td rowspan="${rs}" style="${ES}" data-ret-field="name" onclick="_retEdit(this)">${f.name||'-'}</td>`;
+      }
+      html+=`<td style="${ES}" data-ret-field="product" onclick="_retEdit(this)">${r.product||'-'}</td>`;
+      html+=`<td style="${ES}font-size:11px;" data-ret-field="option" onclick="_retEdit(this)">${r.option||'-'}</td>`;
+      html+=`<td style="${ES}" data-ret-field="qty" onclick="_retEdit(this)">${r.qty||'-'}</td>`;
+      html+=`<td style="${ES}" data-ret-field="opened" data-ret-type="select" data-ret-opts="|개봉|미개봉" onclick="_retEdit(this)">${openedTxt}</td>`;
+      html+=`<td style="${ES}" data-ret-field="inspect" data-ret-type="select" data-ret-opts="|정상|불량-배송|불량-제품|불량-포장|기타" onclick="_retEdit(this)"><span style="font-weight:${insp?'700':'400'};color:${inspColor};">${insp||'-'}</span>${imgIcon}</td>`;
+      html+=`<td style="${CS}cursor:pointer;" onclick="_retWarehousePick(this,'${r.id}')">${wDisp}</td>`;
+      if(isFirst){
+        html+=`<td rowspan="${rs}" style="${CS}">${cxSel}</td>`;
+        html+=`<td rowspan="${rs}" style="${ES}font-size:11px;" data-ret-field="orderno" onclick="_retEdit(this)">${f.orderno||'-'}</td>`;
+        html+=`<td rowspan="${rs}" style="${ES}" data-ret-field="note" onclick="_retEdit(this)">${f.note||'-'}</td>`;
+      }
+      html+=`<td style="${CS}"><button class="btn-danger" style="font-size:11px;padding:2px 8px;" onclick="deleteReturn(${r.id})">삭제</button></td>`;
+      html+=`</tr>`;
     });
   });
   tbody.innerHTML=html;
+  _attachReturnDragEvents();
+}
+// ===== 반품 목록 CX 그룹 저장 (주문번호 단위) =====
+function _retCxChangeGroup(orderno,sel){
+  const val=sel.value;
+  const all=loadReturns();
+  const ono=(orderno||'').trim();
+  const toUpdate=ono?all.filter(r=>(r.orderno||'').trim()===ono):[];
+  if(!toUpdate.length){
+    // fallback: 현재 tr의 id로 저장
+    const tr=sel.closest('tr');
+    if(tr){const id=tr.dataset.retId;_retSaveField(id,'cxChecked',val,tr);}
+    return;
+  }
+  toUpdate.forEach(r=>{
+    r.cxChecked=val;
+    _fsSet('returns',String(r.id),r).catch(e=>console.error(e));
+  });
+  // 행 배경색 즉시 업데이트
+  const tbody=document.getElementById('return-tbody');
+  if(tbody){
+    tbody.querySelectorAll('tr[data-ret-id]').forEach(tr=>{
+      const r=all.find(x=>String(x.id)===tr.dataset.retId);
+      if(r&&(r.orderno||'').trim()===ono){
+        tr.style.background=val==='N'?'#fefce8':'#fff';
+      }
+    });
+  }
+}
+// ===== 반품 목록 드래그 & 드롭 =====
+let _dragReturnId=null;
+function _attachReturnDragEvents(){
+  const tbody=document.getElementById('return-tbody');
+  if(!tbody)return;
+  tbody.querySelectorAll('tr[data-ret-id]').forEach(tr=>{
+    tr.setAttribute('draggable','true');
+    tr.addEventListener('dragstart',e=>{
+      if(!_dragMousedownEl||!_dragMousedownEl.closest('td[data-field="_ret_drag"]')){e.preventDefault();return;}
+      _dragReturnId=+tr.dataset.retId;
+      e.dataTransfer.effectAllowed='move';
+      setTimeout(()=>tr.classList.add('dragging'),0);
+    });
+    tr.addEventListener('dragend',()=>{
+      _dragReturnId=null;
+      tbody.querySelectorAll('tr').forEach(r=>{r.classList.remove('dragging');r.classList.remove('drag-over');});
+    });
+    tr.addEventListener('dragover',e=>{
+      if(!_dragReturnId)return;
+      e.preventDefault();e.dataTransfer.dropEffect='move';
+      if(tr.dataset.retId&&+tr.dataset.retId!==_dragReturnId){
+        tbody.querySelectorAll('tr[data-ret-id]').forEach(r=>r.classList.remove('drag-over'));
+        tr.classList.add('drag-over');
+      }
+    });
+    tr.addEventListener('drop',e=>{
+      e.preventDefault();
+      const toId=tr.dataset.retId?+tr.dataset.retId:null;
+      tbody.querySelectorAll('tr').forEach(r=>{r.classList.remove('drag-over');});
+      if(_dragReturnId&&toId&&_dragReturnId!==toId)_handleReturnDrop(_dragReturnId,toId);
+    });
+  });
+}
+async function _handleReturnDrop(fromId,toId){
+  const allR=loadReturns().slice();
+  allR.forEach((r,i)=>{if(r._rowOrder==null)r._rowOrder=i*1000;r._ro=r._rowOrder;});
+  allR.sort((a,b)=>a._ro-b._ro);
+  const fromIdx=allR.findIndex(r=>r.id===fromId);
+  const toIdx=allR.findIndex(r=>r.id===toId);
+  if(fromIdx===-1||toIdx===-1)return;
+  let prevOrder,nextOrder;
+  if(fromIdx<toIdx){
+    prevOrder=allR[toIdx]._ro;
+    nextOrder=toIdx<allR.length-1?allR[toIdx+1]._ro:allR[toIdx]._ro+2000;
+  }else{
+    prevOrder=toIdx>0?allR[toIdx-1]._ro:allR[toIdx]._ro-2000;
+    nextOrder=allR[toIdx]._ro;
+  }
+  const newOrder=(prevOrder+nextOrder)/2;
+  await _fsUpdate('returns',String(fromId),{_rowOrder:newOrder}).catch(e=>console.error(e));
 }
 // ===== VOC =====
 function renderVocStats(){
@@ -3519,7 +3627,14 @@ function _showVocwList(){
   if(_vocwAutoSaveTimer){clearInterval(_vocwAutoSaveTimer);_vocwAutoSaveTimer=null;}
   document.getElementById('vocw-list-view').style.display='';
   document.getElementById('vocw-edit-view').style.display='none';
+  document.getElementById('vocw-trash-view').style.display='none';
   _loadVocwReportList();
+}
+function _showVocwTrash(){
+  document.getElementById('vocw-list-view').style.display='none';
+  document.getElementById('vocw-edit-view').style.display='none';
+  document.getElementById('vocw-trash-view').style.display='';
+  _loadVocwTrashList();
 }
 function _openVocwEditor(month,type,isNew,week){
   document.getElementById('vocw-list-view').style.display='none';
@@ -3563,7 +3678,7 @@ function _loadVocwReportList(){
       const _pinnedDocId=(pinnedSnap.exists&&pinnedSnap.data().docId)||'';
     db.collection('_sys').where('type','in',['weekly','monthly']).limit(80).get().then(function(snap){
       if(snap.empty){listEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">저장된 보고서가 없습니다.<br><br><button onclick="_openVocwEditor(null,\'weekly\',true)" style="font-size:13px;padding:8px 20px;border:none;border-radius:8px;background:#1a1a1a;color:#fff;cursor:pointer;">✍️ 첫 보고서 작성</button></div>';return;}
-      const docs=[];snap.forEach(d=>docs.push({id:d.id,...d.data()}));
+      const docs=[];snap.forEach(d=>{if(d.id!=='_dashboard_pinned')docs.push({id:d.id,...d.data()});});
       const validDocs=docs.filter(doc=>/^\d{4}-\d{2}$/.test(doc.month||''));
       const brokenDocs=docs.filter(doc=>!/^\d{4}-\d{2}$/.test(doc.month||''));
       // 위클리 / 먼슬리 분리
@@ -3704,12 +3819,87 @@ function _recoverBrokenVocDoc(oldDocId,type,monthInputId){
 }
 function _deleteVocwDoc(docId){
   if(_currentUserId()!=='chohee'){alert('삭제 권한이 없습니다.');return;}
-  if(!confirm('이 보고서를 삭제하시겠습니까?\n삭제 후 복구할 수 없습니다.'))return;
+  if(!confirm('이 보고서를 휴지통으로 이동하시겠습니까?\n휴지통에서 복원하거나 영구삭제할 수 있습니다.'))return;
   try{
-    db.collection('_sys').doc(docId).delete().then(function(){
-      _loadVocwReportList();
+    db.collection('_sys').doc(docId).get().then(function(snap){
+      if(!snap.exists){alert('문서를 찾을 수 없습니다.');return;}
+      const data=snap.data();
+      data._deletedAt=new Date().toISOString();
+      data._deletedBy=_currentUserId();
+      data._originalId=docId;
+      db.collection('_sys_trash').doc(docId).set(data).then(function(){
+        db.collection('_sys').doc(docId).delete().then(function(){
+          _loadVocwReportList();
+        }).catch(function(){alert('원본 삭제 중 오류가 발생했습니다.');});
+      }).catch(function(){alert('휴지통 이동 중 오류가 발생했습니다.');});
+    }).catch(function(){alert('문서를 불러오지 못했습니다.');});
+  }catch(e){alert('오류가 발생했습니다.');}
+}
+function _loadVocwTrashList(){
+  const listEl=document.getElementById('vocw-trash-list');
+  if(!listEl)return;
+  listEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">로딩 중...</div>';
+  try{
+    db.collection('_sys_trash').orderBy('_deletedAt','desc').limit(50).get().then(function(snap){
+      if(snap.empty){
+        listEl.innerHTML='<div style="color:#bbb;text-align:center;padding:32px;"><div style="font-size:32px;margin-bottom:10px;">🗑️</div>휴지통이 비어있습니다.</div>';
+        return;
+      }
+      const docs=[];snap.forEach(d=>docs.push({id:d.id,...d.data()}));
+      let html='<div style="display:flex;flex-direction:column;gap:10px;">';
+      docs.forEach(function(doc){
+        const typeIcon=doc.type==='weekly'?'📅':'📊';
+        const typeLabel=doc.type==='weekly'?'위클리':'먼슬리';
+        const title=(doc.title||doc._originalId||doc.id).replace(/</g,'&lt;');
+        const deletedAt=(doc._deletedAt||'').slice(0,10)||'날짜 미상';
+        const preview=(doc.html||'').replace(/<[^>]+>/g,'').slice(0,60)||'(내용 없음)';
+        html+=`<div style="padding:14px 16px;border:1.5px dashed #e0e0de;border-radius:10px;background:#fafaf8;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+                <span style="font-size:10px;background:#f0f0ee;color:#888;border-radius:4px;padding:2px 7px;">${typeIcon} ${typeLabel}</span>
+                <span style="font-size:11px;color:#ccc;">삭제일: ${deletedAt}</span>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${title}</div>
+              <div style="font-size:11px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${preview}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+              <button onclick="_restoreVocwDoc('${doc.id}')" style="font-size:11px;padding:5px 12px;background:#f0fdf4;color:#16a34a;border:1px solid #86efac;border-radius:6px;cursor:pointer;font-family:inherit;white-space:nowrap;">↩ 복원</button>
+              <button onclick="_permanentDeleteVocwDoc('${doc.id}')" style="font-size:11px;padding:5px 12px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;cursor:pointer;font-family:inherit;white-space:nowrap;">🗑 영구삭제</button>
+            </div>
+          </div>
+        </div>`;
+      });
+      html+='</div>';
+      listEl.innerHTML=html;
+    }).catch(function(){listEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">목록을 불러오지 못했습니다.</div>';});
+  }catch(e){listEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">Firestore 연결 오류</div>';}
+}
+function _restoreVocwDoc(docId){
+  if(_currentUserId()!=='chohee'){return;}
+  try{
+    db.collection('_sys_trash').doc(docId).get().then(function(snap){
+      if(!snap.exists){alert('복원할 문서를 찾을 수 없습니다.');return;}
+      const data=snap.data();
+      const restoreId=data._originalId||docId;
+      delete data._deletedAt;delete data._deletedBy;delete data._originalId;
+      db.collection('_sys').doc(restoreId).set(data).then(function(){
+        db.collection('_sys_trash').doc(docId).delete().then(function(){
+          alert('복원되었습니다.');
+          _loadVocwTrashList();
+        });
+      }).catch(function(){alert('복원 중 오류가 발생했습니다.');});
+    }).catch(function(){alert('문서를 불러오지 못했습니다.');});
+  }catch(e){alert('오류가 발생했습니다.');}
+}
+function _permanentDeleteVocwDoc(docId){
+  if(_currentUserId()!=='chohee'){return;}
+  if(!confirm('영구 삭제하시겠습니까?\n복구할 수 없습니다.'))return;
+  try{
+    db.collection('_sys_trash').doc(docId).delete().then(function(){
+      _loadVocwTrashList();
     }).catch(function(){alert('삭제 중 오류가 발생했습니다.');});
-  }catch(e){alert('삭제할 수 없습니다.');}
+  }catch(e){alert('오류가 발생했습니다.');}
 }
 function switchVocWriteTab(type){
   _vocwType=type;
@@ -4356,29 +4546,32 @@ function _initVocwEditor(){
       const lineStart=text.slice(0,offset);
       if(lineStart==='-'||(lineStart.startsWith('-')&&lineStart.trim()==='-')){
         _vocwPushUndo();
-        let remaining=text.slice(offset).replace(/^[①-⑳❶-❿Ⓐ-ⓙ❶-❿⓪-⓿]\s*/,'');
+        const remaining=text.slice(offset).replace(/^[①-⑳❶-❿Ⓐ-ⓙ❶-❿⓪-⓿]\s*/,'');
+        const parentBlock=node.parentElement;
         // 표 안에 있으면 표 밖으로 먼저 빠져나가기
-        const anchorEl=node.parentElement;
-        const inCell=anchorEl?anchorEl.closest('td,th'):null;
+        const inCell=parentBlock?parentBlock.closest('td,th'):null;
         const tableEl=inCell?inCell.closest('table'):null;
         if(inCell&&tableEl&&ed.contains(tableEl)){
-          // td 안의 - 텍스트 삭제
           node.textContent=remaining;
-          // 표 다음 형제 요소가 없거나 또 표면 빈 p 삽입
           let afterEl=tableEl.nextElementSibling;
           if(!afterEl||afterEl.tagName==='TABLE'){
             const p=document.createElement('p');
             tableEl.parentNode.insertBefore(p,tableEl.nextSibling);
             afterEl=p;
           }
-          // 커서를 표 다음 요소 시작으로 이동
           const rng=document.createRange();
           rng.setStart(afterEl,0);rng.collapse(true);
           sel.removeAllRanges();sel.addRange(rng);
         } else {
+          // 빈 텍스트노드로 만들면 브라우저가 detach할 수 있음 → 부모 블록 기준으로 재앵커
           node.textContent=remaining;
-          sel.collapse(node,0);
+          const anchor=(parentBlock&&ed.contains(parentBlock))?parentBlock:ed;
+          const rng=document.createRange();
+          try{rng.setStart(anchor,0);}catch(_){rng.setStart(ed,0);}
+          rng.collapse(true);
+          sel.removeAllRanges();sel.addRange(rng);
         }
+        ed.focus();
         document.execCommand('insertUnorderedList',false,null);
       }
     }
@@ -4949,7 +5142,7 @@ function editReturn(id){
   // sd-wrap이 있으면 input text도 업데이트
   setTimeout(()=>{if(optSel._sdInput)optSel._sdInput.value=r.option||'';},0);
   row.querySelector('.ri-qty').value=r.qty||'1';
-  row.querySelector('.ri-opened').value=r.opened||'';
+  row.querySelector('.ri-opened').value=r.opened==='Y'?'개봉':r.opened==='N'?'미개봉':r.opened||'';
   const inspType=row.querySelector('.ri-inspect-type');
   const inspDetail=row.querySelector('.ri-inspect-detail');
   const imgArea=row.querySelector('.ri-img-area');
@@ -5049,16 +5242,15 @@ function _retEdit(td){
     const val=el.value;
     _retSaveField(id,field,val,tr);
     if(field==='opened'){
-      td.innerHTML=val==='Y'?'개봉':val==='N'?'미개봉':'-';
-      td.dataset.retVal=val;
+      td.innerHTML=val||'-';
     } else if(field==='inspect'){
-      const c=val.startsWith('불량')?'#dc2626':(val==='정상'?'#16a34a':'#333');
-      td.innerHTML=`<span style="color:${c};font-weight:700;">${val||'-'}</span>`;
+      const c=val.startsWith('불량')?'#dc2626':(val==='정상'?'#16a34a':'#555');
+      const r2=loadReturns().find(x=>String(x.id)===String(id));
+      const ri2=r2&&Array.isArray(r2.returnImgUrls)&&r2.returnImgUrls.length?r2.returnImgUrls:null;
+      const ig2=ri2?`<span style="cursor:pointer;font-size:11px;margin-left:2px;" onclick='viewImgUrls(${JSON.stringify(ri2)},0)'>🖼️</span>`:'';
+      td.innerHTML=`<span style="font-weight:${val?'700':'400'};color:${c};">${val||'-'}</span>${ig2}`;
     } else if(field==='product'){
-      const ret=loadReturns().find(x=>String(x.id)===String(id));
-      const opt=ret?ret.option:'';
-      const badge=(opt&&opt!=='[옵션 지정 불가]')?`<span title="${(opt||'').replace(/"/g,'&quot;')}" style="display:inline-block;color:#1a73e8;font-size:15px;margin-left:4px;vertical-align:middle;cursor:default;line-height:1;">ⓞ</span>`:'';
-      td.innerHTML=(val||'-')+badge;
+      td.innerHTML=val||'-';
     } else {
       td.innerHTML=val||'-';
     }
@@ -5096,24 +5288,43 @@ function _retWarehousePick(td,id){
   opts.forEach(o=>{const opt=document.createElement('option');opt.value=o.value;opt.textContent=o.label;if(o.value===cur)opt.selected=true;sel.appendChild(opt);});
   td.innerHTML='';td.appendChild(sel);sel.focus();
   let saved=false;
-  const save=async()=>{
-    if(saved)return;saved=true;
-    const val=sel.value;
-    let reason=r.warehouseReason||'';
-    if(val==='N'){
-      const inp=prompt('미입고 사유\n(고객 반송 / 업체 반송 / 사고 접수 / CX 전달 / 폐기 / 3PL 전달)',reason);
-      if(inp===null){td.innerHTML=origHTML;saved=false;return;}
-      reason=inp;
-    } else {
-      reason='';
-    }
-    r.warehouseStatus=val;r.warehouseReason=reason;
+  const _doSave=(val,reason)=>{
+    saved=true;
+    r.warehouseStatus=val;r.warehouseReason=reason||'';
     _fsSet('returns',String(id),r).catch(e=>console.error(e));
-    td.innerHTML=_retWarehouseDisplay(val,reason);
+    td.innerHTML=_retWarehouseDisplay(val,reason||'');
   };
-  sel.addEventListener('change',save);
+  const _showReasonPicker=(val)=>{
+    // 인라인 사유 선택 (prompt() 대체)
+    const reasons=['고객 반송','업체 반송','사고 접수','CX 전달','폐기','3PL 전달'];
+    const cur=r.warehouseReason||'';
+    let rHtml=`<div style="padding:4px 0;font-size:11px;color:#666;margin-bottom:4px;">미입고 사유 선택</div>`;
+    rHtml+=`<select id="_ret_reason_sel_${id}" style="font-family:inherit;font-size:12px;border:1.5px solid #1a73e8;border-radius:5px;padding:3px 4px;background:#fff;width:140px;">`;
+    reasons.forEach(rs=>{rHtml+=`<option value="${rs}"${rs===cur?' selected':''}>${rs}</option>`;});
+    rHtml+=`</select>`;
+    rHtml+=`<button onclick="_retReasonConfirm('${id}','${val}')" style="margin-left:6px;font-size:11px;padding:3px 10px;border:none;border-radius:5px;background:#1a1a1a;color:#fff;cursor:pointer;">확인</button>`;
+    rHtml+=`<button onclick="document.getElementById('_ret_reason_wrap_${id}').closest('td').innerHTML=_retWarehouseDisplay('${val.replace(/'/g,"\\'")}','${cur.replace(/'/g,"\\'")}');" style="margin-left:4px;font-size:11px;padding:3px 8px;border:1px solid #ccc;border-radius:5px;background:#fff;cursor:pointer;">취소</button>`;
+    td.innerHTML=`<div id="_ret_reason_wrap_${id}" style="text-align:left;padding:2px;">${rHtml}</div>`;
+  };
+  sel.addEventListener('change',()=>{
+    if(saved)return;
+    const val=sel.value;
+    if(val==='N'){_showReasonPicker(val);}
+    else{_doSave(val,'');}
+  });
   sel.addEventListener('blur',()=>{if(!saved)td.innerHTML=origHTML;});
   sel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();td.innerHTML=origHTML;}});
+}
+function _retReasonConfirm(id,val){
+  const rSel=document.getElementById('_ret_reason_sel_'+id);
+  const reason=rSel?rSel.value:'';
+  const all=loadReturns();
+  const r=all.find(x=>String(x.id)===String(id));
+  if(!r)return;
+  r.warehouseStatus=val;r.warehouseReason=reason;
+  _fsSet('returns',String(id),r).catch(e=>console.error(e));
+  const wrap=document.getElementById('_ret_reason_wrap_'+id);
+  if(wrap)wrap.closest('td').innerHTML=_retWarehouseDisplay(val,reason);
 }
 function _retCxChange(id,sel){
   const val=sel.value;
@@ -6757,7 +6968,7 @@ _loadUsersFromFirestore(function(){
 
 <!-- ===== Report 뷰/편집 모달 ===== -->
 <div id="modal-vl-report" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.35);align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:16px;width:min(740px,92vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 48px rgba(0,0,0,0.22);overflow:hidden;">
+  <div style="background:#fff;border-radius:16px;width:min(960px,96vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 48px rgba(0,0,0,0.22);overflow:hidden;">
     <!-- 헤더 -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px 12px;border-bottom:1px solid #f0f0ee;flex-shrink:0;">
       <div style="display:flex;align-items:center;gap:6px;">
