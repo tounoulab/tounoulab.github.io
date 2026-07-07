@@ -76,8 +76,26 @@ details summary:after{content:'';display:none;}
 .page.active{display:block;}
 .page-inner{max-width:100%;margin:0;padding:24px;}
 /* Home layout */
-.home-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start;}
-.home-layout>div{min-width:0;overflow:visible;}
+.home-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:auto auto auto auto auto;gap:16px 20px;align-items:stretch;}
+.home-layout>.status-section{grid-column:1;grid-row:1;margin-bottom:0;}
+.home-layout>.kpi-row{grid-column:1;grid-row:2;margin-bottom:0 !important;}
+.home-layout>.chart-period-grid{grid-column:1;grid-row:3/5;margin-bottom:0 !important;align-self:stretch;}
+.home-layout>.weekly-card{grid-column:1;grid-row:5;}
+.home-layout>.notice-card{grid-column:2;grid-row:1/3;margin-bottom:0;}
+.home-layout>.report-card{grid-column:2;grid-row:3;margin-bottom:0;}
+.home-layout>.today-card{grid-column:2;grid-row:4;margin-bottom:0;}
+.home-layout>.link-card{grid-column:2;grid-row:5;margin-bottom:0;}
+/* Responsive: zoom or narrow window */
+@media(max-width:960px){
+  .home-layout{grid-template-columns:1fr;grid-template-rows:auto;}
+  .home-layout>.status-section,.home-layout>.kpi-row,.home-layout>.chart-period-grid,.home-layout>.weekly-card,.home-layout>.notice-card,.home-layout>.report-card,.home-layout>.today-card,.home-layout>.link-card{grid-column:1;grid-row:auto;}
+  .home-layout>.notice-card,.home-layout>.report-card,.home-layout>.today-card,.home-layout>.link-card{margin-bottom:0;}
+}
+@media(max-width:960px){
+  .sub-grid.kpi-row{grid-template-columns:repeat(2,1fr) !important;}
+  .chart-period-grid{grid-template-columns:1fr !important;}
+  .page-inner{padding:16px;}
+}
 /* Status section */
 .status-section{background:#fff;border-radius:12px;border:1px solid #e8e8e6;overflow:hidden;margin-bottom:16px;}
 .status-hd{padding:18px 24px 0;font-size:15px;font-weight:700;}
@@ -392,10 +410,8 @@ tr:hover td{background:#fafafa;}
 <div id="page-home" class="page active">
   <div class="page-inner">
     <div class="home-layout">
-      <!-- 메인 컬럼 -->
-      <div>
-        <!-- 클레임 처리 현황 -->
-        <div class="status-section">
+      <!-- 클레임 처리 현황 -->
+      <div class="status-section">
           <div class="status-hd" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
             <span>클레임 처리 현황</span>
             <div style="display:flex;align-items:center;gap:5px;margin-left:auto;white-space:nowrap;">
@@ -415,8 +431,8 @@ tr:hover td{background:#fafafa;}
           </div>
           <div id="h-filter-badge" style="display:none;padding:6px 18px 10px;font-size:12px;color:#1a73e8;font-weight:500;"></div>
         </div>
-        <!-- 이번 달 KPI -->
-        <div class="sub-grid kpi-row" style="grid-template-columns:repeat(4,1fr)!important;gap:10px!important;margin-bottom:16px;">
+      <!-- 이번 달 KPI -->
+      <div class="sub-grid kpi-row" style="grid-template-columns:repeat(4,1fr)!important;gap:10px!important;margin-bottom:16px;">
           <div class="sub-card">
             <div class="sub-card-title">이번 달 평균 리드타임</div>
             <div style="font-size:26px;font-weight:700;color:#1a1a1a;" id="kpi-leadtime">-</div>
@@ -438,8 +454,8 @@ tr:hover td{background:#fafafa;}
             <div id="kpi-long-list" style="font-size:11px;color:#555;margin-top:5px;max-height:72px;overflow-y:auto;line-height:1.6;"></div>
           </div>
         </div>
-        <!-- 귀책별/처리유형 (금일 + 이번주, 각 카드 안에서 좌우 배치) -->
-        <div class="chart-period-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <!-- 귀책별/처리유형 (금일 + 이번주, 각 카드 안에서 좌우 배치) -->
+      <div class="chart-period-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
           <!-- 금일 -->
           <div class="card" style="margin-bottom:0;">
             <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.05em;margin-bottom:14px;">금일</div>
@@ -471,20 +487,18 @@ tr:hover td{background:#fafafa;}
             </div>
           </div>
         </div>
-        <!-- 주간 클레임 추이 -->
-        <div class="card" style="margin-bottom:0;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <span class="card-title" style="margin-bottom:0;">최근 7일 클레임 접수 추이</span>
-            <span id="weekly-total-badge" style="font-size:12px;color:#888;"></span>
-          </div>
-          <div style="position:relative;height:220px;">
-            <canvas id="chart-weekly"></canvas>
-          </div>
+      <!-- 주간 클레임 추이 -->
+      <div class="card weekly-card" style="margin-bottom:0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span class="card-title" style="margin-bottom:0;">최근 7일 클레임 접수 추이</span>
+          <span id="weekly-total-badge" style="font-size:12px;color:#888;"></span>
+        </div>
+        <div style="position:relative;height:220px;">
+          <canvas id="chart-weekly"></canvas>
         </div>
       </div>
-      <!-- 사이드바 -->
-      <div>
-        <div class="side-card">
+      <!-- 공지사항 -->
+      <div class="side-card notice-card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <span class="side-card-title" style="margin-bottom:0;">공지 사항</span>
             <button onclick="toggleNoticeForm()" id="btn-notice-add" style="font-size:11px;padding:3px 8px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;display:none;">+ 등록</button>
@@ -499,8 +513,9 @@ tr:hover td{background:#fafafa;}
           </div>
           <div id="notice-list" style="font-size:13px;color:#555;"></div>
         </div>
-        <div class="side-card">
-          <div style="font-size:14px;font-weight:700;margin-bottom:12px;">📊 Report</div>
+      <!-- Report -->
+      <div class="side-card report-card">
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px;">📊 Report</div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #f0f0ee;border-radius:10px;margin-bottom:8px;background:#fafaf8;">
             <div style="display:flex;align-items:center;gap:10px;">
               <div style="width:34px;height:34px;background:#fff8e1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;">📅</div>
@@ -516,27 +531,28 @@ tr:hover td{background:#fafafa;}
             <button onclick="openVlReport('monthly')" style="font-size:11px;padding:5px 10px;background:#f5a623;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open</button>
           </div>
         </div>
-        <div class="side-card">
-          <div class="side-card-title">오늘의 현황</div>
-          <div class="sub-row"><span class="sub-row-label">클레임 인입</span><span class="sub-row-value" id="side-today-claim">-</span></div>
-          <div class="sub-row"><span class="sub-row-label">반품 입고</span><span class="sub-row-value" id="side-today-return">-</span></div>
-          <div class="sub-row"><span class="sub-row-label">처리 완료</span><span class="sub-row-value" id="side-today-done">-</span></div>
+      <!-- 오늘의 현황 -->
+      <div class="side-card today-card">
+        <div class="side-card-title">오늘의 현황</div>
+        <div class="sub-row"><span class="sub-row-label">클레임 인입</span><span class="sub-row-value" id="side-today-claim">-</span></div>
+        <div class="sub-row"><span class="sub-row-label">반품 입고</span><span class="sub-row-value" id="side-today-return">-</span></div>
+        <div class="sub-row"><span class="sub-row-label">처리 완료</span><span class="sub-row-value" id="side-today-done">-</span></div>
+      </div>
+      <!-- 바로가기 -->
+      <div class="side-card link-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span class="side-card-title" style="margin-bottom:0;">🔗 바로가기</span>
+          <button onclick="toggleLinkForm()" id="btn-link-add" style="font-size:11px;padding:3px 8px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;display:none;">+ 추가</button>
         </div>
-        <div class="side-card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <span class="side-card-title" style="margin-bottom:0;">🔗 바로가기</span>
-            <button onclick="toggleLinkForm()" id="btn-link-add" style="font-size:11px;padding:3px 8px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;color:#555;display:none;">+ 추가</button>
+        <div id="link-form" style="display:none;margin-bottom:10px;">
+          <input type="text" id="link-name-input" placeholder="링크 이름" style="margin-bottom:6px;font-size:13px;padding:7px 10px;border:1px solid #e0e0de;border-radius:7px;width:100%;box-sizing:border-box;outline:none;"/>
+          <input type="url" id="link-url-input" placeholder="https://..." style="margin-bottom:6px;font-size:13px;padding:7px 10px;border:1px solid #e0e0de;border-radius:7px;width:100%;box-sizing:border-box;outline:none;"/>
+          <div style="display:flex;gap:6px;">
+            <button onclick="addLink()" style="flex:1;padding:5px;font-size:12px;border:none;border-radius:6px;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;">추가</button>
+            <button onclick="toggleLinkForm()" style="flex:1;padding:5px;font-size:12px;border:1px solid #ddd;border-radius:6px;background:#f5f5f3;color:#666;cursor:pointer;font-family:inherit;">취소</button>
           </div>
-          <div id="link-form" style="display:none;margin-bottom:10px;">
-            <input type="text" id="link-name-input" placeholder="링크 이름" style="margin-bottom:6px;font-size:13px;padding:7px 10px;border:1px solid #e0e0de;border-radius:7px;width:100%;box-sizing:border-box;outline:none;"/>
-            <input type="url" id="link-url-input" placeholder="https://..." style="margin-bottom:6px;font-size:13px;padding:7px 10px;border:1px solid #e0e0de;border-radius:7px;width:100%;box-sizing:border-box;outline:none;"/>
-            <div style="display:flex;gap:6px;">
-              <button onclick="addLink()" style="flex:1;padding:5px;font-size:12px;border:none;border-radius:6px;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;">추가</button>
-              <button onclick="toggleLinkForm()" style="flex:1;padding:5px;font-size:12px;border:1px solid #ddd;border-radius:6px;background:#f5f5f3;color:#666;cursor:pointer;font-family:inherit;">취소</button>
-            </div>
-          </div>
-          <div id="link-list"></div>
         </div>
+        <div id="link-list"></div>
       </div>
     </div>
   </div>
@@ -584,7 +600,7 @@ tr:hover td{background:#fafafa;}
 
 <!-- ===== PAGE: VOC 작성 ===== -->
 <div id="page-vocwrite" class="page">
-<div style="max-width:860px;margin:0 auto;padding:24px;">
+<div style="max-width:860px;margin:0 auto;padding:0 24px 24px;">
 
   <!-- 목록 뷰 -->
   <div id="vocw-list-view">
@@ -598,9 +614,9 @@ tr:hover td{background:#fafafa;}
     </div>
   </div>
 
-  <!-- 에디터 뷰 -->
-  <div id="vocw-edit-view" style="display:none;">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+  <!-- 에디터 뷰 — 뷰포트 전체 높이 고정, 툴바 상단 고정, 에디터만 내부 스크롤 -->
+  <div id="vocw-edit-view" style="display:none;display:flex;flex-direction:column;height:calc(100vh - 56px);box-sizing:border-box;padding:16px 0 0;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-shrink:0;padding:0 0 0 0;">
     <button onclick="_showVocwList()" style="font-size:13px;padding:5px 12px;border:1px solid #e0e0de;border-radius:8px;background:#fff;cursor:pointer;color:#555;font-family:inherit;">← 목록으로</button>
     <span style="font-size:18px;font-weight:700;">✍️ VOC 작성</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
@@ -616,12 +632,13 @@ tr:hover td{background:#fafafa;}
       <button onclick="saveVocWriteReport()" style="font-size:13px;padding:6px 18px;border:none;border-radius:8px;background:#1a1a1a;color:#fff;cursor:pointer;font-weight:600;font-family:inherit;">저장</button>
     </div>
   </div>
-  <div style="margin-bottom:16px;">
-    <input type="text" id="vocw-title" placeholder="제목 입력 (예: 2026년 7월 1주차 위클리)" style="width:100%;font-size:16px;font-weight:600;padding:8px 12px;border:1.5px solid #e0e0de;border-radius:8px;font-family:inherit;color:#1a1a1a;background:#fff;outline:none;" onfocus="this.style.borderColor='#1a1a1a'" onblur="this.style.borderColor='#e0e0de'">
+  <div style="margin-bottom:10px;flex-shrink:0;">
+    <input type="text" id="vocw-title" placeholder="제목 입력 (예: 2026년 7월 1주차 위클리)" style="width:100%;font-size:16px;font-weight:600;padding:8px 12px;border:1.5px solid #e0e0de;border-radius:8px;font-family:inherit;color:#1a1a1a;background:#fff;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='#1a1a1a'" onblur="this.style.borderColor='#e0e0de'">
   </div>
-  <div class="card" style="padding:0;">
-    <!-- 툴바 -->
-    <div id="vocw-toolbar" style="display:flex;align-items:center;gap:2px;padding:8px 14px;background:#f8f8f6;border-bottom:1px solid #f0f0ee;flex-wrap:wrap;position:sticky;top:56px;z-index:90;border-radius:10px 10px 0 0;">
+  <!-- 카드: flex column, 남은 높이 전부 차지, 내부 스크롤 -->
+  <div class="card" style="padding:0;flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;">
+    <!-- 툴바: flex-shrink:0 → 항상 상단 고정 -->
+    <div id="vocw-toolbar" style="display:flex;align-items:center;gap:2px;padding:8px 14px;background:#f8f8f6;border-bottom:1px solid #f0f0ee;flex-wrap:wrap;flex-shrink:0;border-radius:10px 10px 0 0;z-index:1;">
       <!-- 인라인 서식 -->
       <button id="vocw-btn-bold" onclick="vocwToggle('bold')" title="굵게 (Ctrl+B)" style="padding:4px 9px;font-size:13px;font-weight:700;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">B</button>
       <button id="vocw-btn-italic" onclick="vocwToggle('italic')" title="기울임 (Ctrl+I)" style="padding:4px 9px;font-size:13px;font-style:italic;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">I</button>
@@ -659,7 +676,7 @@ tr:hover td{background:#fafafa;}
       <button onclick="vocwInsertHr()" title="구분선 삽입 (--- 입력 후 Enter)" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">—</button>
       <!-- 표 크기 피커 -->
       <div style="position:relative;display:inline-block;">
-        <button id="vocw-tbl-btn" onclick="vocwToggleTablePicker(this)" title="표 삽입 — 행·열 수를 마우스로 선택" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">표 ▾</button>
+        <button id="vocw-tbl-btn" onmousedown="vocwSaveEditorSel();event.preventDefault()" onclick="vocwToggleTablePicker(this)" title="표 삽입 — 행·열 수를 마우스로 선택" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">표 ▾</button>
         <div id="vocw-table-picker" style="display:none;position:fixed;background:#fff;border:1px solid #e0e0de;border-radius:10px;padding:10px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
           <div id="vocw-table-grid" style="display:grid;grid-template-columns:repeat(8,22px);gap:3px;"></div>
           <div id="vocw-table-label" style="font-size:11px;color:#888;text-align:center;margin-top:7px;">표 크기를 선택하세요</div>
@@ -719,9 +736,9 @@ tr:hover td{background:#fafafa;}
         </div>
       </div>
     </div>
-    <!-- 에디터 본문 -->
+    <!-- 에디터 본문: flex:1 + overflow-y:auto → 내부 스크롤 -->
     <div id="vocw-editor" contenteditable="true"
-      style="min-height:calc(100vh - 280px);padding:24px 32px;font-size:15px;line-height:1.8;color:#1a1a1a;outline:none;background:#fff;"
+      style="flex:1;overflow-y:auto;padding:24px 32px;font-size:15px;line-height:1.8;color:#1a1a1a;outline:none;background:#fff;min-height:0;"
       placeholder="여기에 리포트를 작성하세요..."></div>
   </div>
   </div><!-- /vocw-edit-view -->
@@ -880,7 +897,7 @@ tr:hover td{background:#fafafa;}
 <div id="page-claim" class="page">
 <!-- 클레임 등록 모달 -->
 <div id="claim-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.45);overflow-y:auto;" onclick="if(event.target===this)closeClaimModal()">
-  <div style="background:#fff;border-radius:14px;max-width:720px;margin:40px auto;padding:32px;position:relative;">
+  <div style="background:#fff;border-radius:14px;max-width:900px;margin:40px auto;padding:32px;position:relative;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
       <span style="font-size:17px;font-weight:700;">신규 클레임 등록</span>
       <button onclick="closeClaimModal()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;line-height:1;">×</button>
@@ -1117,7 +1134,7 @@ tr:hover td{background:#fafafa;}
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
     <span style="font-size:18px;font-weight:700;">반품 입고</span>
     <div style="display:flex;gap:6px;align-items:center;">
-      <button class="btn-primary" onclick="openReturnRegModal()">+ 입고 등록</button>
+      <button class="btn-primary" style="width:auto;padding:9px 16px;" onclick="openReturnRegModal()">+ 입고 등록</button>
       <input type="file" id="r-xlsx-import-input" accept=".xlsx" style="display:none;" onchange="importReturnsXlsx(this)">
       <button class="btn-secondary" onclick="document.getElementById('r-xlsx-import-input').click()">xlsx 가져오기</button>
       <button class="btn-secondary" onclick="exportReturnsXlsx()">xlsx 내보내기</button>
@@ -1128,14 +1145,28 @@ tr:hover td{background:#fafafa;}
       <div class="card-title" style="margin-bottom:0;">입고 목록</div>
     </div>
     <div id="return-month-tabs" style="display:flex;gap:0;overflow-x:auto;border-top:2px solid #e8e8e6;scrollbar-width:none;padding:0;"></div>
-    <div class="table-wrap" style="padding:0;"><table><thead><tr><th>입고일</th><th>고객명</th><th>상품명</th><th>옵션</th><th>수량</th><th>개봉</th><th>검수결과</th><th>입고 여부</th><th>주문번호</th><th>비고</th><th></th></tr></thead><tbody id="return-tbody"></tbody></table><div class="empty-msg" id="return-empty">등록된 입고 내역이 없습니다</div></div>
+    <div class="table-wrap" style="padding:0;overflow-x:auto;"><table style="min-width:1000px;border-collapse:collapse;width:100%;"><thead><tr>
+      <th style="text-align:center;white-space:nowrap;">원송장</th>
+      <th style="text-align:center;white-space:nowrap;">반송장</th>
+      <th style="text-align:center;white-space:nowrap;">고객명</th>
+      <th style="text-align:center;white-space:nowrap;">상품명</th>
+      <th style="text-align:center;white-space:nowrap;">옵션</th>
+      <th style="text-align:center;white-space:nowrap;">수량</th>
+      <th style="text-align:center;white-space:nowrap;">개봉 여부</th>
+      <th style="text-align:center;white-space:nowrap;">검수 결과</th>
+      <th style="text-align:center;white-space:nowrap;">입고 여부</th>
+      <th style="text-align:center;white-space:nowrap;">CX 확인</th>
+      <th style="text-align:center;white-space:nowrap;">주문번호</th>
+      <th style="text-align:center;white-space:nowrap;">비고</th>
+      <th></th>
+    </tr></thead><tbody id="return-tbody"></tbody></table><div class="empty-msg" id="return-empty">등록된 입고 내역이 없습니다</div></div>
   </div>
 </div>
 </div><!-- /page-return -->
 
 <!-- ===== 반품 입고 등록 모달 ===== -->
-<div id="return-reg-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.4);overflow-y:auto;" onclick="if(event.target===this)closeReturnRegModal()">
-  <div style="background:#fff;border-radius:12px;max-width:640px;margin:40px auto;padding:28px;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
+<div id="return-reg-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.4);overflow-y:auto;">
+  <div style="background:#fff;border-radius:12px;max-width:860px;margin:40px auto;padding:28px;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
     <input type="hidden" id="r-edit-id">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
       <span id="return-reg-modal-title" style="font-size:16px;font-weight:700;">반품 입고 등록</span>
@@ -1149,7 +1180,7 @@ tr:hover td{background:#fafafa;}
       <button type="button" onclick="addReturnItemRow()" style="font-size:11px;padding:3px 12px;border:1px solid #1a1a1a;border-radius:6px;background:#fff;cursor:pointer;font-family:inherit;font-weight:600;">+ 상품 추가</button>
     </div>
     <div style="display:grid;grid-template-columns:2fr 2fr 56px 56px 1fr 30px;gap:5px;padding:0 2px 5px;border-bottom:1.5px solid #e8e8e6;">
-      <span style="font-size:11px;color:#aaa;">상품명</span><span style="font-size:11px;color:#aaa;">옵션</span><span style="font-size:11px;color:#aaa;text-align:center;">수량</span><span style="font-size:11px;color:#aaa;text-align:center;">개봉</span><span style="font-size:11px;color:#aaa;">검수결과</span><span></span>
+      <span style="font-size:11px;color:#aaa;">상품명</span><span style="font-size:11px;color:#aaa;">옵션</span><span style="font-size:11px;color:#aaa;text-align:center;">수량</span><span style="font-size:11px;color:#aaa;text-align:center;">개봉</span><span style="font-size:11px;color:#aaa;">검수결과</span><span style="font-size:11px;color:#aaa;text-align:center;">순서</span>
     </div>
     <div id="r-items-wrap"></div>
     <div class="form-row" style="margin-top:10px;"><label>비고</label><input type="text" id="r-note" placeholder="비고"/></div>
@@ -1158,7 +1189,7 @@ tr:hover td{background:#fafafa;}
 </div>
 
 <!-- ===== 반품 수정 모달 ===== -->
-<div id="return-edit-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.4);overflow-y:auto;" onclick="if(event.target===this)closeReturnEditModal()">
+<div id="return-edit-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.4);overflow-y:auto;">
   <div style="background:#fff;border-radius:12px;max-width:480px;margin:40px auto;padding:28px;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
       <span style="font-size:16px;font-weight:700;">반품 수정</span>
@@ -1686,7 +1717,8 @@ function renderHomeDashboard(){
     if(badge){badge.style.display='';badge.textContent='📅 '+label+' 기간 조회 중';}
     chartClaims=claims.filter(r=>{const v=normDate(r.date);return v>=from&&v<=to;});
     setTxt('side-today-claim',countUniq(claims,'date',from,to)+'건');
-    setTxt('side-today-return',countIn(returns,'date',from,to)+'건');
+    const _rangeRetOrders=new Set(returns.filter(r=>{const v=normDate(r.date);return v>=from&&v<=to;}).map(r=>(r.orderno||('_id'+r.id)).trim()));
+    setTxt('side-today-return',_rangeRetOrders.size+'건');
     const todayLbl=document.querySelector('#h-today')?.closest('.status-item')?.querySelector('.status-item-label');
     if(todayLbl)todayLbl.textContent='기간 접수';
     const weekLbl=document.querySelector('#h-week')?.closest('.status-item')?.querySelector('.status-item-label');
@@ -1701,7 +1733,8 @@ function renderHomeDashboard(){
     setTxt('h-week',countUniq(claims,'date',ws,t)+'건');
     setTxt('h-month',countUniq(claims,'date',ms,t)+'건');
     setTxt('side-today-claim',countUniq(claims,'date',t,t)+'건');
-    setTxt('side-today-return',countIn(returns,'date',t,t)+'건');
+    const _todayRetOrders=new Set(returns.filter(r=>normDate(r.date)===t).map(r=>(r.orderno||('_id'+r.id)).trim()));
+    setTxt('side-today-return',_todayRetOrders.size+'건');
     const todayLbl=document.getElementById('lbl-today');if(todayLbl)todayLbl.textContent='금일 접수';
     const weekLbl=document.getElementById('lbl-week');if(weekLbl)weekLbl.textContent='이번 주 접수';
     const monthLbl=document.getElementById('lbl-month');if(monthLbl)monthLbl.textContent='이번 달 접수';
@@ -2109,28 +2142,41 @@ function editCell(td,claimId,field,curVal){
     el=document.createElement('input');el.type=type==='number'?'number':type==='date'?'date':'text';
     el.value=curVal||'';el.style.cssText=bStyle;
   }
+  const origHTML=td.innerHTML; // 뱃지 포함 원본 HTML 보존
   td.innerHTML='';td.appendChild(el);el.focus();
   if(el.select&&type!=='date')el.select();
   let _saved=false,_dateUserEdited=false;
   const save=()=>{
     if(_saved)return;
     const val=el.value;
-    // 날짜 필드: 사용자가 직접 편집하지 않은 채 blur → 원래 값 복원 (피커 오픈만 한 경우)
-    // 직접 삭제(backspace 등)했으면 _dateUserEdited=true → 빈값 저장 허용
-    if(type==='date'&&!val&&!_dateUserEdited){td.innerHTML=curVal||'-';return;}
+    // 날짜 필드: 피커만 열고 선택 안 한 경우 원래값 복원
+    if(type==='date'&&!val&&!_dateUserEdited){td.innerHTML=origHTML;return;}
     _saved=true;
     let disp=val||'-';
     if(['costP','costR','costS'].includes(field)){const n=parseFloat(String(val).replace(/,/g,''));disp=!isNaN(n)&&val?n.toLocaleString():'-';}
+    // 상품명 편집 후 ⓞ 뱃지 복원
+    if(field==='product'){
+      const claim=loadClaims().find(c=>String(c.id)===String(claimId));
+      const opt=claim?claim.option:'';
+      if(opt&&opt!=='[옵션 지정 불가]'){
+        disp=`${val||'-'}<span title="${opt.replace(/"/g,'&quot;')}" style="display:inline-block;color:#1a73e8;font-size:15px;margin-left:4px;vertical-align:middle;cursor:default;line-height:1;">ⓞ</span>`;
+      }
+    }
     td.innerHTML=disp;
     const upd={[field]:val};
-    if(field==='donedate'&&val)upd.status='처리 완료';
+    if(field==='donedate'&&val){
+      upd.status='처리 완료';
+      // 같은 행의 status 셀 즉시 업데이트 (Firestore 리렌더 전에도 반영)
+      const tr=td.closest('tr');
+      if(tr){const sTd=tr.querySelector('[data-field="status"]');if(sTd){sTd.innerHTML='처리 완료';sTd.dataset.val='처리 완료';}}
+    }
     _fsUpdate('claims',claimId,upd).catch(e=>console.error(e));
   };
   el.addEventListener('blur',save);
   el.addEventListener('keydown',e=>{
     _dateUserEdited=true; // 키 입력 = 의도적 편집
     if(e.key==='Enter'){e.preventDefault();el.blur();}
-    if(e.key==='Escape'){_saved=true;td.innerHTML=curVal||'-';}
+    if(e.key==='Escape'){_saved=true;td.innerHTML=origHTML;} // 원본 HTML 복원 (뱃지 포함)
   });
   el.addEventListener('input',()=>{_dateUserEdited=true;});
   if(type==='select')el.addEventListener('change',()=>el.blur());
@@ -2750,7 +2796,10 @@ function _buildClaimRow(r,i){
       return;
     }
     if(key==='_inspect'){
-      const cached=(_returnInspectCache&&r.orderno)?(_returnInspectCache[r.orderno.trim()]||null):null;
+      const oList=(_returnInspectCache&&r.orderno)?(_returnInspectCache[(r.orderno||'').trim()]||null):null;
+      if(!oList||!oList.length){cells+=`<td class="tdc" style="color:#bbb;${_colW('_inspect')}">-</td>`;return;}
+      const prodNorm=(r.product||'').trim().toLowerCase();
+      const cached=oList.find(x=>x.product===prodNorm)||oList[0]||null;
       if(!cached){cells+=`<td class="tdc" style="color:#bbb;${_colW('_inspect')}">-</td>`;return;}
       const openedRaw=cached.opened||'';
       const inspRaw=cached.inspect||'';
@@ -2829,7 +2878,8 @@ function _doRenderClaimTable(){
   _vsClaims=claims;
   // 반품 → 검수 결과 맵 (orderno 기준, inspect + opened 저장)
   _returnInspectCache={};
-  try{loadReturns().forEach(r=>{if(r.orderno&&(r.inspect||r.opened||r.returnImgUrls)){const key=r.orderno.trim();if(!_returnInspectCache[key]||r.inspect){_returnInspectCache[key]={inspect:r.inspect||'',opened:r.opened||'',returnImgUrls:Array.isArray(r.returnImgUrls)?r.returnImgUrls:[]};}else if(Array.isArray(r.returnImgUrls)&&r.returnImgUrls.length){(_returnInspectCache[key].returnImgUrls||[]).push(...r.returnImgUrls);}}});}catch(e){}
+  // 반품 → 검수 결과 맵 (orderno 기준 배열, 상품명별로 저장)
+  try{loadReturns().forEach(r=>{if(r.orderno&&(r.inspect||r.opened||r.returnImgUrls)){const key=(r.orderno||'').trim();if(!_returnInspectCache[key])_returnInspectCache[key]=[];const prod=(r.product||'').trim().toLowerCase();const ex=_returnInspectCache[key].find(x=>x.product===prod);if(ex){if(r.inspect)ex.inspect=r.inspect;if(r.opened)ex.opened=r.opened;if(Array.isArray(r.returnImgUrls)&&r.returnImgUrls.length)ex.returnImgUrls.push(...r.returnImgUrls);}else{_returnInspectCache[key].push({product:prod,inspect:r.inspect||'',opened:r.opened||'',returnImgUrls:Array.isArray(r.returnImgUrls)?r.returnImgUrls.slice():[]});}}});}catch(e){}
   _vsInit();
   // 스크롤 복원: tbody가 비어있을 때는 scrollTop이 클램핑되므로
   // _vsRender(sc)로 먼저 올바른 위치의 행을 렌더한 뒤 scrollTop을 설정
@@ -2864,7 +2914,11 @@ function _makeReturnItemRowHTML(){
         <button type="button" onclick="_addReturnRowImg(this)" style="font-size:11px;padding:3px 8px;border:1px solid #e0d0d0;border-radius:5px;background:#fff5f5;cursor:pointer;color:#666;font-family:inherit;width:100%;">📎 사진 첨부</button>
       </div>
     </div>
-    <button type="button" onclick="this.closest('.r-item-row').remove()" style="padding:6px 5px;border:1px solid #e0d0d0;border-radius:7px;font-size:13px;background:#fff5f5;cursor:pointer;color:#dc2626;line-height:1;" title="삭제">✕</button>
+    <div style="display:flex;flex-direction:column;gap:2px;align-items:center;">
+      <button type="button" onclick="_retItemRowUp(this)" style="padding:2px 7px;font-size:11px;border:1px solid #d1d5db;border-radius:4px;background:#f8f8f8;cursor:pointer;line-height:1.4;" title="위로">↑</button>
+      <button type="button" onclick="_retItemRowDown(this)" style="padding:2px 7px;font-size:11px;border:1px solid #d1d5db;border-radius:4px;background:#f8f8f8;cursor:pointer;line-height:1.4;" title="아래로">↓</button>
+      <button type="button" onclick="this.closest('.r-item-row').remove()" style="padding:2px 7px;font-size:11px;border:1px solid #e0d0d0;border-radius:4px;background:#fff5f5;cursor:pointer;color:#dc2626;line-height:1.4;" title="삭제">✕</button>
+    </div>
   </div>`;
 }
 function _addReturnRowImg(btn){
@@ -3044,57 +3098,84 @@ function _buildReturnMonthTabs(returns){
   }).join('');
 }
 function _setReturnMonthTab(month){_returnActiveMonth=month;renderReturnTable();}
+function _retWarehouseDisplay(ws,wr){
+  const map={'Y(정상)':'#16a34a','Y(리퍼)':'#7c3aed','Y(폐기/불량 이동)':'#ea580c','N':'#dc2626'};
+  if(!ws)return '<span style="color:#aaa;">-</span>';
+  const color=map[ws]||'#555';
+  const reasonHtml=ws==='N'&&wr?`<div style="font-size:10px;color:#888;margin-top:2px;white-space:normal;">${wr}</div>`:'';
+  return `<span style="color:${color};font-weight:700;font-size:12px;">${ws}</span>${reasonHtml}`;
+}
 function renderReturnTable(){
   let allReturns=loadReturns().slice().sort((a,b)=>{
-    if((a.date||'')>(b.date||''))return -1;
-    if((a.date||'')<(b.date||''))return 1;
-    return (b.id||0)-(a.id||0);
+    const da=a.date||'',db=b.date||'';
+    if(da>db)return -1;if(da<db)return 1;
+    const ga=(a.orig||'')+'|'+(a.orderno||'');
+    const gb=(b.orig||'')+'|'+(b.orderno||'');
+    if(ga<gb)return -1;if(ga>gb)return 1;
+    return (a.id||0)-(b.id||0);
   });
   _buildReturnMonthTabs(allReturns);
   let returns=_returnActiveMonth?allReturns.filter(r=>(r.date||'').slice(0,7)===_returnActiveMonth):allReturns;
   const tbody=document.getElementById('return-tbody'),empty=document.getElementById('return-empty');
   if(!returns.length){tbody.innerHTML='';empty.style.display='';return;}
   empty.style.display='none';
-  const orderBg=['#f0f7ff','#fff7ed','#f0fdf4','#fdf4ff','#fefce8'];
-  const orderColorMap={};let colorIdx=0;
+  // 날짜별 통계 — 건수(주문번호 unique), 수량(qty 합계)
+  const dateStats={};
+  returns.forEach(r=>{
+    const d=r.date||'';
+    if(!dateStats[d]){dateStats[d]={orders:new Set(),qty:0};}
+    const ono=(r.orderno||'').trim();
+    if(ono)dateStats[d].orders.add(ono);else dateStats[d].orders.add('_id'+r.id);
+    dateStats[d].qty+=parseInt(r.qty||'0',10)||0;
+  });
+  // 같은 입고일+원송장+반송장+고객명+주문번호+비고 → 같은 그룹
+  const gKey=r=>[r.date||'',r.orig||'',r.retno||'',r.name||'',r.orderno||'',r.note||''].join('\x00');
+  const groups=[],seen=new Map();
+  returns.forEach(r=>{const k=gKey(r);if(!seen.has(k)){const a=[];seen.set(k,a);groups.push(a);}seen.get(k).push(r);});
   const DOW=['일','월','화','수','목','금','토'];
   let lastDate='',html='';
-  returns.forEach(r=>{
-    if((r.date||'')!==lastDate){
-      lastDate=r.date||'';
-      let label=lastDate||'날짜 없음';
-      if(lastDate){const d=new Date(lastDate);label=lastDate+' ('+DOW[d.getDay()]+')';}
-      html+=`<tr><td colspan="11" style="background:#f2f3f5;padding:5px 12px;font-size:11px;font-weight:700;color:#555;border-top:2px solid #e0e0de;">📅 ${label}</td></tr>`;
+  groups.forEach(group=>{
+    const f=group[0];
+    if((f.date||'')!==lastDate){
+      lastDate=f.date||'';
+      let lbl=lastDate||'날짜 없음';
+      if(lastDate){const d=new Date(lastDate);lbl=lastDate+' ('+DOW[d.getDay()]+')';}
+      const st=dateStats[lastDate]||{orders:new Set(),qty:0};
+      html+=`<tr><td colspan="13" style="background:#f2f3f5;padding:6px 14px;font-size:11px;font-weight:700;color:#444;border-top:2px solid #e0e0de;">📅 ${lbl}<span style="margin-left:14px;font-weight:400;color:#666;">${st.orders.size}건 &middot; 수량 ${st.qty}개</span></td></tr>`;
     }
-    const ono=(r.orderno||'').trim();
-    if(ono&&orderColorMap[ono]===undefined){orderColorMap[ono]=orderBg[colorIdx%orderBg.length];colorIdx++;}
-    const bg=ono?orderColorMap[ono]:'';
-    const retImgs=Array.isArray(r.returnImgUrls)&&r.returnImgUrls.length?r.returnImgUrls:null;
-    const retImgIcon=retImgs?`<span style="cursor:pointer;margin-left:4px;font-size:12px;" title="사진 ${retImgs.length}장" onclick='viewImgUrls(${JSON.stringify(retImgs)},0)'>🖼️${retImgs.length>1?`<sup style="font-size:9px;color:#1a73e8;">${retImgs.length}</sup>`:''}</span>`:'';
-    // 입고 여부 셀 — 직접 버튼
-    const ws=r.warehouseStatus||'';
-    const wr=r.warehouseReason||'';
-    let warehouseCell='';
-    if(ws==='Y'){
-      warehouseCell=`<button onclick="toggleWarehouseStatus(${r.id})" style="padding:1px 10px;font-size:12px;font-weight:700;border:1.5px solid #16a34a;border-radius:12px;background:#f0fdf4;color:#16a34a;cursor:pointer;font-family:inherit;">Y</button>`;
-    } else if(ws==='N'){
-      warehouseCell=`<button onclick="toggleWarehouseStatus(${r.id})" style="padding:1px 10px;font-size:12px;font-weight:700;border:1.5px solid #dc2626;border-radius:12px;background:#fef2f2;color:#dc2626;cursor:pointer;font-family:inherit;">N</button>${wr?`<span style="font-size:10px;color:#888;display:block;">${wr}</span>`:''}`;
-    } else {
-      warehouseCell=`<button onclick="toggleWarehouseStatus(${r.id})" style="padding:1px 10px;font-size:12px;font-weight:700;border:1.5px solid #d1d5db;border-radius:12px;background:#f9f9f9;color:#aaa;cursor:pointer;font-family:inherit;">-</button>`;
-    }
-    html+=`<tr style="background:${bg};">
-      <td style="color:#999;font-size:11px;">${r.date||'-'}</td>
-      <td>${r.name||'-'}</td>
-      <td>${r.product||'-'}</td>
-      <td>${r.option?`<span style="border:1px solid #1a73e8;color:#1a73e8;border-radius:10px;padding:0 7px;font-size:11px;font-weight:600;">${r.option}</span>`:'-'}</td>
-      <td style="text-align:center;">${r.qty||'-'}</td>
-      <td style="text-align:center;font-weight:600;color:${r.opened==='Y'?'#dc2626':r.opened==='N'?'#16a34a':'#aaa'};">${r.opened==='Y'?'개봉':r.opened==='N'?'미개봉':'-'}</td>
-      <td title="${r.inspect||''}">${r.inspect?`<span style="color:${r.inspect.startsWith('불량')?'#dc2626':'#16a34a'};font-weight:700;font-size:12px;">${r.inspect}</span>`:'-'}${retImgIcon}</td>
-      <td style="text-align:center;font-size:12px;">${warehouseCell}</td>
-      <td style="font-size:11px;font-weight:${ono?'600':'400'};">${ono||'-'}</td>
-      <td>${r.note||'-'}</td>
-      <td style="white-space:nowrap;"><button style="padding:2px 7px;font-size:11px;border:1px solid #c5cae9;border-radius:4px;background:#f3f4fd;cursor:pointer;color:#3949ab;margin-right:3px;" onclick="editReturn(${r.id})">수정</button><button class="btn-danger" onclick="deleteReturn(${r.id})">삭제</button></td>
-    </tr>`;
+    group.forEach((r,i)=>{
+      const isFirst=i===0;
+      const cx=r.cxChecked||'';
+      const rowBg=cx==='N'?'background:#fefce8;':'background:#fff;';
+      // CX 확인 드롭다운
+      const cxSel=`<select onchange="_retCxChange('${r.id}',this)" style="padding:2px 4px;font-size:12px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;background:#fff;"><option value=""${!cx?' selected':''}>-</option><option value="Y"${cx==='Y'?' selected':''}>Y</option><option value="N"${cx==='N'?' selected':''}>N</option></select>`;
+      // 검수 결과
+      const insp=r.inspect||'';
+      const inspColor=insp.startsWith('불량')?'#dc2626':(insp==='정상'?'#16a34a':'#333');
+      const retImgs=Array.isArray(r.returnImgUrls)&&r.returnImgUrls.length?r.returnImgUrls:null;
+      const imgIcon=retImgs?`<span style="cursor:pointer;margin-left:3px;font-size:12px;" title="${retImgs.length}장 사진" onclick='viewImgUrls(${JSON.stringify(retImgs)},0)'>🖼️${retImgs.length>1?`<sup style="font-size:9px;color:#1a73e8;">${retImgs.length}</sup>`:''}</span>`:'';
+      // 개봉 여부 — 검정 텍스트
+      const openedTxt=r.opened==='Y'?'개봉':r.opened==='N'?'미개봉':'-';
+      // 입고 여부 칩 표시
+      const ws=r.warehouseStatus||'',wr=r.warehouseReason||'';
+      const wDisp=_retWarehouseDisplay(ws,wr);
+      const eStyle='cursor:pointer;';
+      html+=`<tr style="${rowBg}" data-ret-id="${r.id}">
+        <td style="font-size:11px;${isFirst?eStyle:''}"${isFirst?` data-ret-field="orig" onclick="_retEdit(this)"`:''}>${isFirst?r.orig||'-':''}</td>
+        <td style="font-size:11px;${isFirst?eStyle:''}"${isFirst?` data-ret-field="retno" onclick="_retEdit(this)"`:''}>${isFirst?r.retno||'-':''}</td>
+        <td style="${isFirst?eStyle:''}"${isFirst?` data-ret-field="name" onclick="_retEdit(this)"`:''}>${isFirst?r.name||'-':''}</td>
+        <td style="${eStyle}" data-ret-field="product" onclick="_retEdit(this)">${r.product||'-'}${(r.option&&r.option!=='[옵션 지정 불가]')?`<span title="${(r.option||'').replace(/"/g,'&quot;')}" style="display:inline-block;color:#1a73e8;font-size:15px;margin-left:4px;vertical-align:middle;cursor:default;line-height:1;">ⓞ</span>`:''}</td>
+        <td style="font-size:12px;vertical-align:middle;${eStyle}" data-ret-field="option" onclick="_retEdit(this)">${r.option||'-'}</td>
+        <td style="text-align:center;${eStyle}" data-ret-field="qty" onclick="_retEdit(this)">${r.qty||'-'}</td>
+        <td style="text-align:center;color:#333;${eStyle}" data-ret-field="opened" data-ret-type="select" data-ret-opts="|Y|N" data-ret-val="${r.opened||''}" onclick="_retEdit(this)">${openedTxt}</td>
+        <td style="${eStyle}" data-ret-field="inspect" onclick="_retEdit(this)" title="${insp}"><span style="color:${inspColor};font-weight:700;">${insp||'-'}</span>${imgIcon}</td>
+        <td style="text-align:center;cursor:pointer;" onclick="_retWarehousePick(this,'${r.id}')">${wDisp}</td>
+        <td style="text-align:center;">${cxSel}</td>
+        <td style="font-size:11px;text-align:center;${isFirst?eStyle:''}"${isFirst?` data-ret-field="orderno" onclick="_retEdit(this)"`:''}>${isFirst?r.orderno||'-':''}</td>
+        <td style="${isFirst?eStyle:''}"${isFirst?` data-ret-field="note" onclick="_retEdit(this)"`:''}>${isFirst?r.note||'-':''}</td>
+        <td><button class="btn-danger" style="font-size:11px;padding:2px 8px;" onclick="deleteReturn(${r.id})">삭제</button></td>
+      </tr>`;
+    });
   });
   tbody.innerHTML=html;
 }
@@ -3557,8 +3638,9 @@ function _loadVocwContent(type){
       if(titleEl)titleEl.value=data.title||'';
       if(!html)editor.focus();
       _initVocwEditor();
+      _vocwInitUndoStack();
       _startVocwAutoSave();
-    }).catch(function(){editor.innerHTML='';_initVocwEditor();_startVocwAutoSave();});
+    }).catch(function(){editor.innerHTML='';_initVocwEditor();_vocwInitUndoStack();_startVocwAutoSave();});
   }catch(e){editor.innerHTML='';_initVocwEditor();}
 }
 function saveVocWriteReport(silent){
@@ -3589,6 +3671,7 @@ function saveVocWriteReport(silent){
 function vocwFmt(cmd,val){
   const ed=document.getElementById('vocw-editor');
   if(!ed)return;
+  _vocwPushUndo();
   ed.focus();
   vocwRestoreEditorSel();
   document.execCommand(cmd,false,val||null);
@@ -3600,6 +3683,7 @@ function vocwFmt(cmd,val){
 function vocwToggle(cmd){
   const ed=document.getElementById('vocw-editor');
   if(!ed)return;
+  _vocwPushUndo();
   ed.focus();
   document.execCommand(cmd,false,null);
   _updateVocwToolbarState();
@@ -3609,6 +3693,7 @@ function vocwToggle(cmd){
 function vocwToggleBlock(tag){
   const ed=document.getElementById('vocw-editor');
   if(!ed)return;
+  _vocwPushUndo();
   ed.focus();
   const current=(document.queryCommandValue('formatBlock')||'').toLowerCase();
   if(current===tag.toLowerCase()||current==='h'+tag.replace(/\D/g,'')){
@@ -3677,6 +3762,48 @@ function vocwSetFontSize(sizeStr){
   if(/<(table|tr|td|th)/i.test(innerHtml))return; // 표 구조 포함 시 무시
   document.execCommand('insertHTML',false,`<span style="font-size:${sizeStr}">${innerHtml}</span>`);
 }
+
+// ===== 커스텀 Undo/Redo 스택 =====
+let _vocwUndoStack=[],_vocwRedoStack=[],_vocwUndoDebounce=null,_vocwUndoInProgress=false;
+function _vocwPushUndo(){
+  if(_vocwUndoInProgress)return;
+  const ed=document.getElementById('vocw-editor');if(!ed)return;
+  const html=ed.innerHTML;
+  if(_vocwUndoStack.length&&_vocwUndoStack[_vocwUndoStack.length-1]===html)return;
+  _vocwUndoStack.push(html);
+  if(_vocwUndoStack.length>80)_vocwUndoStack.shift();
+  _vocwRedoStack=[];
+}
+// 타이핑용 디바운스 (0.6초 정지 시 스냅샷)
+function _vocwPushUndoDebounced(){
+  if(_vocwUndoDebounce)clearTimeout(_vocwUndoDebounce);
+  _vocwUndoDebounce=setTimeout(_vocwPushUndo,600);
+}
+function _vocwUndo(){
+  const ed=document.getElementById('vocw-editor');if(!ed)return;
+  if(_vocwUndoStack.length<=1)return;
+  _vocwUndoInProgress=true;
+  _vocwRedoStack.push(_vocwUndoStack.pop());
+  const prev=_vocwUndoStack[_vocwUndoStack.length-1]||'';
+  ed.innerHTML=prev;
+  // 커서 끝으로
+  try{const sel=window.getSelection();const r=document.createRange();r.selectNodeContents(ed);r.collapse(false);sel.removeAllRanges();sel.addRange(r);}catch(e){}
+  _vocwUndoInProgress=false;
+  _updateVocwToolbarState();
+}
+function _vocwRedo(){
+  const ed=document.getElementById('vocw-editor');if(!ed)return;
+  if(!_vocwRedoStack.length)return;
+  _vocwUndoInProgress=true;
+  const next=_vocwRedoStack.pop();
+  _vocwUndoStack.push(next);
+  ed.innerHTML=next;
+  try{const sel=window.getSelection();const r=document.createRange();r.selectNodeContents(ed);r.collapse(false);sel.removeAllRanges();sel.addRange(r);}catch(e){}
+  _vocwUndoInProgress=false;
+  _updateVocwToolbarState();
+}
+// 에디터 로드 시 초기 스냅샷 등록
+function _vocwInitUndoStack(){_vocwUndoStack=[];_vocwRedoStack=[];const ed=document.getElementById('vocw-editor');if(ed)_vocwUndoStack.push(ed.innerHTML);}
 
 // 에디터 선택 영역 저장 (색상 버튼 클릭 전에 호출)
 let _vocwSavedSel=null;
@@ -3866,6 +3993,7 @@ function _hoverVocwTable(rows,cols){
 }
 function _insertVocwTable(rows,cols){
   const ed=document.getElementById('vocw-editor');if(!ed)return;
+  _vocwPushUndo();
   ed.focus();
   vocwRestoreEditorSel();
   let tbl='<table style="border-collapse:collapse;width:100%;margin:12px 0;">';
@@ -3905,24 +4033,65 @@ function _initVocwEditor(){
   _vocwEditorInited=true;
   const ed=document.getElementById('vocw-editor');
   if(!ed)return;
+  ed.addEventListener('input',function(){_vocwPushUndoDebounced();});
   ed.addEventListener('keydown',function(e){
+    // Ctrl+Z → 커스텀 undo
+    if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key==='z'){e.preventDefault();_vocwUndo();return;}
+    // Ctrl+Y / Ctrl+Shift+Z → redo
+    if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='z'))){e.preventDefault();_vocwRedo();return;}
     // Ctrl+A → 표 안이면 표 전체 선택
     if((e.ctrlKey||e.metaKey)&&e.key==='a'){
       const sel=window.getSelection();
       if(sel&&sel.rangeCount){
-        let node=sel.anchorNode;
-        let table=null;
-        while(node&&node!==ed){
-          if(node.nodeName==='TABLE'){table=node;break;}
-          node=node.parentElement;
-        }
-        if(table){
+        const anchor=sel.anchorNode;
+        const anchorEl=anchor?(anchor.nodeType===3?anchor.parentElement:anchor):null;
+        const table=anchorEl?anchorEl.closest('table'):null;
+        if(table&&ed.contains(table)){
           e.preventDefault();
           const range=document.createRange();
           range.selectNodeContents(table);
-          sel.removeAllRanges();
-          sel.addRange(range);
+          sel.removeAllRanges();sel.addRange(range);
           vocwSaveEditorSel();
+        }
+      }
+    }
+    // 표 안 Up/Down 방향키 → 위아래 행 같은 열로 이동
+    if(e.key==='ArrowUp'||e.key==='ArrowDown'){
+      const sel=window.getSelection();
+      if(!sel||!sel.rangeCount)return;
+      const anchor=sel.anchorNode;
+      const anchorEl=anchor?(anchor.nodeType===3?anchor.parentElement:anchor):null;
+      const curCell=anchorEl?anchorEl.closest('td,th'):null;
+      if(curCell&&ed.contains(curCell)){
+        const curRow=curCell.closest('tr');
+        const table=curRow.closest('table');
+        const rows=Array.from(table.querySelectorAll('tr'));
+        const rowIdx=rows.indexOf(curRow);
+        const colIdx=Array.from(curRow.cells).indexOf(curCell);
+        const targetRowIdx=e.key==='ArrowUp'?rowIdx-1:rowIdx+1;
+        if(targetRowIdx>=0&&targetRowIdx<rows.length){
+          const targetCell=rows[targetRowIdx].cells[Math.min(colIdx,rows[targetRowIdx].cells.length-1)];
+          if(targetCell){
+            e.preventDefault();
+            const rng=document.createRange();
+            rng.selectNodeContents(targetCell);rng.collapse(true);
+            sel.removeAllRanges();sel.addRange(rng);
+            vocwSaveEditorSel();
+          }
+        }
+        // 첫 행에서 Up → 표 위 요소로 이동
+        else if(targetRowIdx<0){
+          e.preventDefault();
+          let prev=table.previousSibling;
+          while(prev&&prev.nodeType===3&&!prev.textContent.trim())prev=prev.previousSibling;
+          if(prev){const rng=document.createRange();rng.selectNodeContents(prev);rng.collapse(false);sel.removeAllRanges();sel.addRange(rng);}
+        }
+        // 마지막 행에서 Down → 표 아래 요소로 이동
+        else if(targetRowIdx>=rows.length){
+          e.preventDefault();
+          let next=table.nextSibling;
+          while(next&&next.nodeType===3&&!next.textContent.trim())next=next.nextSibling;
+          if(next){const rng=document.createRange();rng.setStart(next,0);rng.collapse(true);sel.removeAllRanges();sel.addRange(rng);}
         }
       }
     }
@@ -3947,14 +4116,7 @@ function _initVocwEditor(){
           rng.selectNodeContents(target);rng.collapse(!e.shiftKey);
           const s=window.getSelection();s.removeAllRanges();s.addRange(rng);
         } else if(!e.shiftKey){
-          // 마지막 셀에서 Tab → 새 행 추가
-          const table=curTd.closest('table');
-          const colCount=table.rows[0]?.cells?.length||1;
-          const newRow=table.insertRow();
-          for(let ci=0;ci<colCount;ci++){const td=newRow.insertCell();td.style.cssText='border:1px solid #e0e0de;padding:8px;min-width:60px;';td.innerHTML='&nbsp;';}
-          const rng=document.createRange();
-          rng.selectNodeContents(newRow.cells[0]);rng.collapse(true);
-          const s=window.getSelection();s.removeAllRanges();s.addRange(rng);
+          // 마지막 셀에서 Tab → 아무것도 안 함 (표 추가는 + 버튼으로만)
         }
       } else {
         if(e.shiftKey){document.execCommand('outdent',false,null);}
@@ -4002,6 +4164,7 @@ function _initVocwEditor(){
       const offset=sel.anchorOffset;
       const lineStart=text.slice(0,offset);
       if(lineStart==='-'||(lineStart.startsWith('-')&&lineStart.trim()==='-')){
+        _vocwPushUndo();
         // - 이후 남은 텍스트에서 앞의 원문자/특수 번호(①②③ 등) 제거
         let remaining=text.slice(offset);
         remaining=remaining.replace(/^[①-⑳❶-❿Ⓐ-ⓙ❶-❿⓪-⓿]\s*/,'');
@@ -4102,7 +4265,7 @@ function _vocwFindCellAndIndex(){
   return{cell,row,rowIdx,colIdx,table};
 }
 // 행 추가
-window.vocwAddRow=function(where){
+window.vocwAddRow=function(where){_vocwPushUndo();
   const{cell,row,table}=_vocwFindCellAndIndex();
   if(!table)return;
   const rows=table.querySelectorAll('tr');
@@ -4128,7 +4291,7 @@ window.vocwAddRow=function(where){
   _vocwRefreshTableUI(table);
 };
 // 열 추가
-window.vocwAddCol=function(where){
+window.vocwAddCol=function(where){_vocwPushUndo();
   const{colIdx,table}=_vocwFindCellAndIndex();
   if(!table)return;
   const rows=table.querySelectorAll('tr');
@@ -4147,7 +4310,7 @@ window.vocwAddCol=function(where){
   _vocwRefreshTableUI(table);
 };
 // 행 삭제
-window.vocwDelRow=function(){
+window.vocwDelRow=function(){_vocwPushUndo();
   const{row,table}=_vocwFindCellAndIndex();
   if(!row||!table)return;
   if(table.querySelectorAll('tr').length<=1){alert('마지막 행은 삭제할 수 없습니다.');return;}
@@ -4155,7 +4318,7 @@ window.vocwDelRow=function(){
   _vocwRefreshTableUI(table);
 };
 // 열 삭제
-window.vocwDelCol=function(){
+window.vocwDelCol=function(){_vocwPushUndo();
   const{colIdx,table}=_vocwFindCellAndIndex();
   if(colIdx<0||!table)return;
   const rows=table.querySelectorAll('tr');
@@ -4644,6 +4807,120 @@ function toggleWarehouseStatus(id){
     updated=Object.assign({},r,{warehouseStatus:'Y',warehouseReason:''});
   }
   _fsSet('returns',String(id),updated).catch(e=>console.error(e));
+}
+
+// ===== 반품 목록 인라인 편집 =====
+function _retEdit(td){
+  if(!td||td.querySelector('input,select'))return;
+  const tr=td.closest('tr');
+  const id=tr&&tr.dataset.retId;
+  const field=td.dataset.retField;
+  if(!id||!field)return;
+  const type=td.dataset.retType||'text';
+  const r=loadReturns().find(x=>String(x.id)===String(id));
+  if(!r)return;
+  let cur=String(r[field]||'');
+  const origHTML=td.innerHTML;
+  let el;
+  if(type==='select'){
+    const opts=(td.dataset.retOpts||'').split('|');
+    el=document.createElement('select');
+    el.style.cssText='width:100%;font-family:inherit;font-size:12px;border:1.5px solid #1a73e8;border-radius:5px;padding:2px;background:#fff;';
+    opts.forEach(o=>{const opt=document.createElement('option');opt.value=o;opt.textContent=o||'-';if(o===cur)opt.selected=true;el.appendChild(opt);});
+  } else if(type==='date'){
+    el=document.createElement('input');el.type='date';el.value=cur;
+    el.style.cssText='width:100%;font-family:inherit;font-size:11px;border:1.5px solid #1a73e8;border-radius:5px;padding:2px;box-sizing:border-box;';
+  } else {
+    el=document.createElement('input');el.type='text';el.value=cur;
+    el.style.cssText='width:100%;font-family:inherit;font-size:12px;border:1.5px solid #1a73e8;border-radius:5px;padding:2px 4px;box-sizing:border-box;';
+  }
+  td.innerHTML='';td.appendChild(el);el.focus();
+  if(el.select&&type==='text')el.select();
+  const save=()=>{
+    const val=el.value;
+    _retSaveField(id,field,val,tr);
+    if(field==='opened'){
+      td.innerHTML=val==='Y'?'개봉':val==='N'?'미개봉':'-';
+      td.dataset.retVal=val;
+    } else if(field==='inspect'){
+      const c=val.startsWith('불량')?'#dc2626':(val==='정상'?'#16a34a':'#333');
+      td.innerHTML=`<span style="color:${c};font-weight:700;">${val||'-'}</span>`;
+    } else if(field==='product'){
+      const ret=loadReturns().find(x=>String(x.id)===String(id));
+      const opt=ret?ret.option:'';
+      const badge=(opt&&opt!=='[옵션 지정 불가]')?`<span title="${(opt||'').replace(/"/g,'&quot;')}" style="display:inline-block;color:#1a73e8;font-size:15px;margin-left:4px;vertical-align:middle;cursor:default;line-height:1;">ⓞ</span>`:'';
+      td.innerHTML=(val||'-')+badge;
+    } else {
+      td.innerHTML=val||'-';
+    }
+  };
+  el.addEventListener('blur',save);
+  el.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();save();}
+    if(e.key==='Escape'){e.preventDefault();td.innerHTML=origHTML;}
+  });
+  if(type==='select')el.addEventListener('change',()=>save());
+}
+function _retSaveField(id,field,value,tr){
+  const all=loadReturns();
+  const r=all.find(x=>String(x.id)===String(id));
+  if(!r)return;
+  r[field]=value;
+  _fsSet('returns',String(id),r).catch(e=>console.error(e));
+}
+function _retWarehousePick(td,id){
+  if(td.querySelector('select'))return;
+  const all=loadReturns();
+  const r=all.find(x=>String(x.id)===String(id));
+  if(!r)return;
+  const origHTML=td.innerHTML;
+  const cur=r.warehouseStatus||'';
+  const opts=[
+    {value:'',label:'- (미선택)'},
+    {value:'Y(정상)',label:'Y(정상)'},
+    {value:'Y(리퍼)',label:'Y(리퍼)'},
+    {value:'Y(폐기/불량 이동)',label:'Y(폐기/불량 이동)'},
+    {value:'N',label:'N (미입고)'},
+  ];
+  const sel=document.createElement('select');
+  sel.style.cssText='font-family:inherit;font-size:12px;border:1.5px solid #1a73e8;border-radius:5px;padding:3px 4px;background:#fff;';
+  opts.forEach(o=>{const opt=document.createElement('option');opt.value=o.value;opt.textContent=o.label;if(o.value===cur)opt.selected=true;sel.appendChild(opt);});
+  td.innerHTML='';td.appendChild(sel);sel.focus();
+  let saved=false;
+  const save=async()=>{
+    if(saved)return;saved=true;
+    const val=sel.value;
+    let reason=r.warehouseReason||'';
+    if(val==='N'){
+      const inp=prompt('미입고 사유\n(고객 반송 / 업체 반송 / 사고 접수 / CX 전달 / 폐기 / 3PL 전달)',reason);
+      if(inp===null){td.innerHTML=origHTML;saved=false;return;}
+      reason=inp;
+    } else {
+      reason='';
+    }
+    r.warehouseStatus=val;r.warehouseReason=reason;
+    _fsSet('returns',String(id),r).catch(e=>console.error(e));
+    td.innerHTML=_retWarehouseDisplay(val,reason);
+  };
+  sel.addEventListener('change',save);
+  sel.addEventListener('blur',()=>{if(!saved)td.innerHTML=origHTML;});
+  sel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();td.innerHTML=origHTML;}});
+}
+function _retCxChange(id,sel){
+  const val=sel.value;
+  const tr=sel.closest('tr');
+  _retSaveField(id,'cxChecked',val,tr);
+  if(tr)tr.style.background=val==='N'?'#fefce8':'#fff';
+}
+function _retItemRowUp(btn){
+  const row=btn.closest('.r-item-row');
+  const prev=row.previousElementSibling;
+  if(prev&&prev.classList.contains('r-item-row'))row.parentNode.insertBefore(row,prev);
+}
+function _retItemRowDown(btn){
+  const row=btn.closest('.r-item-row');
+  const next=row.nextElementSibling;
+  if(next&&next.classList.contains('r-item-row'))row.parentNode.insertBefore(next,row);
 }
 
 // ===== xlsx 내보내기/가져오기 =====
