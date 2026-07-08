@@ -101,9 +101,9 @@ nav.gnb,#page-tab-bar{flex-shrink:0;}
   .page-inner{padding:16px;}
 }
 /* Status section */
-.status-section{background:#fff;border-radius:12px;border:1px solid #e8e8e6;overflow:hidden;margin-bottom:16px;}
+.status-section{background:#fff;border-radius:12px;border:1px solid #e8e8e6;overflow:hidden;margin-bottom:0;display:flex;flex-direction:column;}
 .status-hd{padding:18px 24px 0;font-size:15px;font-weight:700;}
-.status-row{display:flex;border-top:1px solid #f0f0ee;margin-top:14px;}
+.status-row{display:flex;border-top:1px solid #f0f0ee;margin-top:14px;flex:1;}
 .status-item{flex:1;padding:18px 4px;text-align:center;border-right:1px solid #f0f0ee;display:flex;flex-direction:column;justify-content:center;align-items:center;}
 .status-item:last-child{border-right:none;}
 .status-item-label{font-size:11px;color:#999;margin-bottom:6px;}
@@ -1061,7 +1061,7 @@ tr:hover td{background:#fafafa;}
 
 <!-- ===== PAGE: 클레임 통계 ===== -->
 <div id="page-voc" class="page">
-<div style="padding:24px;max-width:960px;margin:0 auto;">
+<div style="padding:24px;">
   <div class="stats-grid">
     <div class="stat-card"><div class="stat-label">금일 접수</div><div class="stat-value" id="sv-today">0</div><div class="stat-hint" id="sv-today-hint"></div><div class="stat-compare same" id="sv-today-cmp">-</div></div>
     <div class="stat-card"><div class="stat-label">이번 주 접수</div><div class="stat-value" id="sv-week">0</div><div class="stat-hint" id="sv-week-hint"></div><div class="stat-compare same" id="sv-week-cmp">-</div></div>
@@ -1125,7 +1125,7 @@ tr:hover td{background:#fafafa;}
 
 <!-- ===== PAGE: VOC 로그 ===== -->
 <div id="page-voclog" class="page">
-<div style="padding:24px;max-width:960px;margin:0 auto;">
+<div style="padding:24px;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
     <span style="font-size:18px;font-weight:700;">VOC 로그</span>
     <span style="font-size:12px;color:#aaa;">클레임 성격 = VOC · 중복 주문번호 1건 집계</span>
