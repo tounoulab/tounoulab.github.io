@@ -1324,6 +1324,7 @@ function switchPage(name){
     setTimeout(()=>{
       const sc=+localStorage.getItem('sc_claim')||0;
       if(sc>0&&_vsWrap&&Math.abs(_vsWrap.scrollTop-sc)>20){_vsWrap.scrollTop=sc;_vsRender();}
+      else if(!sc&&_vsWrap&&_vsWrap.clientHeight>0){_vsRender();} // clientHeight 확정 후 전체 재렌더
     },200);
   }
 }
@@ -2741,7 +2742,7 @@ function _vsRender(scrollTopOverride){
   if(!_vsClaims.length){tbody.innerHTML='';return;}
   const wrap=_vsWrap;
   const st=scrollTopOverride!==undefined?scrollTopOverride:(wrap?wrap.scrollTop:0);
-  const vh=wrap?wrap.clientHeight:700;
+  const vh=wrap&&wrap.clientHeight>100?wrap.clientHeight:(window.innerHeight||700);
   const total=_vsClaims.length;
   const buf=10; // 위아래 버퍼 행 수
   const start=Math.max(0,Math.floor(st/VS_ROW_H)-buf);
