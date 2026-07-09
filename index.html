@@ -254,7 +254,8 @@ tr:hover td{background:#fafafa;}
 .vl-report-content ol{padding-left:20px;margin:4px 0;}
 .vl-report-content li{margin:2px 0;}
 .vl-report-content hr{border:0;border-top:1px solid #e8e8e6;margin:12px 0;}
-.vl-report-content table{margin-left:auto;margin-right:auto;}
+.vl-report-content table{margin-left:auto;margin-right:auto;border-collapse:collapse;}
+.vl-report-content table td,.vl-report-content table th{border:1px solid #e0e0de;padding:8px;min-width:60px;}
 #vl-report-editor h2{font-size:17px;font-weight:700;margin:16px 0 6px;}
 #vl-report-editor h3{font-size:15px;font-weight:600;margin:12px 0 4px;}
 #vl-report-editor[contenteditable]:empty::before{content:attr(placeholder);color:#bbb;pointer-events:none;}
@@ -722,6 +723,9 @@ tr:hover td{background:#fafafa;}
           </div>
         </div>
       </div>
+      <!-- 열/행 균등 -->
+      <button onmousedown="event.preventDefault()" onclick="vocwEqualizeColumns()" title="열 너비 균등 분배 (커서가 표 안에 있어야 함)" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">↔ 열</button>
+      <button onmousedown="event.preventDefault()" onclick="vocwEqualizeRows()" title="행 높이 균등 분배 (커서가 표 안에 있어야 함)" style="padding:4px 9px;font-size:12px;border:1px solid #e0e0de;border-radius:5px;background:#fff;cursor:pointer;font-family:inherit;">↕ 행</button>
       <!-- 색상 피커 (표 셀 배경 + 하이라이트) -->
       <span style="width:1px;background:#e0e0de;height:20px;margin:0 4px;display:inline-block;flex-shrink:0;"></span>
       <div style="position:relative;display:inline-block;">
@@ -2355,8 +2359,8 @@ function _applyColWidths(){
     const tdKey=_TD_FIELD[k]||k;
     const isFirst=idx===0; // _drag
     const isLast=idx===_STICKY_KEYS.length-1;
-    // 헤더 left 위치 + 배경 강제 적용 (스크롤 시 뒷면 비침 방지)
-    css+=`#claim-sheet th[data-col="${k}"]{left:${cum}px !important;background:#f6f6f4 !important;}\n`;
+    // 헤더 left 위치 + 배경 강제 적용 + z-index:20 (일반 th z-index:12보다 높아야 가로스크롤 시 우측 헤더가 위로 안 올라옴)
+    css+=`#claim-sheet th[data-col="${k}"]{left:${cum}px !important;background:#f6f6f4 !important;z-index:20 !important;}\n`;
     // 바디 셀: sticky position + 명시적 배경(스크롤 시 비침 방지)
     css+=`#claim-sheet tbody td[data-field="${tdKey}"]{position:sticky !important;left:${cum}px !important;z-index:10 !important;}\n`;
     css+=`#claim-sheet tbody tr.tr-even td[data-field="${tdKey}"]{background:#fff !important;}\n`;
@@ -4449,6 +4453,32 @@ function vocwSetTableBorder(width,style,color){
     cell.style.border=width==='0'?'none':`${width} ${style} ${color}`;
   });
   tbl.style.borderCollapse='collapse';
+}
+function vocwEqualizeColumns(){
+  const tbl=_vocwFindTable();
+  if(!tbl){alert('커서를 표 안에 놓아주세요.');return;}
+  _vocwPushUndo();
+  const rows=Array.from(tbl.querySelectorAll('tr'));
+  let maxCols=0;
+  rows.forEach(r=>{
+    let c=0;r.querySelectorAll('td,th').forEach(cell=>c+=(parseInt(cell.getAttribute('colspan'))||1));
+    if(c>maxCols)maxCols=c;
+  });
+  if(!maxCols)return;
+  const pct=(100/maxCols).toFixed(2)+'%';
+  tbl.querySelectorAll('td,th').forEach(cell=>{cell.style.width=pct;});
+  tbl.style.tableLayout='fixed';
+  tbl.style.width='100%';
+}
+function vocwEqualizeRows(){
+  const tbl=_vocwFindTable();
+  if(!tbl){alert('커서를 표 안에 놓아주세요.');return;}
+  _vocwPushUndo();
+  const rows=Array.from(tbl.querySelectorAll('tr'));
+  if(!rows.length)return;
+  rows.forEach(r=>{r.style.height='';r.querySelectorAll('td,th').forEach(c=>c.style.height='');});
+  const h=Math.floor(tbl.offsetHeight/rows.length);
+  rows.forEach(r=>r.style.height=h+'px');
 }
 // 색상 피커 토글
 function vocwToggleColorPicker(btn){
