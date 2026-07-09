@@ -788,6 +788,14 @@ tr:hover td{background:#fafafa;}
         <option value="">선택</option>
       </select>
     </div>
+    <!-- 단순변심 전용: 플랫폼 선택 -->
+    <div class="conditional-row" id="rowDansoPlatform" style="margin-bottom:12px;">
+      <label>플랫폼</label>
+      <select id="dansoPlatform" onchange="onDansoPlatformChange()">
+        <option value="카페24">카페24</option>
+        <option value="29CM">29CM</option>
+      </select>
+    </div>
     <!-- 누락 발송처 확인 여부 -->
     <div class="conditional-row" id="rowShipCheck" style="margin-bottom:12px;">
       <label>발송처 확인 여부</label>
@@ -2678,7 +2686,7 @@ function renderClaimTable(){
 
 // ===== 가상 스크롤 (Virtual Scroll) =====
 const VS_ROW_H=38,VS_BUF=120;
-let _vsClaims=[],_vsRafId=null,_vsWrap=null,_vsScrollBound=false,_vsScrollRestored=false,_allClaimsRaw=null,_returnInspectCache={};
+let _vsClaims=[],_vsRafId=null,_vsWrap=null,_vsScrollBound=false,_vsScrollRestored=false,_allClaimsRaw=null,_returnInspectCache={},_claimDonedateMap={};
 function _vsInit(){
   const wrap=document.getElementById('claim-scroll-wrap');
   if(!wrap)return;
@@ -2836,10 +2844,21 @@ function _buildClaimRow(r,i){
       return;
     }
     if(key==='_inspect'){
-      const oList=(_returnInspectCache&&r.orderno)?(_returnInspectCache[(r.orderno||'').trim()]||null):null;
+      const _oKey=(r.orderno||'').trim();
+      const oList=_oKey?(_returnInspectCache[_oKey]||null):null;
       if(!oList||!oList.length){cells+=`<td class="tdc" style="color:#bbb;${_colW('_inspect')}">-</td>`;return;}
+      // 재인입 필터: 현재 클레임 인입일 이전에 완료된 이전 클레임이 있으면
+      // 그 처리완료일 이후에 등록된 반품입고 건만 사용
+      const _curIndate=normDate(r.indate)||'';
+      let _prevDonedate='';
+      if(_curIndate&&_claimDonedateMap[_oKey]){
+        const _pd=_claimDonedateMap[_oKey].filter(d=>d&&d<=_curIndate);
+        _prevDonedate=_pd.length?_pd[_pd.length-1]:'';
+      }
+      const validList=_prevDonedate?oList.filter(e=>(e.date||'')>_prevDonedate):oList;
+      if(!validList.length){cells+=`<td class="tdc" style="color:#bbb;${_colW('_inspect')}">-</td>`;return;}
       const prodNorm=(r.product||'').trim().toLowerCase();
-      const cached=oList.find(x=>x.product===prodNorm)||oList[0]||null;
+      const cached=validList.find(x=>x.product===prodNorm)||validList[0]||null;
       if(!cached){cells+=`<td class="tdc" style="color:#bbb;${_colW('_inspect')}">-</td>`;return;}
       const openedRaw=cached.opened||'';
       const inspRaw=cached.inspect||'';
@@ -2917,10 +2936,12 @@ function _doRenderClaimTable(){
   if(!claims.length){tbody.innerHTML='';if(empty)empty.style.display='';initColResize();return;}
   if(empty)empty.style.display='none';
   _vsClaims=claims;
-  // 반품 → 검수 결과 맵 (orderno 기준, inspect + opened 저장)
+  // 반품 → 검수 결과 맵 (orderno 기준 배열, 상품명별 + 입고일 포함)
   _returnInspectCache={};
-  // 반품 → 검수 결과 맵 (orderno 기준 배열, 상품명별로 저장)
-  try{loadReturns().forEach(r=>{if(r.orderno&&(r.inspect||r.opened||r.returnImgUrls)){const key=(r.orderno||'').trim();if(!_returnInspectCache[key])_returnInspectCache[key]=[];const prod=(r.product||'').trim().toLowerCase();const ex=_returnInspectCache[key].find(x=>x.product===prod);if(ex){if(r.inspect)ex.inspect=r.inspect;if(r.opened)ex.opened=r.opened;if(Array.isArray(r.returnImgUrls)&&r.returnImgUrls.length)ex.returnImgUrls.push(...r.returnImgUrls);}else{_returnInspectCache[key].push({product:prod,inspect:r.inspect||'',opened:r.opened||'',returnImgUrls:Array.isArray(r.returnImgUrls)?r.returnImgUrls.slice():[]});}}});}catch(e){}
+  try{loadReturns().forEach(r=>{if(r.orderno&&(r.inspect||r.opened||r.returnImgUrls)){const key=(r.orderno||'').trim();if(!_returnInspectCache[key])_returnInspectCache[key]=[];const prod=(r.product||'').trim().toLowerCase();const nd=normDate(r.date)||'';const ex=_returnInspectCache[key].find(x=>x.product===prod);if(ex){if(r.inspect)ex.inspect=r.inspect;if(r.opened)ex.opened=r.opened;if(Array.isArray(r.returnImgUrls)&&r.returnImgUrls.length)ex.returnImgUrls.push(...r.returnImgUrls);if(nd&&nd>ex.date)ex.date=nd;}else{_returnInspectCache[key].push({product:prod,inspect:r.inspect||'',opened:r.opened||'',returnImgUrls:Array.isArray(r.returnImgUrls)?r.returnImgUrls.slice():[],date:nd});}}});}catch(e){}
+  // 주문번호별 처리완료일 배열 — 재인입 클레임 검수결과 필터링용
+  _claimDonedateMap={};
+  try{allClaims.forEach(c=>{if(c.orderno&&c.donedate){const k=(c.orderno||'').trim();if(!_claimDonedateMap[k])_claimDonedateMap[k]=[];const nd=normDate(c.donedate)||'';if(nd)_claimDonedateMap[k].push(nd);}});Object.values(_claimDonedateMap).forEach(arr=>arr.sort());}catch(e){}
   _vsInit();
   // 스크롤 복원: tbody가 비어있을 때는 scrollTop이 클램핑되므로
   // _vsRender(sc)로 먼저 올바른 위치의 행을 렌더한 뒤 scrollTop을 설정
@@ -3658,7 +3679,6 @@ function _loadDashboardPinnedReport(){
         const typeLabel=pinned.type==='weekly'?'위클리':'먼슬리';
         const safeTitle=(pinned.title||'보고서').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         const pubDate=pinned.publishedAt||'';
-        const unpinBtn=_isAdmin?`<button onclick="_unpinDashboardReport()" style="display:block;margin-top:8px;width:100%;font-size:11px;padding:4px 0;border:1px solid #e0e0de;border-radius:6px;background:#fff;color:#888;cursor:pointer;font-family:inherit;">📌 게시 해제</button>`:'';
         body.innerHTML=`
           <div style="border:2px solid #1a1a1a;border-radius:10px;padding:12px;background:#fafaf8;margin-bottom:8px;">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
@@ -3671,7 +3691,6 @@ function _loadDashboardPinnedReport(){
               </div>
               <button onclick="openVlReportById('${pinned.docId}','${pinned.type||'weekly'}')" style="flex-shrink:0;font-size:11px;padding:5px 10px;background:#f5a623;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open</button>
             </div>
-            ${unpinBtn}
           </div>`;
       } else {
         body.innerHTML=_defaultRows();
@@ -3850,9 +3869,11 @@ function _openVocwEditor(month,type,isNew,week){
     if(titleEl)titleEl.value='';
     _initVocwEditor();
   }else{
-    // 기존 문서 열기: 제목 초기화 후 Firestore에서 로드
+    // 기존 문서 열기: 에디터·제목 초기화 후 Firestore에서 강제 로드
     const titleEl2=document.getElementById('vocw-title');
     if(titleEl2)titleEl2.value='';
+    const editor2=document.getElementById('vocw-editor');
+    if(editor2)editor2.innerHTML=''; // 이전 문서 내용이 남아있으면 _loadVocwContent가 스킵하므로 강제 초기화
     switchVocWriteTab(type||_vocwType||'weekly');
   }
 }
@@ -4191,6 +4212,20 @@ function vocwFmt(cmd,val){
   _vocwPushUndo();
   ed.focus();
   vocwRestoreEditorSel();
+  // 정렬 명령: execCommand는 th를 누락할 수 있으므로 선택 셀에 직접 적용
+  if(cmd==='justifyLeft'||cmd==='justifyCenter'||cmd==='justifyRight'){
+    const alignMap={justifyLeft:'left',justifyCenter:'center',justifyRight:'right'};
+    const align=alignMap[cmd];
+    const sel=window.getSelection();
+    if(sel&&sel.rangeCount){
+      const findTbl=(node)=>{let n=node;while(n&&n!==ed){if(n.nodeName==='TABLE')return n;n=n.parentNode;}return null;};
+      const tbl=findTbl(sel.anchorNode);
+      if(tbl){
+        const cells=Array.from(tbl.querySelectorAll('td,th')).filter(c=>sel.containsNode(c,true));
+        if(cells.length>0){cells.forEach(c=>{c.style.textAlign=align;});vocwSaveEditorSel();_updateVocwToolbarState();return;}
+      }
+    }
+  }
   document.execCommand(cmd,false,val||null);
   vocwSaveEditorSel();
   _updateVocwToolbarState();
@@ -4418,6 +4453,7 @@ function vocwApplyColor(color){
 
   // 표 셀 감지: anchor/focus 노드에서 TD/TH 검색
   const findCell=(node)=>{let n=node;while(n&&n!==ed){if(n.nodeName==='TD'||n.nodeName==='TH')return n;n=n.parentNode;}return null;};
+  const findTblNode=(node)=>{let n=node;while(n&&n!==ed){if(n.nodeName==='TABLE')return n;n=n.parentNode;}return null;};
   const anchorCell=findCell(sel.anchorNode);
   const focusCell=findCell(sel.focusNode);
 
@@ -4437,6 +4473,14 @@ function vocwApplyColor(color){
     // 단일 셀 (클릭만 한 경우)
     (anchorCell||focusCell).style.backgroundColor=color==='transparent'?'':color;
     return;
+  }
+  // Ctrl+A 전체표 선택: anchorNode가 TABLE/THEAD/TBODY 레벨인 경우 (findCell이 null 반환)
+  {
+    const tbl=findTblNode(sel.anchorNode);
+    if(tbl){
+      const cells=Array.from(tbl.querySelectorAll('td,th')).filter(c=>sel.containsNode(c,true));
+      if(cells.length>0){cells.forEach(c=>{c.style.backgroundColor=color==='transparent'?'':color;});return;}
+    }
   }
 
   // 표 밖 → 텍스트 하이라이트 — 적용 후 선택영역 복원
@@ -5777,6 +5821,11 @@ function initChips() {
         document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
         chip.classList.add('selected');
         selectedIssue = chip.dataset.key;
+        // 단순변심 전용 플랫폼 필드 표시/숨김
+        const rowDP = document.getElementById('rowDansoPlatform');
+        const dpSel = document.getElementById('dansoPlatform');
+        if (rowDP) rowDP.className = 'conditional-row' + (selectedIssue === '클레임_단순변심' ? ' visible' : '');
+        if (dpSel) dpSel.value = '카페24'; // 플랫폼 초기화
         if (group === '아웃바운드') {
           document.getElementById('rowClaimMain').className = 'conditional-row';
           const mapped = OUTBOUND_CHIP_MAP[item];
@@ -5858,6 +5907,14 @@ function setupOutbound(main) {
   onClaimTypeChange();
 }
 
+function onDansoPlatformChange() {
+  // 플랫폼 변경 시 처리유형이 선택돼 있으면 sub-options 재구성
+  const claimMainEl = document.getElementById('claimMain');
+  if (claimMainEl && claimMainEl.value) {
+    onMainTypeChange();
+  }
+}
+
 function onMainTypeChange() {
   const main = document.getElementById('claimMain').value;
   const subSel = document.getElementById('claimType');
@@ -5874,9 +5931,16 @@ function onMainTypeChange() {
     subSel.value = '반품불가';
   } else if (main === '교환') {
     if (selectedIssue === '클레임_단순변심') {
-      rowSub.className = 'conditional-row';
-      subSel.innerHTML = '<option value="단순변심교환_부재">단순변심교환_부재</option>';
-      subSel.value = '단순변심교환_부재';
+      const _dp29 = (document.getElementById('dansoPlatform')||{}).value || '카페24';
+      if (_dp29 === '29CM') {
+        rowSub.className = 'conditional-row';
+        subSel.innerHTML = '<option value="29cm_교환">교환</option>';
+        subSel.value = '29cm_교환';
+      } else {
+        rowSub.className = 'conditional-row';
+        subSel.innerHTML = '<option value="단순변심교환_부재">단순변심교환_부재</option>';
+        subSel.value = '단순변심교환_부재';
+      }
     } else if (selectedIssue === '클레임_불량 주장') {
       rowSub.className = 'conditional-row';
       subSel.innerHTML = '<option value="불량주장_교환">불량주장_교환</option>';
@@ -5928,6 +5992,19 @@ function onMainTypeChange() {
       rowSub.className = 'conditional-row';
       subSel.innerHTML = '<option value="누락_반품">누락_반품</option>';
       subSel.value = '누락_반품';
+    } else if (selectedIssue === '클레임_단순변심') {
+      const _dp29r = (document.getElementById('dansoPlatform')||{}).value || '카페24';
+      if (_dp29r === '29CM') {
+        rowSub.className = 'conditional-row visible';
+        [['29cm_반품_6000','반품(6,000원)'],['29cm_반품_3000','반품(3,000원)']].forEach(([val, label]) => {
+          const o = document.createElement('option'); o.value = val; o.textContent = label; subSel.appendChild(o);
+        });
+      } else {
+        rowSub.className = 'conditional-row visible';
+        [['반품_전체','전체 반품(초도 배송비 미발생)'],['반품_전체_발생','전체 반품(초도 배송비 발생)'],['반품_부분_무배충족','부분 반품 (무배 충족)'],['반품_부분_무배미충족','부분 반품 (무배 미충족)']].forEach(([val, label]) => {
+          const o = document.createElement('option'); o.value = val; o.textContent = label; subSel.appendChild(o);
+        });
+      }
     } else {
       rowSub.className = 'conditional-row visible';
       [['반품_전체','전체 반품(초도 배송비 미발생)'],['반품_전체_발생','전체 반품(초도 배송비 발생)'],['반품_부분_무배충족','부분 반품 (무배 충족)'],['반품_부분_무배미충족','부분 반품 (무배 미충족)']].forEach(([val, label]) => {
@@ -5997,7 +6074,7 @@ function onClaimTypeChange() {
   const defectJudge = defectJudgeEl ? defectJudgeEl.value : '';
   const isBullyangConfirmed = selectedIssue === '클레임_불량 주장' && v === '불량주장_교환' && defectJudge === '불량확인' && photoVal === '첨부';
   const isBullyangConfirmedReturn = selectedIssue === '클레임_불량 주장' && claimMainVal === '반품' && defectJudge === '불량확인' && photoVal === '첨부';
-  const hideAbsence = isShipDate || v === '수령확인_회신없음' || v === '교환_회수접수' || isDansoReturns || v === '단순변심교환_회신없음' || (isPasonPhoto && photoVal === '첨부') || (isOchulgoPhoto && photoVal === '첨부') || isTracking || v === '분실_반품' || v === '분실_교환' || ((v === '누락_반품' || v === '누락_교환') && shipCheckVal2 === '누락확인') || isBullyangConfirmed || isBullyangConfirmedReturn || v === '파손훼손_교환배송전' || v === '선물하기_안내';
+  const hideAbsence = isShipDate || v === '수령확인_회신없음' || v === '교환_회수접수' || isDansoReturns || v === '단순변심교환_회신없음' || (isPasonPhoto && photoVal === '첨부') || (isOchulgoPhoto && photoVal === '첨부') || isTracking || v === '분실_반품' || v === '분실_교환' || ((v === '누락_반품' || v === '누락_교환') && shipCheckVal2 === '누락확인') || isBullyangConfirmed || isBullyangConfirmedReturn || v === '파손훼손_교환배송전' || v === '선물하기_안내' || v === '29cm_반품_6000' || v === '29cm_반품_3000' || v === '29cm_교환';
   document.getElementById('rowAbsence').className = 'conditional-row' + (hideAbsence ? '' : ' visible');
   document.getElementById('rowShipDate').className = 'conditional-row' + (isShipDate ? ' visible' : '');
   updateObTimeVisibility();
@@ -6014,11 +6091,11 @@ function onClaimTypeChange() {
     && !isTracking
     && !(v === '오출고_교환' && photoVal !== '첨부')
     && !(v === '분실_교환' && document.getElementById('lostStatus').value === '부재'))
-    || isDansoExchangeNoAbsence;
+    || isDansoExchangeNoAbsence || v === '29cm_교환';
   document.getElementById('rowDefectJudge').className = 'conditional-row' + (selectedIssue === '클레임_불량 주장' && photoVal === '첨부' && (v === '불량주장_교환' || claimMainVal === '반품') ? ' visible' : '');
   document.getElementById('rowExchangeType').className = 'conditional-row' + (showExchangeType ? ' visible' : '');
-  document.getElementById('rowChangeOption').className = 'conditional-row' + (isDansoExchangeNoAbsence ? ' visible' : '');
-  document.getElementById('rowExchangeShipDate').className = 'conditional-row' + (isDansoExchangeNoAbsence || (v === '파손훼손_교환' && photoVal === '첨부') || (v === '파손훼손_교환배송전') || (v === '분실_교환' && document.getElementById('lostStatus').value === '종결') || (v === '오출고_교환' && photoVal === '첨부') || (v === '누락_교환' && shipCheckVal2 === '누락확인') || (v === '불량주장_교환' && photoVal === '첨부' && defectJudge === '불량확인') ? ' visible' : '');
+  document.getElementById('rowChangeOption').className = 'conditional-row' + ((isDansoExchangeNoAbsence || v === '29cm_교환') ? ' visible' : '');
+  document.getElementById('rowExchangeShipDate').className = 'conditional-row' + (isDansoExchangeNoAbsence || v === '29cm_교환' || (v === '파손훼손_교환' && photoVal === '첨부') || (v === '파손훼손_교환배송전') || (v === '분실_교환' && document.getElementById('lostStatus').value === '종결') || (v === '오출고_교환' && photoVal === '첨부') || (v === '누락_교환' && shipCheckVal2 === '누락확인') || (v === '불량주장_교환' && photoVal === '첨부' && defectJudge === '불량확인') ? ' visible' : '');
   document.getElementById('rowReturnDeny').className = 'conditional-row' + (v === '반품불가' ? ' visible' : '');
   if (isBullyangConfirmedReturn) {
     document.getElementById('rowSubType').className = 'conditional-row';
@@ -6778,6 +6855,53 @@ function buildText() {
     lines.push('금일 회수 접수 도와드렸으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
     lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
     lines.push('회수 확인 후 새 상품 재발송 진행 예정이며, 이 과정에서 다소 시간이 소요될 수 있는 점 양해 부탁드립니다.');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  // ── 29CM 단순변심 반품 ──────────────────────────────────────
+  if (claimType === '29cm_반품_6000' || claimType === '29cm_반품_3000') {
+    const fee29 = claimType === '29cm_반품_6000' ? '6,000' : '3,000';
+    lines.push('');
+    lines.push('반품 신청하신 상품 안내차 연락 드렸습니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    lines.push('');
+    lines.push('자동 회수접수 되었으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+    lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+    lines.push('');
+    lines.push(`반품 배송비 ${fee29}원은 환불금에서 공제되어 처리될 예정이며, 회수 상품 입고 및 검수 완료 후 순차적으로 환불이 진행되는 점 양해 부탁드립니다.`);
+    lines.push('');
+    lines.push('감사합니다.');
+    lines.push('');
+    lines.push(FOOTER);
+    return lines.join('\n');
+  }
+
+  // ── 29CM 단순변심 교환 ──────────────────────────────────────
+  if (claimType === '29cm_교환') {
+    const exchangeType29 = document.getElementById('exchangeType').value;
+    const changeOption29 = document.getElementById('changeOption').value.trim() || '[변경 옵션]';
+    const exchangeShipDate29 = document.getElementById('exchangeShipDate').value.trim() || '[출고 예정 일자]';
+    lines.push('');
+    lines.push('교환 신청하신 상품 안내차 연락 드렸습니다.');
+    lines.push('');
+    lines.push(`- 상품명 : ${product}`);
+    if (changeOption29 !== '[변경 옵션]') lines.push(`- 변경 옵션 : ${changeOption29}`);
+    lines.push('');
+    lines.push('왕복 배송비 결제 확인 및 자동 회수접수 되었으며 영업일 기준 3일 이내에 CJ대한통운 배송기사가 방문 드릴 예정입니다.');
+    lines.push('번거로우시겠지만, 원활한 회수 진행을 위해 택배 봉투에 [뚜누 CJ 회수]라고 기재 부탁드리며 배송 중 상품이 훼손되지 않도록 포장하여 문 앞에 놓아주시면 감사하겠습니다.');
+    lines.push('');
+    if (exchangeType29 === 'POD') {
+      lines.push('교환 상품은 주문 제작 상품으로 재제작 후 발송이 진행 될 예정입니다.');
+      lines.push(`교환 상품은 ${exchangeShipDate29} 발송 예정으로 확인되며, 제작 기간이 소요되는 점 너른 양해 부탁드립니다.`);
+    } else {
+      lines.push(`교환 상품은 회수 수거 확인 후 발송 도와드리고 있어 ${exchangeShipDate29}에 발송 될 예정으로 시간 양해 부탁드립니다.`);
+    }
+    lines.push('');
+    lines.push('발송 진행시 운송장 번호 안내 드릴 수 있도록 하겠습니다.');
     lines.push('감사합니다.');
     lines.push('');
     lines.push(FOOTER);
