@@ -1018,7 +1018,7 @@ tr:hover td{background:#fafafa;}
     </div>
   </div>
 </div>
-<div id="claim-scroll-wrap" style="overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 190px);padding:0 0 24px 24px;position:relative;;">
+<div id="claim-scroll-wrap" style="overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 190px);padding:0 0 24px 0;position:relative;">
   <table id="claim-sheet" style="table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:13px;background:#fff;">
     <colgroup id="claim-colgroup">
       <col data-col="_drag"><col data-col="month"><col data-col="_ticket"><col data-col="date"><col data-col="indate"><col data-col="shipdate">
@@ -1031,7 +1031,7 @@ tr:hover td{background:#fafafa;}
     </colgroup>
     <thead>
       <tr style="background:#f6f6f4;">
-        <th data-col="_drag" style="border:1px solid #e0e0de;position:sticky;left:24px;z-index:5;background:#f6f6f4;"></th>
+        <th data-col="_drag" style="border:1px solid #e0e0de;position:sticky;left:0;z-index:5;background:#f6f6f4;"></th>
         <th data-col="month" style="border:1px solid #e0e0de;">발생 월</th>
         <th data-col="_ticket" style="border:1px solid #e0e0de;">티켓번호</th>
         <th data-col="date" style="border:1px solid #e0e0de;">작성일</th>
@@ -2293,14 +2293,14 @@ const _colDefaults={
   month:60,_ticket:76,
   date:100,indate:100,shipdate:100,donedate:100,
   channel:100,platform:68,orderno:190,buyer:66,
-  product:300,option:115,category:100,
+  product:300,option:180,category:100,
   issue:165,liability:56,type:122,nature:100,
   _img:54,reason:150,
   returnYn:52,reshipYn:62,accident:86,
   costP:80,costR:80,costS:80,
   _lead:58,status:70,_inspect:115,_sla:48,_del:115
 };
-const _COL_VER='v10'; // 버전 올리면 저장된 너비 초기화 → 새 기본값 적용
+const _COL_VER='v11'; // 버전 올리면 저장된 너비 초기화 → 새 기본값 적용
 const _colWidths=(()=>{
   const uid=sessionStorage.getItem('tuunu_session_v1')||'';
   const key='tuunu_colWidths_'+_COL_VER+(uid?'_'+uid:'');
@@ -2351,9 +2351,9 @@ function _applyColWidths(){
     c.style.width=w+'px';
   });
   // sticky left 위치 동적 계산 (_ticket 키는 data-field="ticketNo"에 매핑)
-  // claim-scroll-wrap의 padding-left:24px를 보정해 sticky 기준점을 content 엣지로 맞춤
+  // sticky left 기준: scroll-wrap padding 없음, left:0부터 시작
   const _TD_FIELD={_ticket:'ticketNo'};
-  let css='',cum=24;
+  let css='',cum=0;
   _STICKY_KEYS.forEach((k,idx)=>{
     const w=_colWidths[k]||80;
     const tdKey=_TD_FIELD[k]||k;
@@ -2939,7 +2939,7 @@ function _buildClaimRow(r,i){
   cells+=`<td class="tdc" style="white-space:nowrap;${_colW('_del')}"><button style="padding:2px 7px;font-size:11px;border:1px solid #c5cae9;border-radius:4px;background:#f3f4fd;cursor:pointer;color:#3949ab;margin-right:3px;" onclick="duplicateClaim(${r.id})" title="이 행 복사">복사</button><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
   const bgVal=bg||'#fff';
   const trClass=i%2===0?'tr-even':'tr-odd';
-  const dragTd=`<td class="tdc sty" data-field="_drag" style="position:sticky;left:24px;z-index:11;background:${bg};box-sizing:border-box;${_colW('_drag')}">⠿</td>`;
+  const dragTd=`<td class="tdc sty" data-field="_drag" style="position:sticky;left:0;z-index:11;background:${bg};box-sizing:border-box;${_colW('_drag')}">⠿</td>`;
   return`<tr draggable="true" class="${trClass}" data-cid="${r.id}" style="background:${bgVal};">${dragTd}${cells}</tr>`;
 }
 
