@@ -246,6 +246,7 @@ tr:hover td{background:#fafafa;}
 .voc-label-wrap{white-space:nowrap !important;width:160px !important;flex-shrink:0;}
 .stat-hint{font-size:10px;color:#bbb;margin-top:2px;}
 /* VOC 리포트 뷰 스타일 */
+.vl-report-content{max-width:760px;margin-left:auto;margin-right:auto;}
 .vl-report-content h2{font-size:17px;font-weight:700;margin:16px 0 6px;}
 .vl-report-content h3{font-size:15px;font-weight:600;margin:12px 0 4px;color:#333;}
 .vl-report-content p{margin:4px 0;}
@@ -253,6 +254,7 @@ tr:hover td{background:#fafafa;}
 .vl-report-content ol{padding-left:20px;margin:4px 0;}
 .vl-report-content li{margin:2px 0;}
 .vl-report-content hr{border:0;border-top:1px solid #e8e8e6;margin:12px 0;}
+.vl-report-content table{margin-left:auto;margin-right:auto;}
 #vl-report-editor h2{font-size:17px;font-weight:700;margin:16px 0 6px;}
 #vl-report-editor h3{font-size:15px;font-weight:600;margin:12px 0 4px;}
 #vl-report-editor[contenteditable]:empty::before{content:attr(placeholder);color:#bbb;pointer-events:none;}
@@ -470,15 +472,15 @@ tr:hover td{background:#fafafa;}
           <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;height:100%;box-sizing:border-box;">
             <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.05em;margin-bottom:14px;">금일</div>
             <div class="chart-inner-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;flex:1;align-content:center;">
-              <div style="display:flex;flex-direction:column;justify-content:space-between;">
-                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">이슈별 현황</div>
-                <div style="display:flex;align-items:center;justify-content:center;">
-                  <div id="h-liability-today-wrap" style="position:relative;height:140px;width:100%;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-today"></canvas></div>
+              <div style="display:flex;flex-direction:column;">
+                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:8px;">이슈별 현황</div>
+                <div style="display:flex;flex:1;align-items:center;gap:8px;min-height:0;">
+                  <div id="h-liability-today-list" class="chart-legend" style="width:110px;flex-shrink:0;margin-top:0;"></div>
+                  <div id="h-liability-today-wrap" style="position:relative;flex:1;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-today"></canvas></div>
                 </div>
-                <div id="h-liability-today-list" class="chart-legend" style="margin-top:8px;"></div>
               </div>
-              <div style="display:flex;flex-direction:column;justify-content:space-between;">
-                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">상품군별 현황</div>
+              <div style="display:flex;flex-direction:column;">
+                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:8px;">상품군별 현황</div>
                 <div id="h-cat-today-list" style="display:flex;flex-direction:column;gap:7px;flex:1;justify-content:center;"></div>
               </div>
             </div>
@@ -487,15 +489,15 @@ tr:hover td{background:#fafafa;}
           <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;height:100%;box-sizing:border-box;">
             <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:14px;"><span style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.05em;">이번 주</span><span id="week-chart-hint" style="font-size:10px;color:#ccc;"></span></div>
             <div class="chart-inner-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;flex:1;align-content:center;">
-              <div style="display:flex;flex-direction:column;justify-content:space-between;">
-                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">이슈별 현황</div>
-                <div style="display:flex;align-items:center;justify-content:center;">
-                  <div id="h-liability-week-wrap" style="position:relative;height:140px;width:100%;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-week"></canvas></div>
+              <div style="display:flex;flex-direction:column;">
+                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:8px;">이슈별 현황</div>
+                <div style="display:flex;flex:1;align-items:center;gap:8px;min-height:0;">
+                  <div id="h-liability-week-list" class="chart-legend" style="width:110px;flex-shrink:0;margin-top:0;"></div>
+                  <div id="h-liability-week-wrap" style="position:relative;flex:1;height:140px;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-week"></canvas></div>
                 </div>
-                <div id="h-liability-week-list" class="chart-legend" style="margin-top:8px;"></div>
               </div>
-              <div style="display:flex;flex-direction:column;justify-content:space-between;">
-                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">상품군별 현황</div>
+              <div style="display:flex;flex-direction:column;">
+                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:8px;">상품군별 현황</div>
                 <div id="h-cat-week-list" style="display:flex;flex-direction:column;gap:7px;flex:1;justify-content:center;"></div>
               </div>
             </div>
@@ -782,18 +784,18 @@ tr:hover td{background:#fafafa;}
       <label>상품명</label>
       <input type="text" id="product" placeholder="예: 코튼 베개커버 2p" />
     </div>
-    <div class="conditional-row" id="rowClaimMain" style="margin-bottom:12px;">
-      <label>처리 유형</label>
-      <select id="claimMain" onchange="onMainTypeChange()">
-        <option value="">선택</option>
-      </select>
-    </div>
     <!-- 단순변심 전용: 플랫폼 선택 -->
     <div class="conditional-row" id="rowDansoPlatform" style="margin-bottom:12px;">
       <label>플랫폼</label>
       <select id="dansoPlatform" onchange="onDansoPlatformChange()">
         <option value="카페24">카페24</option>
         <option value="29CM">29CM</option>
+      </select>
+    </div>
+    <div class="conditional-row" id="rowClaimMain" style="margin-bottom:12px;">
+      <label>처리 유형</label>
+      <select id="claimMain" onchange="onMainTypeChange()">
+        <option value="">선택</option>
       </select>
     </div>
     <!-- 누락 발송처 확인 여부 -->
@@ -1025,7 +1027,7 @@ tr:hover td{background:#fafafa;}
     </colgroup>
     <thead>
       <tr style="background:#f6f6f4;">
-        <th data-col="_drag" style="border:1px solid #e0e0de;position:sticky;left:0;z-index:5;background:#f6f6f4;"></th>
+        <th data-col="_drag" style="border:1px solid #e0e0de;position:sticky;left:24px;z-index:5;background:#f6f6f4;"></th>
         <th data-col="month" style="border:1px solid #e0e0de;">발생 월</th>
         <th data-col="_ticket" style="border:1px solid #e0e0de;">티켓번호</th>
         <th data-col="date" style="border:1px solid #e0e0de;">작성일</th>
@@ -1927,15 +1929,31 @@ function renderSideReturnList(returns){
 // ===== 클레임 CRUD =====
 // ===== 한국 공휴일 (영업일 SLA 계산용) =====
 const KR_HOLIDAYS=new Set([
-  '2025-01-01','2025-01-28','2025-01-29','2025-01-30',
-  '2025-03-01','2025-03-03','2025-05-05','2025-05-06',
-  '2025-06-06','2025-08-15',
-  '2025-10-03','2025-10-05','2025-10-06','2025-10-07','2025-10-09','2025-12-25',
-  '2026-01-01','2026-01-27','2026-01-28','2026-01-29',
-  '2026-03-01','2026-03-02','2026-05-05','2026-05-24',
-  '2026-06-06','2026-08-15','2026-08-17',
-  '2026-09-24','2026-09-25','2026-09-26',
-  '2026-10-03','2026-10-05','2026-10-09','2026-12-25'
+  // 2025
+  '2025-01-01',                                           // 신정
+  '2025-01-28','2025-01-29','2025-01-30',                 // 설날 연휴
+  '2025-03-01','2025-03-03',                              // 삼일절 + 대체
+  '2025-05-05','2025-05-06',                              // 어린이날 + 석가탄신일 대체
+  '2025-06-06',                                           // 현충일
+  '2025-08-15',                                           // 광복절
+  '2025-10-03',                                           // 개천절
+  '2025-10-05','2025-10-06','2025-10-07','2025-10-08',    // 추석 연휴
+  '2025-10-09',                                           // 한글날
+  '2025-12-25',                                           // 크리스마스
+  // 2026
+  '2026-01-01',                                           // 신정
+  '2026-02-16','2026-02-17','2026-02-18',                 // 설날 연휴
+  '2026-03-01','2026-03-02',                              // 삼일절 + 대체
+  '2026-05-05',                                           // 어린이날
+  '2026-05-24','2026-05-25',                              // 석가탄신일 + 대체
+  '2026-06-03',                                           // 지방선거 임시공휴일
+  '2026-06-06',                                           // 현충일
+  '2026-07-17',                                           // 제헌절 (18년 만에 부활)
+  '2026-08-15','2026-08-17',                              // 광복절 + 대체
+  '2026-09-24','2026-09-25','2026-09-26',                 // 추석 연휴
+  '2026-10-03','2026-10-05',                              // 개천절 + 대체
+  '2026-10-09',                                           // 한글날
+  '2026-12-25'                                            // 크리스마스
 ]);
 const _bdCache={};
 function calcBusinessDays(start,end){
@@ -2329,8 +2347,9 @@ function _applyColWidths(){
     c.style.width=w+'px';
   });
   // sticky left 위치 동적 계산 (_ticket 키는 data-field="ticketNo"에 매핑)
+  // claim-scroll-wrap의 padding-left:24px를 보정해 sticky 기준점을 content 엣지로 맞춤
   const _TD_FIELD={_ticket:'ticketNo'};
-  let css='',cum=0;
+  let css='',cum=24;
   _STICKY_KEYS.forEach((k,idx)=>{
     const w=_colWidths[k]||80;
     const tdKey=_TD_FIELD[k]||k;
@@ -2916,7 +2935,7 @@ function _buildClaimRow(r,i){
   cells+=`<td class="tdc" style="white-space:nowrap;${_colW('_del')}"><button style="padding:2px 7px;font-size:11px;border:1px solid #c5cae9;border-radius:4px;background:#f3f4fd;cursor:pointer;color:#3949ab;margin-right:3px;" onclick="duplicateClaim(${r.id})" title="이 행 복사">복사</button><button class="btn-danger" onclick="deleteClaim(${r.id})">삭제</button></td>`;
   const bgVal=bg||'#fff';
   const trClass=i%2===0?'tr-even':'tr-odd';
-  const dragTd=`<td class="tdc sty" data-field="_drag" style="position:sticky;left:0;z-index:11;background:${bg};box-sizing:border-box;${_colW('_drag')}">⠿</td>`;
+  const dragTd=`<td class="tdc sty" data-field="_drag" style="position:sticky;left:24px;z-index:11;background:${bg};box-sizing:border-box;${_colW('_drag')}">⠿</td>`;
   return`<tr draggable="true" class="${trClass}" data-cid="${r.id}" style="background:${bgVal};">${dragTd}${cells}</tr>`;
 }
 
@@ -3651,68 +3670,68 @@ function openVlReportById(docId,type){
     }).catch(function(){view.innerHTML='<p style="color:#bbb;font-size:13px;">리포트를 불러오는 중 오류가 발생했습니다.</p>';});
   }catch(e){view.innerHTML='<p style="color:#bbb;font-size:13px;">리포트를 불러올 수 없습니다.</p>';}
 }
-// 대시보드 REPORT 카드 동적 렌더
+// 대시보드 REPORT 카드 동적 렌더 (위클리 + 먼슬리 각각 게시 지원)
 function _loadDashboardPinnedReport(){
   const body=document.getElementById('report-card-body');
   if(!body)return;
-  const _isAdmin=_currentUserId()==='chohee';
-  try{
-    db.collection('_sys').doc('_dashboard_pinned').get().then(function(snap){
-      const pinned=snap.exists?snap.data():null;
-      const _defaultRows=()=>`
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #f0f0ee;border-radius:10px;margin-bottom:8px;background:#fafaf8;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;background:#fff8e1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;">📅</div>
-            <div><div style="font-weight:600;font-size:12px;">Weekly Report</div><div style="font-size:11px;color:#aaa;margin-top:1px;">주간 VOC 및 클레임</div></div>
+  const _pinnedCard=(pinned)=>{
+    const typeIcon=pinned.type==='weekly'?'📅':'📊';
+    const typeLabel=pinned.type==='weekly'?'위클리':'먼슬리';
+    const safeTitle=(pinned.title||'보고서').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const pubDate=pinned.publishedAt||'';
+    return`<div style="border:2px solid #1a1a1a;border-radius:10px;padding:12px;background:#fafaf8;margin-bottom:8px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <span style="font-size:10px;background:#1a1a1a;color:#fff;border-radius:4px;padding:2px 7px;flex-shrink:0;">${typeIcon} ${typeLabel}</span>
+            <span style="font-size:10px;color:#aaa;flex-shrink:0;">${pubDate}</span>
           </div>
-          <button onclick="openVlReport('weekly')" style="font-size:11px;padding:5px 10px;background:#f5a623;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open</button>
+          <div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${safeTitle}">${safeTitle}</div>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #f0f0ee;border-radius:10px;background:#fafaf8;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;background:#fff3e0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;">📊</div>
-            <div><div style="font-weight:600;font-size:12px;">Monthly Report</div><div style="font-size:11px;color:#aaa;margin-top:1px;">월간 VOC 리포트 및 KPI</div></div>
-          </div>
-          <button onclick="openVlReport('monthly')" style="font-size:11px;padding:5px 10px;background:#f5a623;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open</button>
-        </div>`;
-      if(pinned&&pinned.docId){
-        const typeIcon=pinned.type==='weekly'?'📅':'📊';
-        const typeLabel=pinned.type==='weekly'?'위클리':'먼슬리';
-        const safeTitle=(pinned.title||'보고서').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const pubDate=pinned.publishedAt||'';
-        body.innerHTML=`
-          <div style="border:2px solid #1a1a1a;border-radius:10px;padding:12px;background:#fafaf8;margin-bottom:8px;">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-              <div style="flex:1;min-width:0;">
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-                  <span style="font-size:10px;background:#1a1a1a;color:#fff;border-radius:4px;padding:2px 7px;flex-shrink:0;">${typeIcon} ${typeLabel}</span>
-                  <span style="font-size:10px;color:#aaa;flex-shrink:0;">${pubDate}</span>
-                </div>
-                <div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${safeTitle}">${safeTitle}</div>
-              </div>
-              <button onclick="openVlReportById('${pinned.docId}','${pinned.type||'weekly'}')" style="flex-shrink:0;font-size:11px;padding:5px 10px;background:#f5a623;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open</button>
-            </div>
-          </div>`;
-      } else {
-        body.innerHTML=_defaultRows();
-      }
+        <button onclick="openVlReportById('${pinned.docId}','${pinned.type||'weekly'}')" style="flex-shrink:0;font-size:11px;padding:5px 10px;background:#f5a623;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open</button>
+      </div>
+    </div>`;
+  };
+  const _defaultRow=(type)=>{
+    const icon=type==='weekly'?'📅':'📊';
+    const bg=type==='weekly'?'#fff8e1':'#fff3e0';
+    const label=type==='weekly'?'Weekly Report':'Monthly Report';
+    const sub=type==='weekly'?'주간 VOC 및 클레임':'월간 VOC 리포트 및 KPI';
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #f0f0ee;border-radius:10px;margin-bottom:8px;background:#fafaf8;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;background:${bg};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;">${icon}</div>
+        <div><div style="font-weight:600;font-size:12px;">${label}</div><div style="font-size:11px;color:#aaa;margin-top:1px;">${sub}</div></div>
+      </div>
+      <button onclick="openVlReport('${type}')" style="font-size:11px;padding:5px 10px;background:#f5a623;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open</button>
+    </div>`;
+  };
+  try{
+    Promise.all([
+      db.collection('_sys').doc('_dashboard_pinned_weekly').get(),
+      db.collection('_sys').doc('_dashboard_pinned_monthly').get()
+    ]).then(function(snaps){
+      const weekly=snaps[0].exists?snaps[0].data():null;
+      const monthly=snaps[1].exists?snaps[1].data():null;
+      body.innerHTML=(weekly?_pinnedCard(weekly):_defaultRow('weekly'))+(monthly?_pinnedCard(monthly):_defaultRow('monthly'));
     }).catch(function(){
-      body.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #f0f0ee;border-radius:10px;margin-bottom:8px;background:#fafaf8;"><div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;background:#fff8e1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;">📅</div><div><div style="font-weight:600;font-size:12px;">Weekly Report</div><div style="font-size:11px;color:#aaa;margin-top:1px;">주간 VOC 및 클레임</div></div></div><button onclick="openVlReport('weekly')" style="font-size:11px;padding:5px 10px;background:#f5a623;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open</button></div><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #f0f0ee;border-radius:10px;background:#fafaf8;"><div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;background:#fff3e0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;">📊</div><div><div style="font-weight:600;font-size:12px;">Monthly Report</div><div style="font-size:11px;color:#aaa;margin-top:1px;">월간 VOC 리포트 및 KPI</div></div></div><button onclick="openVlReport('monthly')" style="font-size:11px;padding:5px 10px;background:#f5a623;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600;">↗ Open</button></div>`;
+      body.innerHTML=_defaultRow('weekly')+_defaultRow('monthly');
     });
   }catch(e){body.innerHTML='<div style="color:#bbb;font-size:12px;text-align:center;padding:10px;">불러오기 실패</div>';}
 }
-// 게시 등록 / 해제
+// 게시 등록 / 해제 (위클리·먼슬리 각각 독립 게시)
 function _publishVocwDoc(docId,title,type){
   if(_currentUserId()!=='chohee'){alert('게시 권한이 없습니다.');return;}
-  db.collection('_sys').doc('_dashboard_pinned').get().then(function(snap){
-    const curId=snap.exists?snap.data().docId:'';
+  const pinnedKey='_dashboard_pinned_'+(type||'weekly');
+  db.collection('_sys').doc(pinnedKey).get().then(function(snap){
+    const curId=(snap.exists&&snap.data().docId)||'';
     if(curId===docId){
       // 이미 게시 중 → 해제
-      db.collection('_sys').doc('_dashboard_pinned').delete().then(function(){
+      db.collection('_sys').doc(pinnedKey).delete().then(function(){
         _loadDashboardPinnedReport();
         _loadVocwReportList();
       }).catch(function(){alert('게시 해제 중 오류가 발생했습니다.');});
     } else {
-      db.collection('_sys').doc('_dashboard_pinned').set({
+      db.collection('_sys').doc(pinnedKey).set({
         docId:docId,title:title,type:type||'weekly',
         publishedAt:new Date().toISOString().slice(0,10),
         publishedBy:_currentUserId()
@@ -3885,8 +3904,13 @@ function _loadVocwReportList(){
   const _canDel=_currentUserId()==='chohee';
   const _canPin=_currentUserId()==='chohee';
   try{
-    db.collection('_sys').doc('_dashboard_pinned').get().then(function(pinnedSnap){
-      const _pinnedDocId=(pinnedSnap.exists&&pinnedSnap.data().docId)||'';
+    Promise.all([
+      db.collection('_sys').doc('_dashboard_pinned_weekly').get(),
+      db.collection('_sys').doc('_dashboard_pinned_monthly').get()
+    ]).then(function(pSnaps){
+      const _pinnedWeeklyId=(pSnaps[0].exists&&pSnaps[0].data().docId)||'';
+      const _pinnedMonthlyId=(pSnaps[1].exists&&pSnaps[1].data().docId)||'';
+      const _pinnedDocId=(id,type)=>type==='weekly'?id===_pinnedWeeklyId:id===_pinnedMonthlyId;
     db.collection('_sys').where('type','in',['weekly','monthly']).limit(80).get().then(function(snap){
       if(snap.empty){listEl.innerHTML='<div style="color:#bbb;text-align:center;padding:24px;">저장된 보고서가 없습니다.<br><br><button onclick="_openVocwEditor(null,\'weekly\',true)" style="font-size:13px;padding:8px 20px;border:none;border-radius:8px;background:#1a1a1a;color:#fff;cursor:pointer;">✍️ 첫 보고서 작성</button></div>';return;}
       const docs=[];snap.forEach(d=>{if(d.id!=='_dashboard_pinned')docs.push({id:d.id,...d.data()});});
@@ -3929,7 +3953,7 @@ function _loadVocwReportList(){
         const _delBtn=(docId)=>_canDel?`<button onclick="event.stopPropagation();_deleteVocwDoc('${docId}')" style="flex-shrink:0;font-size:11px;padding:4px 10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;cursor:pointer;font-family:inherit;">삭제</button>`:'';
         const _pinBtn=(docId,title,type)=>{
           if(!_canPin)return'';
-          const isPinned=docId===_pinnedDocId;
+          const isPinned=_pinnedDocId(docId,type);
           return`<button onclick="event.stopPropagation();_publishVocwDoc('${docId}','${title.replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${type}')" style="flex-shrink:0;font-size:11px;padding:4px 10px;background:${isPinned?'#1a1a1a':'#f0fdf4'};color:${isPinned?'#fff':'#16a34a'};border:1px solid ${isPinned?'#1a1a1a':'#86efac'};border-radius:6px;cursor:pointer;font-family:inherit;">${isPinned?'📌 게시중':'📌 게시'}</button>`;
         };
         if(wkByMonth[m]){
@@ -3940,7 +3964,7 @@ function _loadVocwReportList(){
             const upd=doc.updatedAt?doc.updatedAt.slice(0,10):'날짜 미상';
             const preview=(doc.html||'').replace(/<[^>]+>/g,'').slice(0,50)||'(내용 없음)';
             const wkParam=doc._week||'';
-            html+=`<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:1px solid ${doc.id===_pinnedDocId?'#1a1a1a':'#ebebea'};border-radius:8px;background:${doc.id===_pinnedDocId?'#f8f8f6':'#fff'};">
+            html+=`<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:1px solid ${_pinnedDocId(doc.id,'weekly')?'#1a1a1a':'#ebebea'};border-radius:8px;background:${_pinnedDocId(doc.id,'weekly')?'#f8f8f6':'#fff'};">
               <div style="flex:1;display:flex;align-items:center;gap:10px;cursor:pointer;min-width:0;" onclick="_openVocwEditor('${m}','weekly',false,'${wkParam}')">
                 <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:#e8f0fe;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#1a73e8;">${doc._week||'?'}</div>
                 <div style="flex:1;min-width:0;">
@@ -3960,7 +3984,7 @@ function _loadVocwReportList(){
             const displayTitle=doc.title||(moLabel+' 먼슬리');
             const upd=doc.updatedAt?doc.updatedAt.slice(0,10):'날짜 미상';
             const preview=(doc.html||'').replace(/<[^>]+>/g,'').slice(0,50)||'(내용 없음)';
-            html+=`<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:1px solid ${doc.id===_pinnedDocId?'#1a1a1a':'#ebebea'};border-radius:8px;background:${doc.id===_pinnedDocId?'#f8f8f6':'#fff'};">
+            html+=`<div style="display:flex;align-items:center;gap:6px;padding:10px 12px;border:1px solid ${_pinnedDocId(doc.id,'monthly')?'#1a1a1a':'#ebebea'};border-radius:8px;background:${_pinnedDocId(doc.id,'monthly')?'#f8f8f6':'#fff'};">
               <div style="flex:1;display:flex;align-items:center;gap:10px;cursor:pointer;min-width:0;" onclick="_openVocwEditor('${m}','monthly',false,'')">
                 <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:#fce8f3;display:flex;align-items:center;justify-content:center;font-size:16px;">📊</div>
                 <div style="flex:1;min-width:0;">
@@ -5194,6 +5218,14 @@ function exportClaims(){
 }
 function exportClaimsXLSX(){
   const c=loadClaims();if(!c.length){alert('데이터가 없습니다.');return;}
+  // 현재 탭 기준 필터링
+  let filtered=c;
+  let tabLabel='전체';
+  if(_activeClaimMonth&&_activeClaimMonth!=='all'){
+    filtered=c.filter(r=>_getClaimMonthKey(r)===_activeClaimMonth);
+    tabLabel=_activeClaimMonth;
+    if(!filtered.length){alert('현재 탭에 데이터가 없습니다.');return;}
+  }
   const cols=[
     ['month','발생 월'],['date','작성일'],['indate','클레임 인입일'],['shipdate','배송 일자'],
     ['donedate','처리 완료일'],['channel','인입 채널'],['platform','플랫폼'],
@@ -5203,7 +5235,7 @@ function exportClaimsXLSX(){
     ['returnYn','회수 여부'],['reshipYn','재출고 여부'],['accident','사고 접수 여부'],
     ['status','처리 상태'],['costP','상품 비용'],['costR','회수 비용'],['costS','재출고 비용']
   ];
-  const data=c.map(r=>{
+  const data=filtered.map(r=>{
     const row={};
     cols.forEach(([k,h])=>{row[h]=r[k]||'';});
     const bds=calcBusinessDays(r.indate,r.donedate);
@@ -5213,7 +5245,8 @@ function exportClaimsXLSX(){
   const ws=XLSX.utils.json_to_sheet(data);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'클레임현황');
-  XLSX.writeFile(wb,'클레임현황_'+todayStr()+'.xlsx');
+  const fname=tabLabel==='전체'?'클레임현황_전체_'+todayStr()+'.xlsx':'클레임현황_'+tabLabel+'.xlsx';
+  XLSX.writeFile(wb,fname);
 }
 function _xlsxDateToISO(v){
   if(!v&&v!==0)return'';
@@ -5323,6 +5356,12 @@ function importClaimsXLSX(input){
         ?rows.slice(0,5).map(r=>String(r[issueHeader]||'')).filter(Boolean)
         :[];
 
+      // 현재 탭 정보
+      const _importTab=_activeClaimMonth&&_activeClaimMonth!=='all'?_activeClaimMonth:'all';
+      const _importTabLabel=_importTab==='all'?'전체':_importTab;
+      const _tabNote=_importTab==='all'
+        ?'⚠️ 전체 탭이 선택된 상태입니다. 기존 모든 데이터가 교체됩니다.'
+        :'📌 현재 탭: '+_importTabLabel+'\n기존 '+_importTabLabel+' 데이터만 교체됩니다. 다른 탭 데이터는 유지됩니다.';
       // 헤더 매핑 결과 항상 표시
       const headerReport=
         '📋 엑셀 컬럼 인식 결과\n\n'+
@@ -5331,7 +5370,7 @@ function importClaimsXLSX(input){
         (issueMapped
           ?'✅ 이슈별 분류 컬럼: "'+issueHeader+'" → 샘플: '+issueSamples.join(' / ')+'\n\n'
           :'⚠️ [이슈별 분류] 컬럼을 찾지 못했습니다.\n엑셀 실제 헤더명: '+allHeaders.filter(h=>h.includes('이슈')||h.includes('분류')).join(', ')+'\n\n')+
-        '계속 가져오시겠습니까?\n(기존 데이터는 엑셀 데이터로 전체 교체됩니다)';
+        _tabNote+'\n\n계속 가져오시겠습니까?';
       if(!confirm(headerReport)){input.value='';return;}
 
       const newClaims=[];
@@ -5369,9 +5408,23 @@ function importClaimsXLSX(input){
         input.value='';return;
       }
 
-      // 엑셀 데이터로 전체 교체 (기존 데이터 merge 없음)
-      saveClaims(newClaims)
-        .then(()=>alert('✅ '+newClaims.length+'건 가져오기 완료\n엑셀 데이터로 전체 교체되었습니다.'))
+      // 탭 기준 저장
+      let toSave;
+      let successMsg;
+      if(_importTab==='all'){
+        // 전체 탭: 기존 전체 교체
+        toSave=newClaims;
+        successMsg='✅ '+newClaims.length+'건 가져오기 완료\n전체 데이터가 교체되었습니다.';
+      } else {
+        // 특정 월 탭: 해당 월 데이터만 교체, 다른 월은 유지
+        // 가져온 레코드의 month 필드를 현재 탭으로 강제 설정
+        newClaims.forEach(r=>{r.month=_importTab;});
+        const existing=loadClaims().filter(r=>_getClaimMonthKey(r)!==_importTab);
+        toSave=[...existing,...newClaims];
+        successMsg='✅ '+newClaims.length+'건 가져오기 완료 ('+_importTabLabel+' 탭)\n다른 탭 데이터는 유지됩니다.';
+      }
+      saveClaims(toSave)
+        .then(()=>alert(successMsg))
         .catch(err=>alert('저장 오류: '+err));
     }catch(err){alert('파일 읽기 오류: '+err);}
     input.value='';
