@@ -101,7 +101,7 @@ nav.gnb,#page-tab-bar{flex-shrink:0;}
   .page-inner{padding:16px;}
 }
 /* Status section */
-.status-section{background:#fff;border-radius:12px;border:1px solid #e8e8e6;overflow:hidden;margin-bottom:0;display:flex;flex-direction:column;}
+.status-section{background:#fff;border-radius:12px;border:1px solid #e8e8e6;border-top:4px solid #F7C948;overflow:hidden;margin-bottom:0;display:flex;flex-direction:column;}
 .status-hd{padding:18px 24px 0;font-size:15px;font-weight:700;}
 .status-row{display:flex;border-top:1px solid #f0f0ee;margin-top:14px;flex:1;}
 .status-item{flex:1;padding:16px 20px;border-right:1px solid #f0f0ee;display:flex;flex-direction:column;justify-content:center;}
@@ -446,22 +446,22 @@ tr:hover td{background:#fafafa;}
         </div>
       <!-- 이번 달 KPI -->
       <div class="sub-grid kpi-row" style="grid-template-columns:repeat(4,1fr)!important;gap:10px!important;margin-bottom:16px;">
-          <div class="sub-card">
+          <div class="sub-card" style="border-top:3px solid #60A5FA;">
             <div class="sub-card-title">이번 달 평균 리드타임</div>
             <div style="font-size:26px;font-weight:700;color:#1a1a1a;" id="kpi-leadtime">-</div>
             <div style="font-size:11px;color:#aaa;margin-top:3px;">일 (영업일 기준)</div>
           </div>
-          <div class="sub-card">
+          <div class="sub-card" style="border-top:3px solid #F59E0B;">
             <div class="sub-card-title">VOC 상품 비용 합계</div>
-            <div style="font-size:22px;font-weight:700;color:#1a1a1a;" id="kpi-vocamt">-</div>
+            <div style="font-size:22px;font-weight:700;color:#D97706;" id="kpi-vocamt">-</div>
             <div style="font-size:11px;color:#aaa;margin-top:3px;">원 (이번 달 누계)</div>
           </div>
-          <div class="sub-card">
+          <div class="sub-card" style="border-top:3px solid #F59E0B;">
             <div class="sub-card-title">VOC 운임</div>
-            <div style="font-size:22px;font-weight:700;color:#1a1a1a;" id="kpi-csamt">-</div>
+            <div style="font-size:22px;font-weight:700;color:#D97706;" id="kpi-csamt">-</div>
             <div style="font-size:11px;color:#aaa;margin-top:3px;">원 (이번 달 누계)</div>
           </div>
-          <div class="sub-card" style="min-height:0;">
+          <div class="sub-card" style="min-height:0;border-top:3px solid #EF4444;">
             <div class="sub-card-title">장기 미처리건 <span style="font-size:10px;color:#bbb;font-weight:400;">(인입일 기준 7영업일↑)</span></div>
             <div style="font-size:26px;font-weight:700;color:#c62828;" id="kpi-long-count">-</div>
             <div id="kpi-long-list" style="font-size:11px;color:#555;margin-top:5px;max-height:72px;overflow-y:auto;line-height:1.6;"></div>
@@ -7018,7 +7018,6 @@ function buildText() {
       lines.push('');
       if (claimType === '반품_부분_무배미충족') {
         lines.push(feeMsg);
-        lines.push('');
         lines.push('회수 상품 입고 및 검수 완료 후 순차적으로 환불이 진행되는 점 양해 부탁드립니다.');
       } else {
         lines.push(`${feeMsg} 회수 상품 입고 및 검수 완료 후 순차적으로 환불이 진행되는 점 양해 부탁드립니다.`);
