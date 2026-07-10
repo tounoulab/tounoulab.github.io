@@ -1489,15 +1489,17 @@ function countsByField(arr,field){
 function _renderCatBar(elId,countsObj,top){
   const el=document.getElementById(elId);if(!el)return;
   const sorted=Object.entries(countsObj).sort((a,b)=>b[1]-a[1]).slice(0,top);
-  const max=sorted.length?sorted[0][1]:1;
   if(!sorted.length){el.innerHTML='<span style="color:#bbb;font-size:11px;">데이터 없음</span>';return;}
-  el.innerHTML=sorted.map(([k,v])=>`<div style="display:flex;align-items:center;gap:8px;">
-    <div style="min-width:80px;max-width:80px;font-size:11px;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${k}">${k}</div>
-    <div style="flex:1;background:#f0f0ee;border-radius:3px;height:8px;overflow:hidden;">
-      <div style="width:${Math.max(4,Math.round(v/max*100))}%;background:#9bf6ff;height:100%;border-radius:3px;"></div>
-    </div>
-    <div style="min-width:22px;text-align:right;font-size:11px;font-weight:600;color:#333;">${v}</div>
-  </div>`).join('');
+  const total=sorted.reduce((s,[,v])=>s+v,0);
+  el.style.cssText='display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;';
+  el.innerHTML=sorted.map(([k,v])=>{
+    const pct=total?Math.round(v/total*100):0;
+    return `<div style="background:#f8f8f6;border-radius:8px;border:1px solid #eeeeec;padding:8px 10px;min-width:64px;flex:1;">
+      <div style="font-size:10px;color:#aaa;font-weight:600;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${k}">${k}</div>
+      <div style="font-size:20px;font-weight:700;color:#1a1a1a;line-height:1.1;">${v}<span style="font-size:11px;font-weight:500;color:#bbb;margin-left:2px;">건</span></div>
+      <div style="font-size:10px;color:#bbb;margin-top:3px;">${pct}%</div>
+    </div>`;
+  }).join('');
 }
 function renderDonutChart(canvasId,legendId,countsObj){
   const sorted=Object.entries(countsObj).sort((a,b)=>b[1]-a[1]).slice(0,7);
