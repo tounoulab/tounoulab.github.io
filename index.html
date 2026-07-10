@@ -474,15 +474,12 @@ tr:hover td{background:#fafafa;}
             <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.05em;margin-bottom:14px;">금일</div>
             <div class="chart-inner-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;flex:1;">
               <div style="display:flex;flex-direction:column;">
-                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">이슈별 현황</div>
-                <div style="display:flex;align-items:center;justify-content:center;">
-                  <div id="h-liability-today-wrap" style="position:relative;height:140px;width:100%;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-today"></canvas></div>
-                </div>
-                <div id="h-liability-today-list" class="chart-legend" style="margin-top:8px;"></div>
+                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:8px;">이슈별 현황</div>
+                <div id="h-liability-today-rank" style="display:flex;flex-direction:column;gap:1px;"></div>
               </div>
               <div style="display:flex;flex-direction:column;">
-                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">상품군별 현황</div>
-                <div id="h-cat-today-list" style="display:flex;flex-direction:column;gap:7px;"></div>
+                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:8px;">상품군별 현황</div>
+                <div id="h-cat-today-rank" style="display:flex;flex-direction:column;gap:1px;"></div>
               </div>
             </div>
           </div>
@@ -491,15 +488,12 @@ tr:hover td{background:#fafafa;}
             <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:14px;"><span style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:0.05em;">이번 주</span><span id="week-chart-hint" style="font-size:10px;color:#ccc;"></span></div>
             <div class="chart-inner-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;flex:1;">
               <div style="display:flex;flex-direction:column;">
-                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">이슈별 현황</div>
-                <div style="display:flex;align-items:center;justify-content:center;">
-                  <div id="h-liability-week-wrap" style="position:relative;height:140px;width:100%;display:flex;align-items:center;justify-content:center;"><canvas id="chart-liability-week"></canvas></div>
-                </div>
-                <div id="h-liability-week-list" class="chart-legend" style="margin-top:8px;"></div>
+                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:8px;">이슈별 현황</div>
+                <div id="h-liability-week-rank" style="display:flex;flex-direction:column;gap:1px;"></div>
               </div>
               <div style="display:flex;flex-direction:column;">
-                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:6px;">상품군별 현황</div>
-                <div id="h-cat-week-list" style="display:flex;flex-direction:column;gap:7px;"></div>
+                <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:8px;">상품군별 현황</div>
+                <div id="h-cat-week-rank" style="display:flex;flex-direction:column;gap:1px;"></div>
               </div>
             </div>
           </div>
@@ -510,7 +504,7 @@ tr:hover td{background:#fafafa;}
           <span class="card-title" style="margin-bottom:0;">최근 7일 클레임 접수 추이</span>
           <span id="weekly-total-badge" style="font-size:12px;color:#888;"></span>
         </div>
-        <div style="position:relative;flex:1;min-height:180px;">
+        <div style="position:relative;height:200px;">
           <canvas id="chart-weekly"></canvas>
         </div>
       </div>
@@ -1486,18 +1480,146 @@ function countsByField(arr,field){
   const c={};arr.forEach(r=>{const k=r[field];if(k)c[k]=(c[k]||0)+1;});return c;
 }
 
+window._dashClaims={};
+function _renderIssueRankList(elId,countsObj,claims){
+  const el=document.getElementById(elId);if(!el)return;
+  const sorted=Object.entries(countsObj).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  if(!sorted.length){el.innerHTML='<span style="color:#bbb;font-size:11px;">데이터 없음</span>';return;}
+  const total=sorted.reduce((s,[,v])=>s+v,0);
+  const max=sorted[0][1];
+  window._dashClaims[elId]=claims;
+  el.innerHTML=sorted.map(([label,cnt],i)=>{
+    const barPct=Math.round(cnt/max*100);
+    const pct=Math.round(cnt/total*100);
+    const color=CHART_COLORS[i]||'#ccc';
+    const safeLabel=label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return`<div>
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;cursor:pointer;"
+           onmouseover="this.style.background='#f8f8f6'" onmouseout="this.style.background=''"
+           onclick="_toggleIssueDetail('${elId}',${i},'${safeLabel}')">
+        <span style="font-size:11px;font-weight:600;color:#ccc;width:14px;text-align:center;flex-shrink:0;">${i+1}</span>
+        <span style="font-size:11px;color:#444;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${label}">${label}</span>
+        <div style="width:56px;height:5px;background:#f0f0ee;border-radius:3px;flex-shrink:0;overflow:hidden;">
+          <div style="width:${barPct}%;height:100%;background:${color};border-radius:3px;"></div>
+        </div>
+        <span style="font-size:11px;font-weight:600;color:#333;width:30px;text-align:right;flex-shrink:0;">${cnt}건</span>
+        <span id="${elId}-btn-${i}" style="font-size:10px;color:#bbb;display:inline-block;flex-shrink:0;transition:transform 0.18s;">▼</span>
+      </div>
+      <div id="${elId}-detail-${i}" style="display:none;padding:4px 8px 8px 30px;"></div>
+    </div>`;
+  }).join('');
+}
+function _toggleIssueDetail(elId,idx,label){
+  const det=document.getElementById(`${elId}-detail-${idx}`);
+  const btn=document.getElementById(`${elId}-btn-${idx}`);
+  if(!det)return;
+  const open=det.style.display!=='none';
+  det.style.display=open?'none':'block';
+  if(btn)btn.style.transform=open?'':'rotate(180deg)';
+  if(!open&&!det._built){
+    det._built=true;
+    const cl=window._dashClaims[elId]||[];
+    const filtered=cl.filter(r=>(r.type||'(미입력)')===label);
+    const seen=new Set();
+    const deduped=filtered.filter(r=>{const k=r.orderno||String(r.id);if(seen.has(k))return false;seen.add(k);return true;});
+    const catMap={};
+    deduped.forEach(r=>{const c=r.category||'(미분류)';catMap[c]=(catMap[c]||0)+1;});
+    const catSorted=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+    const tot=deduped.length;
+    const mx=catSorted.length?catSorted[0][1]:1;
+    if(!catSorted.length){det.innerHTML='<span style="color:#bbb;font-size:11px;">데이터 없음</span>';return;}
+    det.innerHTML=`<div style="font-size:10px;color:#aaa;margin-bottom:5px;">상품군별 (총 ${tot}건)</div>`
+      +catSorted.map(([cat,cnt])=>{
+        const bw=Math.max(3,Math.round(cnt/mx*100));
+        return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="font-size:11px;color:#555;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${cat}">${cat}</span>
+          <div style="width:50px;height:4px;background:#f0f0ee;border-radius:2px;flex-shrink:0;overflow:hidden;">
+            <div style="width:${bw}%;height:100%;background:#FFAECF;border-radius:2px;"></div>
+          </div>
+          <span style="font-size:11px;font-weight:600;color:#444;width:30px;text-align:right;flex-shrink:0;">${cnt}건</span>
+        </div>`;
+      }).join('');
+  }
+}
+function _renderCatRankList(elId,countsObj,claims){
+  const el=document.getElementById(elId);if(!el)return;
+  const sorted=Object.entries(countsObj).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(!sorted.length){el.innerHTML='<span style="color:#bbb;font-size:11px;">데이터 없음</span>';return;}
+  const total=sorted.reduce((s,[,v])=>s+v,0);
+  const max=sorted[0][1];
+  window._dashClaims[elId]=claims;
+  const PAL=['#FFAECF','#93D5F8','#FCD97A','#86EFAC','#C4B5FD'];
+  el.innerHTML=sorted.map(([label,cnt],i)=>{
+    const barPct=Math.round(cnt/max*100);
+    const safeLabel=label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return`<div>
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;cursor:pointer;"
+           onmouseover="this.style.background='#f8f8f6'" onmouseout="this.style.background=''"
+           onclick="_toggleCatDetail('${elId}',${i},'${safeLabel}')">
+        <span style="font-size:11px;font-weight:600;color:#ccc;width:14px;text-align:center;flex-shrink:0;">${i+1}</span>
+        <span style="font-size:11px;color:#444;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;word-break:keep-all;" title="${label}">${label}</span>
+        <div style="width:56px;height:5px;background:#f0f0ee;border-radius:3px;flex-shrink:0;overflow:hidden;">
+          <div style="width:${barPct}%;height:100%;background:${PAL[i%PAL.length]};border-radius:3px;"></div>
+        </div>
+        <span style="font-size:11px;font-weight:600;color:#333;width:30px;text-align:right;flex-shrink:0;">${cnt}건</span>
+        <span id="${elId}-btn-${i}" style="font-size:10px;color:#bbb;display:inline-block;flex-shrink:0;transition:transform 0.18s;">▼</span>
+      </div>
+      <div id="${elId}-detail-${i}" style="display:none;padding:4px 8px 8px 30px;"></div>
+    </div>`;
+  }).join('');
+}
+function _toggleCatDetail(elId,idx,label){
+  const det=document.getElementById(`${elId}-detail-${idx}`);
+  const btn=document.getElementById(`${elId}-btn-${idx}`);
+  if(!det)return;
+  const open=det.style.display!=='none';
+  det.style.display=open?'none':'block';
+  if(btn)btn.style.transform=open?'':'rotate(180deg)';
+  if(!open&&!det._built){
+    det._built=true;
+    const cl=window._dashClaims[elId]||[];
+    const filtered=cl.filter(r=>(r.category||'(미분류)')===label);
+    const seen=new Set();
+    const deduped=filtered.filter(r=>{const k=r.orderno||String(r.id);if(seen.has(k))return false;seen.add(k);return true;});
+    const issMap={};
+    deduped.forEach(r=>{const t=r.type||'(미분류)';issMap[t]=(issMap[t]||0)+1;});
+    const issSorted=Object.entries(issMap).sort((a,b)=>b[1]-a[1]);
+    const tot=deduped.length;
+    const mx=issSorted.length?issSorted[0][1]:1;
+    if(!issSorted.length){det.innerHTML='<span style="color:#bbb;font-size:11px;">데이터 없음</span>';return;}
+    det.innerHTML=`<div style="font-size:10px;color:#aaa;margin-bottom:5px;">이슈 유형별 (총 ${tot}건)</div>`
+      +issSorted.map(([iss,cnt])=>{
+        const bw=Math.max(3,Math.round(cnt/mx*100));
+        return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="font-size:11px;color:#555;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${iss}">${iss}</span>
+          <div style="width:50px;height:4px;background:#f0f0ee;border-radius:2px;flex-shrink:0;overflow:hidden;">
+            <div style="width:${bw}%;height:100%;background:#93D5F8;border-radius:2px;"></div>
+          </div>
+          <span style="font-size:11px;font-weight:600;color:#444;width:30px;text-align:right;flex-shrink:0;">${cnt}건</span>
+        </div>`;
+      }).join('');
+  }
+}
 function _renderCatBar(elId,countsObj,top){
   const el=document.getElementById(elId);if(!el)return;
   const sorted=Object.entries(countsObj).sort((a,b)=>b[1]-a[1]).slice(0,top);
   if(!sorted.length){el.innerHTML='<span style="color:#bbb;font-size:11px;">데이터 없음</span>';return;}
   const total=sorted.reduce((s,[,v])=>s+v,0);
+  const PALETTE=[
+    {bg:'#FFF0F6',border:'#FFAECF',num:'#E8729A'},
+    {bg:'#EFF9FF',border:'#93D5F8',num:'#3B93D6'},
+    {bg:'#FFFBEC',border:'#FCD97A',num:'#C98F00'},
+    {bg:'#F0FFF5',border:'#86EFAC',num:'#16A34A'},
+    {bg:'#F5F3FF',border:'#C4B5FD',num:'#7C5AED'},
+  ];
   el.style.cssText='display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;';
-  el.innerHTML=sorted.map(([k,v])=>{
+  el.innerHTML=sorted.map(([k,v],i)=>{
     const pct=total?Math.round(v/total*100):0;
-    return `<div style="background:#f8f8f6;border-radius:8px;border:1px solid #eeeeec;padding:8px 10px;min-width:64px;flex:1;">
-      <div style="font-size:10px;color:#aaa;font-weight:600;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${k}">${k}</div>
-      <div style="font-size:20px;font-weight:700;color:#1a1a1a;line-height:1.1;">${v}<span style="font-size:11px;font-weight:500;color:#bbb;margin-left:2px;">건</span></div>
-      <div style="font-size:10px;color:#bbb;margin-top:3px;">${pct}%</div>
+    const c=PALETTE[i%PALETTE.length];
+    return `<div style="background:${c.bg};border-radius:8px;border:1px solid ${c.border};padding:8px 10px;min-width:90px;flex:1;">
+      <div style="font-size:10px;color:${c.num};font-weight:600;margin-bottom:5px;line-height:1.4;word-break:keep-all;opacity:0.8;" title="${k}">${k}</div>
+      <div style="font-size:20px;font-weight:700;color:${c.num};line-height:1.1;">${v}<span style="font-size:11px;font-weight:500;margin-left:2px;opacity:0.6;">건</span></div>
+      <div style="font-size:10px;margin-top:3px;color:${c.num};opacity:0.55;">${pct}%</div>
     </div>`;
   }).join('');
 }
@@ -1737,9 +1859,10 @@ function renderWeeklyTrendChart(claims){
     },
     options:{
       responsive:true,maintainAspectRatio:false,
+      layout:{padding:{top:20,bottom:20}},
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y}건`}}},
       scales:{
-        y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0f0ee'},border:{display:false}},
+        y:{beginAtZero:false,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0f0ee'},border:{display:false}},
         x:{ticks:{font:{size:11}},grid:{color:'#f5f5f3'},border:{display:false}}
       }
     }
@@ -1802,10 +1925,10 @@ function renderHomeDashboard(){
   const todayC=dedup(claims.filter(r=>normDate(r.date)===t));
   const weekC=dedup(claims.filter(r=>{const v=normDate(r.date);return v>=ws&&v<=we;}));
   const monthC=dedup(claims.filter(r=>{const v=normDate(r.date);return v>=ms&&v<=me;}));
-  renderDonutChart('chart-liability-today','h-liability-today-list',countsByField(todayC,'type'));
-  _renderCatBar('h-cat-today-list',countsByField(todayC,'category'),5);
-  renderDonutChart('chart-liability-week','h-liability-week-list',countsByField(weekC,'type'));
-  _renderCatBar('h-cat-week-list',countsByField(weekC,'category'),5);
+  _renderIssueRankList('h-liability-today-rank',countsByField(todayC,'type'),todayC);
+  _renderCatRankList('h-cat-today-rank',countsByField(todayC,'category'),todayC);
+  _renderIssueRankList('h-liability-week-rank',countsByField(weekC,'type'),weekC);
+  _renderCatRankList('h-cat-week-rank',countsByField(weekC,'category'),weekC);
   // 이번 달 귀책별 + 이슈 TOP5 미니 리스트 렌더
   renderWeeklyTrendChart(claims);
   _renderLongClaims(claims);
