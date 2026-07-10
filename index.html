@@ -7016,7 +7016,13 @@ function buildText() {
     } else {
       const feeMsg = SHIPPING_FEE[claimType];
       lines.push('');
-      lines.push(`${feeMsg} 회수 상품 입고 및 검수 완료 후 순차적으로 환불이 진행되는 점 양해 부탁드립니다.`);
+      if (claimType === '반품_부분_무배미충족') {
+        lines.push(feeMsg);
+        lines.push('');
+        lines.push('회수 상품 입고 및 검수 완료 후 순차적으로 환불이 진행되는 점 양해 부탁드립니다.');
+      } else {
+        lines.push(`${feeMsg} 회수 상품 입고 및 검수 완료 후 순차적으로 환불이 진행되는 점 양해 부탁드립니다.`);
+      }
       lines.push('');
       lines.push('감사합니다.');
     }
