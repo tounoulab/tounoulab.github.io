@@ -333,6 +333,68 @@ tr:hover td{background:#fafafa;}
   .chart-period-grid{grid-template-columns:1fr!important;}
   .chart-inner-grid{grid-template-columns:1fr 1fr!important;}
 }
+
+/* ===== 출고 일정 계산기 ===== */
+#page-scheduler{--sc-bg:#f2f3f5;--sc-bg2:#fff;--sc-surface:#fff;--sc-surface2:#f8f8f6;--sc-border:#e8e8e6;--sc-border2:#d5d5d2;--sc-text:#1a1a1a;--sc-text2:#555;--sc-text3:#aaa;--sc-accent:#1a1a1a;--sc-accent2:#333;--sc-accent-soft:#f5f5f3;--sc-green:#16a34a;--sc-green-soft:#f0fdf4;--sc-orange:#ea580c;--sc-red:#dc2626;--sc-red-soft:#fef2f2;--sc-blue:#2563eb;--sc-blue-soft:#eff6ff;}
+#page-scheduler{background:var(--sc-bg);color:var(--sc-text);font-size:14px;line-height:1.6;width:100%;align-self:stretch;}
+#page-scheduler .sc-wrap{width:100%;padding:28px 32px;box-sizing:border-box;}
+#page-scheduler .sc-card{width:100%;}
+#page-scheduler .sc-steps{display:flex;gap:10px;align-items:center;margin-bottom:28px;}
+#page-scheduler .sc-snum{width:28px;height:28px;border-radius:50%;background:var(--sc-surface2);border:1px solid var(--sc-border2);font-size:13px;font-weight:600;color:var(--sc-text2);display:flex;align-items:center;justify-content:center;transition:all .2s;}
+#page-scheduler .sc-snum.active{background:var(--sc-accent);border-color:var(--sc-accent);color:#fff;}
+#page-scheduler .sc-snum.done{background:var(--sc-green-soft);border-color:var(--sc-green);color:var(--sc-green);}
+#page-scheduler .sc-slbl{font-size:14px;color:var(--sc-text2);font-weight:500;}
+#page-scheduler .sc-slbl.active{color:var(--sc-accent);font-weight:600;}
+#page-scheduler .sc-slbl.done{color:var(--sc-green);}
+#page-scheduler .sc-card{background:var(--sc-surface);border:1px solid var(--sc-border);border-radius:12px;padding:28px;margin-bottom:16px;}
+#page-scheduler .sc-card-hd{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+#page-scheduler .sc-cnum{width:26px;height:26px;border-radius:50%;background:var(--sc-accent);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+#page-scheduler .sc-ctitle{font-size:16px;font-weight:700;}
+#page-scheduler .sc-cdesc{font-size:13px;color:var(--sc-text2);margin-left:auto;}
+#page-scheduler .sc-upzone{border:2px dashed var(--sc-border2);border-radius:12px;padding:48px 20px;text-align:center;background:var(--sc-bg2);transition:all .2s;position:relative;}
+#page-scheduler .sc-upzone input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+#page-scheduler .sc-upzone:hover{border-color:var(--sc-accent);background:var(--sc-accent-soft);}
+#page-scheduler .sc-up-icon{font-size:40px;margin-bottom:10px;}
+#page-scheduler .sc-up-title{font-size:15px;font-weight:600;margin-bottom:6px;color:var(--sc-text);}
+#page-scheduler .sc-up-sub{font-size:13px;color:var(--sc-text2);}
+#page-scheduler .sc-fbadge{display:inline-flex;align-items:center;gap:8px;background:var(--sc-green-soft);border:1px solid var(--sc-green);border-radius:8px;padding:9px 16px;font-size:14px;color:var(--sc-green);font-weight:600;}
+#page-scheduler .sc-fgroup{display:flex;flex-direction:column;gap:8px;}
+#page-scheduler .sc-fgroup label{font-size:13px;font-weight:600;color:var(--sc-text2);}
+#page-scheduler .sc-fgroup input[type=date]{padding:10px 14px;border:1px solid var(--sc-border2);border-radius:8px;font-size:14px;background:var(--sc-bg2);color:var(--sc-text);font-family:inherit;width:200px;}
+#page-scheduler .sc-fgroup input[type=date]:focus{outline:none;border-color:var(--sc-accent);}
+#page-scheduler .sc-hint-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+#page-scheduler .sc-hbadge{display:inline-flex;align-items:center;gap:6px;background:var(--sc-surface2);border:1px solid var(--sc-border);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--sc-text);}
+#page-scheduler .sc-hdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+#page-scheduler .sc-btn{display:inline-flex;align-items:center;gap:6px;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:1px solid var(--sc-border2);background:var(--sc-surface2);color:var(--sc-text);font-family:inherit;transition:all .15s;}
+#page-scheduler .sc-btn:hover{background:#eee;}
+#page-scheduler .sc-btn-a{background:var(--sc-accent);color:#fff;border-color:var(--sc-accent);font-weight:600;}
+#page-scheduler .sc-btn-a:hover{background:var(--sc-accent2);}
+#page-scheduler .sc-btn-g{background:var(--sc-green-soft);color:var(--sc-green);border-color:var(--sc-green);font-weight:600;}
+#page-scheduler .sc-btn svg{width:16px;height:16px;}
+#page-scheduler .sc-brow{display:flex;gap:10px;margin-top:24px;}
+#page-scheduler .sc-divider{height:1px;background:var(--sc-border);margin:24px 0;}
+#page-scheduler .sc-sumbar{display:flex;gap:28px;flex-wrap:wrap;background:var(--sc-bg2);border:1px solid var(--sc-border);border-radius:8px;padding:16px 20px;margin-bottom:20px;}
+#page-scheduler .sc-si{display:flex;flex-direction:column;gap:4px;}
+#page-scheduler .sc-si-lbl{font-size:12px;color:var(--sc-text2);font-weight:500;text-transform:uppercase;letter-spacing:.3px;}
+#page-scheduler .sc-si-val{font-size:22px;font-weight:700;}
+#page-scheduler .c-acc{color:var(--sc-accent);}
+#page-scheduler .c-grn{color:var(--sc-green);}
+#page-scheduler .c-red{color:var(--sc-red);}
+#page-scheduler .c-org{color:var(--sc-orange);}
+#page-scheduler .sc-tw{overflow-x:auto;}
+#page-scheduler table{width:100%;border-collapse:collapse;font-size:14px;min-width:900px;}
+#page-scheduler thead th{font-size:12px;font-weight:700;color:var(--sc-text2);text-align:left;padding:10px 14px;border-bottom:2px solid var(--sc-border);white-space:nowrap;background:var(--sc-bg2);}
+#page-scheduler tbody td{padding:12px 14px;border-bottom:1px solid var(--sc-border);vertical-align:middle;color:var(--sc-text);font-size:14px;}
+#page-scheduler tbody tr:last-child td{border-bottom:none;}
+#page-scheduler tbody tr:hover td{background:var(--sc-surface2);}
+#page-scheduler .sc-chip{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:100px;white-space:nowrap;}
+#page-scheduler .sc-ch-cat{background:var(--sc-surface2);color:var(--sc-text2);border:1px solid var(--sc-border2);}
+#page-scheduler .sc-ch-day{background:var(--sc-blue-soft);color:var(--sc-blue);}
+#page-scheduler .sc-ch-unk{background:var(--sc-red-soft);color:var(--sc-red);border:1px solid var(--sc-red);}
+#page-scheduler .sc-td-g{font-size:13px;color:var(--sc-text2);min-width:220px;line-height:1.6;word-break:keep-all;}
+#page-scheduler .sc-ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+#page-scheduler .sc-toast{position:fixed;bottom:24px;right:24px;background:var(--sc-surface);border:1px solid var(--sc-border2);color:var(--sc-text);padding:12px 18px;border-radius:8px;font-size:14px;z-index:999;opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none;max-width:400px;}
+#page-scheduler .sc-toast.show{opacity:1;transform:translateY(0);}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -403,6 +465,7 @@ tr:hover td{background:#fafafa;}
         <div class="gnb-nav-item" data-page="claim" onclick="switchPage('claim')">📋 클레임 현황</div>
         <div class="gnb-nav-item" data-page="voc" onclick="switchPage('voc')">📊 클레임 통계</div>
         <div class="gnb-nav-item" data-page="voclog" onclick="switchPage('voclog')">📝 VOC 로그</div>
+        <div class="gnb-nav-item" data-page="scheduler" onclick="switchPage('scheduler')">🗓️ 출고 일정</div>
         <div class="gnb-nav-item" data-page="return" onclick="switchPage('return')">📦 반품 입고</div>
         <div class="gnb-nav-item" data-page="msg" onclick="switchPage('msg')">✉️ 문자 안내</div>
         <div id="btn-voc-write" class="gnb-nav-item" onclick="switchPage('vocwrite')" style="display:none;color:#dc2626;font-weight:700;">✍️ VOC 작성</div>
@@ -1158,6 +1221,118 @@ tr:hover td{background:#fafafa;}
 </div>
 </div><!-- /page-voclog -->
 
+<!-- ===== PAGE: 출고 일정 계산기 ===== -->
+<div id="page-scheduler" class="page">
+  <div class="sc-wrap">
+    <div style="margin-bottom:24px;">
+      <div style="font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">출고 일정 계산기</div>
+      <div style="font-size:14px;color:#555;">상품별 제작기간 자동 매칭 · 영업일 기준</div>
+    </div>
+    <div class="sc-steps">
+      <div style="display:flex;align-items:center;gap:8px"><div class="sc-snum active" id="sc-sn1">1</div><span class="sc-slbl active" id="sc-sl1">파일 업로드</span></div>
+      <span style="color:#aaa;font-size:18px;">›</span>
+      <div style="display:flex;align-items:center;gap:8px"><div class="sc-snum" id="sc-sn2">2</div><span class="sc-slbl" id="sc-sl2">발주일 설정</span></div>
+      <span style="color:#aaa;font-size:18px;">›</span>
+      <div style="display:flex;align-items:center;gap:8px"><div class="sc-snum" id="sc-sn3">3</div><span class="sc-slbl" id="sc-sl3">결과 · 다운로드</span></div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="sc-card" id="sc-s1">
+      <div class="sc-card-hd">
+        <div class="sc-cnum">1</div>
+        <div class="sc-ctitle">이지어드민 발주 파일 업로드</div>
+        <div class="sc-cdesc">.xlsx / .xls</div>
+      </div>
+      <div class="sc-upzone" id="sc-ez-zone">
+        <input type="file" id="sc-ez-input" accept=".xlsx,.xls">
+        <div id="sc-ez-idle">
+          <div class="sc-up-icon">📂</div>
+          <div class="sc-up-title">파일을 클릭해서 선택하세요</div>
+          <div class="sc-up-sub">주문번호 · 상품명 · 발주시간 포함 파일</div>
+        </div>
+        <div id="sc-ez-done" style="display:none">
+          <div class="sc-fbadge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span id="sc-ez-fname"></span>
+          </div>
+          <div style="font-size:13px;color:#555;margin-top:6px" id="sc-ez-finfo"></div>
+        </div>
+      </div>
+      <div id="sc-s1-next" style="display:none">
+        <div class="sc-brow"><button class="sc-btn sc-btn-a" onclick="scGoStep(2)">다음 단계 →</button></div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="sc-card" id="sc-s2" style="display:none">
+      <div class="sc-card-hd">
+        <div class="sc-cnum">2</div>
+        <div class="sc-ctitle">발주일 설정</div>
+      </div>
+      <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;">
+        <div class="sc-fgroup">
+          <label>발주일</label>
+          <input type="date" id="sc-order-date" oninput="scUpdateHint()">
+        </div>
+        <div class="sc-fgroup">
+          <label>안내일 <span style="font-size:12px;color:#aaa;font-weight:400;">(오늘 기준 — 이전 날짜 제외)</span></label>
+          <input type="date" id="sc-notify-date">
+          <div style="font-size:12px;color:#888;margin-top:4px;">미입력 시 전체 범위 표시</div>
+        </div>
+      </div>
+      <div class="sc-hint-row" id="sc-date-hint"></div>
+      <div class="sc-divider"></div>
+      <div style="font-size:13px;color:#555;line-height:2">
+        제작기준: <span style="color:#1a1a1a;font-weight:600;">발주일 당일 1영업일차</span> &nbsp;·&nbsp;
+        14시 이후 발주: <span style="color:var(--sc-orange);font-weight:600;">다음 영업일부터 제작</span> &nbsp;·&nbsp;
+        공휴일·주말 제외
+      </div>
+      <div class="sc-brow">
+        <button class="sc-btn" onclick="scGoStep(1)">← 이전</button>
+        <button class="sc-btn sc-btn-a" onclick="scCalc()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          출고 일정 계산
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="sc-card" id="sc-s3" style="display:none">
+      <div class="sc-card-hd">
+        <div class="sc-cnum">3</div>
+        <div class="sc-ctitle">출고 예정일 결과</div>
+      </div>
+      <div class="sc-sumbar" id="sc-sumbar"></div>
+      <div class="sc-ph">
+        <span style="font-size:13px;font-weight:600;color:var(--sc-text)">전체 목록</span>
+        <div style="display:flex;gap:8px">
+          <button class="sc-btn" onclick="scGoStep(2)">← 다시 계산</button>
+          <button class="sc-btn sc-btn-g" onclick="scDlExcel()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            엑셀 다운로드
+          </button>
+        </div>
+      </div>
+      <div class="sc-tw">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>주문번호</th><th>상품명</th>
+              <th>발주시간</th><th>제작시작일</th>
+              <th>카테고리</th><th>제작기간</th><th>출고 예정 범위</th><th>안내 문구</th>
+            </tr>
+          </thead>
+          <tbody id="sc-rtbody"></tbody>
+        </table>
+      </div>
+      <div style="font-size:13px;color:#555;margin-top:12px;">
+        ※ 미매칭 항목 수동 확인 필요 &nbsp;·&nbsp; 예약 출고 상품 별도 안내
+      </div>
+    </div>
+  </div>
+  <div class="sc-toast" id="sc-toast"></div>
+</div><!-- /page-scheduler -->
+
 <!-- ===== PAGE: 반품 입고 ===== -->
 <div id="page-return" class="page">
 <div style="padding:0 24px 24px;">
@@ -1189,6 +1364,8 @@ tr:hover td{background:#fafafa;}
 
 <!-- ===== 반품 행 우클릭 컨텍스트 메뉴 ===== -->
 <div id="ret-ctx-menu" style="display:none;position:fixed;z-index:9999;background:#fff;border:1px solid #e0e0de;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:4px 0;min-width:150px;">
+  <div onclick="_retCtxAddItem()" style="padding:8px 16px;font-size:13px;cursor:pointer;color:#1a1a1a;" onmouseenter="this.style.background='#f5f5f3'" onmouseleave="this.style.background=''">＋ 상품 추가</div>
+  <div style="border-top:1px solid #f0f0ee;margin:3px 0;"></div>
   <div onclick="_retCtxMerge()" style="padding:8px 16px;font-size:13px;cursor:pointer;color:#1a1a1a;" onmouseenter="this.style.background='#f5f5f3'" onmouseleave="this.style.background=''">⊕ 위 항목과 병합</div>
   <div onclick="_retCtxSplit()" style="padding:8px 16px;font-size:13px;cursor:pointer;color:#dc2626;" onmouseenter="this.style.background='#fff5f5'" onmouseleave="this.style.background=''">⊘ 그룹 분리</div>
 </div>
@@ -1273,7 +1450,7 @@ function _restoreScroll(page){
   });
 }
 // ===== 페이지 탭바 =====
-const _PAGE_LABELS={home:'🏠 대시보드',claim:'📋 클레임 현황',voc:'📊 클레임 통계',voclog:'📝 VOC 로그',return:'📦 반품 입고',msg:'✉️ 문자 안내',vocwrite:'✍️ VOC 작성',accounts:'👥 계정'};
+const _PAGE_LABELS={home:'🏠 대시보드',claim:'📋 클레임 현황',voc:'📊 클레임 통계',voclog:'📝 VOC 로그',scheduler:'🗓️ 출고 일정',return:'📦 반품 입고',msg:'✉️ 문자 안내',vocwrite:'✍️ VOC 작성',accounts:'👥 계정'};
 let _openTabs=[];
 function _renderTabBar(){
   const bar=document.getElementById('page-tab-bar');if(!bar)return;
@@ -3371,6 +3548,11 @@ function _attachReturnContextMenu(){
   document.addEventListener('contextmenu',e=>{
     if(!e.target.closest('#ret-ctx-menu')&&!e.target.closest('#return-table-container'))menu.style.display='none';
   });
+}
+function _retCtxAddItem(){
+  const menu=document.getElementById('ret-ctx-menu');if(menu)menu.style.display='none';
+  if(!_retCtxTargetId)return;
+  _retAddItemToGroup(_retCtxTargetId);
 }
 function _retCtxMerge(){
   const menu=document.getElementById('ret-ctx-menu');if(menu)menu.style.display='none';
@@ -5613,6 +5795,29 @@ function importClaimsXLSX(input){
   reader.readAsArrayBuffer(file);
 }
 // ===== 반품 모달 =====
+function _retAddItemToGroup(refId){
+  const all=loadReturns();
+  const ref=all.find(r=>String(r.id)===String(refId));
+  if(!ref){alert('그룹 정보를 찾을 수 없습니다.');return;}
+  // 신규 등록 모드 (edit-id 비움) — 그룹 공유 필드 자동 채우기
+  document.getElementById('r-edit-id').value='';
+  document.getElementById('return-reg-modal-title').textContent='상품 추가 — '+( ref.name||'');
+  document.getElementById('return-reg-submit-btn').textContent='추가 등록';
+  document.getElementById('r-date').value=ref.date||'';
+  document.getElementById('r-orig').value=ref.orig||'';
+  document.getElementById('r-retno').value=ref.retno||'';
+  document.getElementById('r-name').value=ref.name||'';
+  document.getElementById('r-orderno').value=ref.orderno||'';
+  document.getElementById('r-note').value=ref.note||'';
+  const wrap=document.getElementById('r-items-wrap');
+  wrap.innerHTML='';
+  wrap.insertAdjacentHTML('beforeend',_makeReturnItemRowHTML());
+  const optSel=wrap.querySelector('.ri-option');
+  if(optSel&&!optSel._sd)makeSearchable(optSel);
+  const m=document.getElementById('return-reg-modal');
+  if(m)m.style.display='';
+  setTimeout(()=>{const p=wrap.querySelector('.ri-product');if(p)p.focus();},100);
+}
 function openReturnRegModal(){
   const m=document.getElementById('return-reg-modal');if(!m)return;
   // 신규 등록 모드로 초기화
@@ -7645,6 +7850,222 @@ _loadUsersFromFirestore(function(){
     init();
   }
 });
+
+// ===== 출고 일정 계산기 =====
+(function(){
+  const SC_HOLIDAYS = new Set([
+    '2025-01-01','2025-01-28','2025-01-29','2025-01-30','2025-03-01',
+    '2025-05-05','2025-05-06','2025-06-06','2025-08-15',
+    '2025-10-03','2025-10-06','2025-10-07','2025-10-08','2025-10-09','2025-12-25',
+    '2026-01-01','2026-01-28','2026-01-29','2026-01-30','2026-03-01',
+    '2026-05-05','2026-06-03','2026-06-06','2026-08-15','2026-10-03','2026-10-09','2026-12-25',
+  ]);
+
+  function scIsWorkday(s){const d=new Date(s),w=d.getDay();return w!==0&&w!==6&&!SC_HOLIDAYS.has(s);}
+  function scAddWorkdays(s,n){const d=new Date(s);let c=0;while(true){const ds=d.toISOString().split('T')[0];if(scIsWorkday(ds)){c++;if(c===n)return ds;}d.setDate(d.getDate()+1);}}
+  function scNextWorkday(s){const d=new Date(s);d.setDate(d.getDate()+1);while(true){const ds=d.toISOString().split('T')[0];if(scIsWorkday(ds))return ds;d.setDate(d.getDate()+1);}}
+  function scFmt(s){if(!s)return'—';const d=new Date(s),days=['일','월','화','수','목','금','토'];return`${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})`;}
+  function scTodayStr(){return new Date().toISOString().split('T')[0];}
+  function scTimeToStr(v){if(!v)return null;const s=String(v).trim();if(/^\d{1,2}:\d{2}/.test(s))return s;const f=parseFloat(s);if(!isNaN(f)&&f>=0&&f<1){const t=Math.round(f*86400),h=Math.floor(t/3600),m=Math.floor((t%3600)/60),sc=t%60;return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;}return s;}
+  function scGetHour(v){const s=scTimeToStr(v)||'';const m=s.match(/^(\d{1,2}):/);return m?parseInt(m[1]):0;}
+  function scGetProdStart(od,tv){const h=scGetHour(tv);if(h<14)return scIsWorkday(od)?od:scNextWorkday(od);return scNextWorkday(od);}
+
+  const SC_CATS=[
+    {name:'쉬폰 패브릭 포스터',kw:['쉬폰'],min:7,max:10},
+    {name:'패브릭 포스터',kw:['패브릭 포스터','패브릭포스터'],min:3,max:5},
+    {name:'이불',kw:['이불'],same:'당일 14시 이전 단독 주문 시 당일 출고 (예약 제외)'},
+    {name:'니트 블랭킷',kw:['니트 블랭킷','니트블랭킷'],same:'당일 14시 이전 단독 주문 시 당일 출고'},
+    {name:'담요',kw:['담요'],min:4,max:7},
+    {name:'파자마',kw:['파자마'],min:3,max:5},
+    {name:'파우치',kw:['파우치'],min:3,max:5},
+    {name:'쿠션 커버',kw:['쿠션 커버','쿠션커버','미니 쿠션','미니쿠션'],min:3,max:5},
+    {name:'베개 커버',kw:['베개 커버','베개커버'],min:3,max:5},
+    {name:'캔버스 액자',kw:['캔버스'],min:3,max:5},
+    {name:'포스터/액자',kw:['포스터','액자'],min:1,max:3},
+    {name:'소프트 규조토',kw:['소프트 규조토','소프트규조토'],min:3,max:7},
+    {name:'PVC 주방매트',kw:['pvc 주방','pvc주방'],same:'당일 14시 이전 단독 주문 시 당일 출고'},
+    {name:'발매트/주방매트/러너',kw:['발매트','주방매트','러너','주방 매트'],min:3,max:5},
+    {name:'러그',kw:['러그'],same:'당일 14시 이전 단독 주문 시 당일 출고 (L사이즈·일부 3~7일)'},
+    {name:'반팔 티셔츠',kw:['반팔','티셔츠'],min:1,max:3},
+    {name:'에어리 에코백',kw:['에코백'],same:'당일 14시 이전 단독 주문 시 당일 출고'},
+    {name:'테이블매트/키친크로스',kw:['테이블매트','키친크로스','테이블 매트'],min:1,max:3},
+    {name:'웨이브볼 등 도자기',kw:['웨이브볼','스트록','스푼레스트','플랫 플레이트','오벌 플레이트','플랫플레이트','오벌플레이트'],min:4,max:5,note:'재고 소진 시 최대 7~10일'},
+    {name:'color pills / 머그·컵',kw:['color pills','술잔','머그','컵'],min:10,max:14,note:'100% 수작업, 영업일 기준 2주 이내'},
+    {name:'오라 글라스',kw:['오라 글라스','오라글라스'],min:3,max:5},
+    {name:'하이볼잔/레트로컵/스택컵',kw:['하이볼','레트로컵','스택컵'],same:'당일 14시 이전 단독 주문 시 당일 출고'},
+    {name:'접시',kw:['접시'],same:'당일 14시 이전 단독 주문 시 당일 출고'},
+  ];
+
+  function scMatchCat(name){const l=name.toLowerCase();for(const c of SC_CATS)for(const k of c.kw)if(l.includes(k.toLowerCase()))return c;return null;}
+
+  let scEzData=[],scEzHeaders=[],scColOrd=-1,scColPrd=-1,scColTm=-1,scResultData=[];
+
+  function scShowToast(msg){const t=document.getElementById('sc-toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),3000);}
+
+  window.scGoStep=function(n){
+    if(n===1){document.getElementById('sc-s2').style.display='none';document.getElementById('sc-s3').style.display='none';}
+    if(n===2){
+      document.getElementById('sc-s2').style.display='block';
+      document.getElementById('sc-s3').style.display='none';
+      if(!document.getElementById('sc-order-date').value){document.getElementById('sc-order-date').value=scTodayStr();scUpdateHint();}
+      if(!document.getElementById('sc-notify-date').value){document.getElementById('sc-notify-date').value=scTodayStr();}
+      document.getElementById('sc-s2').scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+    for(let i=1;i<=3;i++){
+      document.getElementById('sc-sn'+i).className='sc-snum'+(i<n?' done':i===n?' active':'');
+      document.getElementById('sc-sl'+i).className='sc-slbl'+(i<n?' done':i===n?' active':'');
+      document.getElementById('sc-sn'+i).textContent=i<n?'✓':i;
+    }
+  };
+
+  window.scUpdateHint=function(){
+    const od=document.getElementById('sc-order-date').value;
+    if(!od){document.getElementById('sc-date-hint').innerHTML='';return;}
+    const isWd=scIsWorkday(od);
+    document.getElementById('sc-date-hint').innerHTML=
+      '<div class="sc-hbadge"><span class="sc-hdot" style="background:var(--sc-accent)"></span>발주일: '+scFmt(od)+
+      (isWd?'':' <span style="color:var(--sc-red)">(비영업일 — 다음 영업일 제작)</span>')+'</div>';
+  };
+
+  window.scCalc=function(){
+    const od=document.getElementById('sc-order-date').value;
+    if(!od){scShowToast('발주일을 입력해주세요.');return;}
+    if(!scEzData.length){scShowToast('파일을 먼저 업로드해주세요.');return;}
+    const notifyDate=document.getElementById('sc-notify-date').value||'';
+    const allRows=scEzData.map(row=>{
+      const orderNo=String(row[scColOrd]||'').trim();
+      const product=String(row[scColPrd]||'').trim();
+      const tv=scColTm>=0?row[scColTm]:null;
+      const ts=scTimeToStr(tv);
+      const ps=scGetProdStart(od,tv);
+      const isNext=scGetHour(tv)>=14||!scIsWorkday(od);
+      const cat=scMatchCat(product);
+      const maxDays=cat?(cat.same?0:cat.max):-1;
+      return{orderNo,product,ts,ps,isNext,cat,maxDays};
+    }).filter(r=>r.orderNo||r.product);
+
+    const groups={},orderList=[];
+    allRows.forEach(r=>{
+      const key=r.orderNo||('_no_'+Math.random());
+      if(!groups[key]){groups[key]={orderNo:r.orderNo,rows:[],ps:r.ps,isNext:r.isNext,ts:r.ts};orderList.push(key);}
+      groups[key].rows.push(r);
+    });
+
+    scResultData=orderList.map((key,idx)=>{
+      const g=groups[key],rows=g.rows;
+      let mainRow=rows[0];
+      rows.forEach(r=>{if(r.maxDays>mainRow.maxDays)mainRow=r;});
+      const products=rows.map(r=>r.product).join(' / ');
+      const unmatched=rows.filter(r=>!r.cat).map(r=>r.product);
+      const cat=mainRow.cat,ps=mainRow.ps,isNext=mainRow.isNext,ts=mainRow.ts;
+      let rangeLabel='—',dayTxt='—',guide='';
+      if(cat){
+        if(cat.same){rangeLabel='당일 출고 조건 확인';dayTxt='당일';guide='[기준: '+cat.name+'] '+cat.same;}
+        else{
+          const rawFrom=scAddWorkdays(ps,cat.min),toDate=scAddWorkdays(ps,cat.max);
+          // 안내일 이후로 fromDate 조정
+          let fromDate=rawFrom;
+          let notifyAdj=false;
+          if(notifyDate&&notifyDate>rawFrom&&notifyDate<=toDate){fromDate=notifyDate;notifyAdj=true;}
+          else if(notifyDate&&notifyDate>toDate){fromDate=toDate;notifyAdj=true;} // 전체 범위 지남
+          const isExpired=notifyDate&&notifyDate>toDate;
+          rangeLabel=isExpired
+            ?'⚠️ 범위 경과 — 확인 필요'
+            :(fromDate===toDate?scFmt(fromDate):scFmt(fromDate)+' ~ '+scFmt(toDate));
+          dayTxt=cat.min+'~'+cat.max+'영업일';
+          guide='[기준: '+cat.name+'] 제작 기간 '+dayTxt+' 소요, 출고 예정일 '+(isExpired?'범위 경과 ('+scFmt(rawFrom)+' ~ '+scFmt(toDate)+')':rangeLabel);
+          if(notifyAdj&&!isExpired)guide+=' ('+scFmt(rawFrom)+'~'+scFmt(toDate)+' 중 안내일 기준 조정)';
+          if(isNext)guide+=' (14시 이후 발주, 제작 시작 '+scFmt(ps)+')';
+          if(cat.note)guide+=' / '+cat.note;
+        }
+      }else{guide='카테고리 미매칭 — 수동 확인 필요';}
+      if(unmatched.length>0)guide+=' ※미매칭: '+unmatched.join(', ');
+      return{idx:idx+1,orderNo:g.orderNo,products,productCount:rows.length,ts,ps,isNext,cat,dayTxt,rangeLabel,guide,isMulti:rows.length>1,mainProduct:mainRow.product};
+    });
+
+    scRenderResult();
+    document.getElementById('sc-s3').style.display='block';
+    scGoStep(3);
+    document.getElementById('sc-s3').scrollIntoView({behavior:'smooth',block:'nearest'});
+  };
+
+  function scRenderResult(){
+    const total=scResultData.length,matched=scResultData.filter(r=>r.cat).length,unmatched=total-matched,sameDay=scResultData.filter(r=>r.cat&&r.cat.same).length;
+    document.getElementById('sc-sumbar').innerHTML=
+      '<div class="sc-si"><div class="sc-si-lbl">전체</div><div class="sc-si-val c-acc">'+total+'</div></div>'+
+      '<div class="sc-si"><div class="sc-si-lbl">일정 산출</div><div class="sc-si-val c-grn">'+matched+'</div></div>'+
+      '<div class="sc-si"><div class="sc-si-lbl">당일출고 확인</div><div class="sc-si-val c-org">'+sameDay+'</div></div>'+
+      '<div class="sc-si"><div class="sc-si-lbl">미매칭</div><div class="sc-si-val'+(unmatched>0?' c-red':'')+'">'+(unmatched)+'</div></div>';
+    document.getElementById('sc-rtbody').innerHTML=scResultData.map(r=>{
+      const catChip=r.cat?'<span class="sc-chip sc-ch-cat">'+r.cat.name+'</span>':'<span class="sc-chip sc-ch-unk">미매칭</span>';
+      const rangeColor=r.cat?(r.cat.same?'var(--sc-accent)':'var(--sc-green)'):'var(--sc-text3)';
+      return'<tr>'+
+        '<td style="font-size:13px;color:#aaa">'+r.idx+'</td>'+
+        '<td style="font-size:13px;color:#555">'+(r.orderNo||'—')+'</td>'+
+        '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;" title="'+r.products+'">'+(r.products||'—')+'</td>'+
+        '<td style="font-size:13px;color:'+(r.isNext?'var(--sc-orange)':'#555')+'">'+(r.ts||'—')+'</td>'+
+        '<td style="font-size:13px;color:'+(r.isNext?'var(--sc-orange)':'#333')+'">'+scFmt(r.ps)+(r.isNext?' ↑':'')+'</td>'+
+        '<td>'+catChip+'</td>'+
+        '<td><span class="sc-chip sc-ch-day">'+r.dayTxt+'</span></td>'+
+        '<td style="font-weight:600;color:'+rangeColor+'">'+r.rangeLabel+'</td>'+
+        '<td class="sc-td-g">'+r.guide+'</td>'+
+        '</tr>';
+    }).join('');
+  }
+
+  window.scDlExcel=function(){
+    if(!scResultData.length){scShowToast('결과 데이터가 없습니다.');return;}
+    if(typeof XLSX==='undefined'){scShowToast('XLSX 라이브러리 로딩 중...');return;}
+    const hdrs=['#','주문번호','상품명(전체)','상품수','발주시간','제작시작일','기준 카테고리','제작기간','출고예정 범위','안내 문구'];
+    const rows=scResultData.map(r=>[r.idx,r.orderNo,r.products,r.productCount,r.ts||'',r.ps||'',r.cat?r.cat.name+(r.isMulti?' (기준)':''):'미매칭',r.dayTxt,r.rangeLabel,r.guide]);
+    const ws=XLSX.utils.aoa_to_sheet([hdrs].concat(rows));
+    ws['!cols']=[{wch:4},{wch:22},{wch:40},{wch:6},{wch:10},{wch:12},{wch:18},{wch:12},{wch:22},{wch:55}];
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'출고일정');
+    XLSX.writeFile(wb,'뚜누_출고일정_'+scTodayStr()+'.xlsx');
+    scShowToast(scResultData.length+'건 다운로드 완료');
+  };
+
+  // 파일 업로드
+  document.addEventListener('DOMContentLoaded',function(){
+    const input=document.getElementById('sc-ez-input');
+    if(!input)return;
+    input.addEventListener('change',function(){
+      const file=this.files[0];if(!file)return;
+      const reader=new FileReader();
+      reader.onload=function(e){
+        try{
+          const wb=XLSX.read(e.target.result,{type:'array'});
+          const ws=wb.Sheets[wb.SheetNames[0]];
+          const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+          if(rows.length<2){scShowToast('데이터가 없는 파일입니다.');return;}
+          scEzHeaders=rows[0].map(h=>String(h).replace(/\s+/g,' ').trim());
+          scEzData=rows.slice(1).filter(r=>r.some(c=>c!==''));
+          scColOrd=-1;scColPrd=-1;scColTm=-1;
+          scEzHeaders.forEach((h,i)=>{
+            const l=h.toLowerCase().trim();
+            if(scColOrd<0&&(l==='주문번호'||l==='수주번호'))scColOrd=i;
+            if(scColPrd<0&&(l==='상품명'||l==='품명'))scColPrd=i;
+            if(scColTm<0&&(l==='발주시간'||l==='발주 시간'))scColTm=i;
+          });
+          scEzHeaders.forEach((h,i)=>{
+            const l=h.toLowerCase().trim();
+            if(scColOrd<0&&(l.includes('주문')||l.includes('번호')))scColOrd=i;
+            if(scColPrd<0&&l.includes('상품'))scColPrd=i;
+            if(scColTm<0&&l.includes('발주'))scColTm=i;
+          });
+          document.getElementById('sc-ez-fname').textContent=file.name;
+          document.getElementById('sc-ez-finfo').textContent=scEzData.length+'행 · 주문번호:"'+(scEzHeaders[scColOrd]||'미감지')+'" 상품명:"'+(scEzHeaders[scColPrd]||'미감지')+'" 발주시간:"'+(scEzHeaders[scColTm]||'미감지')+'"';
+          document.getElementById('sc-ez-idle').style.display='none';
+          document.getElementById('sc-ez-done').style.display='block';
+          document.getElementById('sc-ez-zone').style.borderColor='var(--sc-green)';
+          document.getElementById('sc-s1-next').style.display='block';
+        }catch(err){scShowToast('파일 읽기 오류: '+err.message);}
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  });
+})();
 </script>
 
 <!-- ===== Report 뷰/편집 모달 ===== -->
