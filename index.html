@@ -247,8 +247,10 @@ tr:hover td{background:#fafafa;}
 .stat-hint{font-size:10px;color:#bbb;margin-top:2px;}
 /* VOC 리포트 뷰 스타일 */
 .vl-report-content{max-width:760px;margin-left:auto;margin-right:auto;}
-.vl-report-content h2{font-size:17px;font-weight:700;margin:16px 0 6px;}
-.vl-report-content h3{font-size:15px;font-weight:600;margin:12px 0 4px;color:#333;}
+.vl-report-content h1{font-size:22px;font-weight:700;margin:14px 0 6px;line-height:1.3;}
+.vl-report-content h2{font-size:17px;font-weight:700;margin:12px 0 5px;}
+.vl-report-content h3{font-size:15px;font-weight:600;margin:10px 0 4px;color:#333;}
+.vl-report-content h4{font-size:14px;font-weight:600;margin:8px 0 3px;color:#444;}
 .vl-report-content p{margin:4px 0;}
 .vl-report-content ul{padding-left:20px;margin:4px 0;}
 .vl-report-content ol{padding-left:20px;margin:4px 0;}
@@ -7815,6 +7817,27 @@ function init(){
   document.addEventListener('click',e=>{if(cfp&&cfp.style.display!=='none'&&!cfp.contains(e.target)&&!e.target.classList.contains('th-filter-btn'))closeColFilter();});
   // 키보드 닫기
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&cfp&&cfp.style.display!=='none')closeColFilter();});
+  // Ctrl+A: 클레임 테이블 안에 포커스/선택 있으면 표 데이터만 선택
+  document.addEventListener('keydown',function(e){
+    if(!(e.ctrlKey||e.metaKey)||e.key!=='a')return;
+    const wrap=document.getElementById('claim-scroll-wrap');
+    if(!wrap)return;
+    // 인풋/에디터 안에 있으면 무시
+    const active=document.activeElement;
+    if(active&&(active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.isContentEditable))return;
+    // 현재 selection이 claim-scroll-wrap 안에 있는지 확인
+    const sel=window.getSelection();
+    const anchorNode=sel&&sel.anchorNode;
+    const anchorEl=anchorNode?(anchorNode.nodeType===3?anchorNode.parentElement:anchorNode):null;
+    if(!anchorEl||!wrap.contains(anchorEl))return;
+    // 표 안이면 표 전체 선택
+    const tbl=document.getElementById('claim-sheet');
+    if(!tbl)return;
+    e.preventDefault();
+    const range=document.createRange();
+    range.selectNodeContents(tbl);
+    sel.removeAllRanges();sel.addRange(range);
+  });
   setupFirebaseListeners();
   _loadDashboardPinnedReport();
   // 새로고침이면 마지막 페이지 복원, 창 닫고 켰거나 재로그인이면 대시보드
