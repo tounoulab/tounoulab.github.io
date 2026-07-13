@@ -7686,12 +7686,17 @@ function _saveUsers(arr){localStorage.setItem(USERS_KEY,JSON.stringify(arr));}
 function _findUser(id,pw){
   var _id=(id||'').trim();
   var _pw=(pw||'').trim();
-  // DEFAULT_USERS 먼저 (항상 보장)
-  var defFound=DEFAULT_USERS.find(function(u){return u.id===_id&&u.pw===_pw;});
-  if(defFound)return defFound;
-  // localStorage 조회 (비밀번호 변경 반영)
-  var found=_getUsers().find(function(u){return u.id===_id&&u.pw===_pw;});
-  return found||null;
+  var localUsers=_getUsers();
+  // localStorage 먼저 — 비밀번호 변경이 반영된 최신 값 우선
+  var found=localUsers.find(function(u){return u.id===_id&&u.pw===_pw;});
+  if(found)return found;
+  // localStorage에 해당 id 자체가 없을 때만 DEFAULT 허용 (초기 상태)
+  var idExists=localUsers.find(function(u){return u.id===_id;});
+  if(!idExists){
+    var defFound=DEFAULT_USERS.find(function(u){return u.id===_id&&u.pw===_pw;});
+    if(defFound)return defFound;
+  }
+  return null;
 }
 function _isLoggedIn(){return !!sessionStorage.getItem(SESSION_KEY);}
 function _currentUserId(){return sessionStorage.getItem(SESSION_KEY)||'';}
