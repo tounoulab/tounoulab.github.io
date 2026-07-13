@@ -7620,7 +7620,8 @@ function _renderAccOnline(){
       if(!doc.exists||!doc.data()){el.innerHTML='<span style="color:#bbb;">접속 중인 사용자 없음</span>';return;}
       const sessions=doc.data();
       const now=Date.now();
-      const online=Object.entries(sessions).filter(([id,s])=>s.online===true);
+      const ONLINE_THRESHOLD=3*60*1000; // 3분 이내 heartbeat 있으면 온라인
+      const online=Object.entries(sessions).filter(([id,s])=>s.lastSeen&&(now-s.lastSeen)<ONLINE_THRESHOLD);
       if(!online.length){el.innerHTML='<span style="color:#bbb;">접속 중인 사용자 없음</span>';return;}
       el.innerHTML=online.map(([id,s])=>`
         <span style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:20px;padding:5px 12px;margin:4px;font-size:13px;">
@@ -7721,7 +7722,15 @@ function submitLogin(){
     err.style.display='none';
     _updateGnbUser();
     // Firestore에 접속 세션 기록
-    try{if(typeof db!=='undefined'){db.collection('_sys').doc('sessions').set({[user.id]:{name:user.name,loginAt:new Date().toISOString(),online:true}},{merge:true}).catch(()=>{});}}catch(e){}
+    try{if(typeof db!=='undefined'){
+      const _hbData={name:user.name,loginAt:new Date().toISOString(),online:true,lastSeen:Date.now()};
+      db.collection('_sys').doc('sessions').set({[user.id]:_hbData},{merge:true}).catch(()=>{});
+      // 하트비트: 90초마다 lastSeen 갱신
+      if(window._hbInterval)clearInterval(window._hbInterval);
+      window._hbInterval=setInterval(()=>{
+        try{db.collection('_sys').doc('sessions').set({[user.id]:{lastSeen:Date.now()}},{merge:true}).catch(()=>{});}catch(e){}
+      },90000);
+    }}catch(e){}
     if(!_appInited){_appInited=true;init();}
   } else {
     err.style.display='block';
@@ -7734,6 +7743,7 @@ function doLogout(){
   if(!confirm('로그아웃 하시겠습니까?'))return;
   const uid=_currentUserId();
   // Firestore 세션 offline 처리
+  if(window._hbInterval){clearInterval(window._hbInterval);window._hbInterval=null;}
   try{if(uid&&typeof db!=='undefined'){db.collection('_sys').doc('sessions').set({[uid]:{online:false,logoutAt:new Date().toISOString()}},{merge:true}).catch(()=>{});}}catch(e){}
   sessionStorage.removeItem(SESSION_KEY);
   sessionStorage.setItem('_tuunu_did_logout','1'); // 재로그인 시 대시보드로
@@ -7763,7 +7773,9 @@ function saveSettings(){
   var msgEl=document.getElementById('settings-msg');
   var u=_currentUser();
   if(!u){msgEl.style.color='#dc2626';msgEl.textContent='세션이 만료되었습니다. 다시 로그인해주세요.';return;}
-  if(curPw!==u.pw){msgEl.style.color='#dc2626';msgEl.textContent='현재 비밀번호가 올바르지 않습니다.';return;}
+  // 로그인과 동일하게 DEFAULT_USERS 기본값도 함께 허용
+  var defUser=DEFAULT_USERS.find(function(d){return d.id===u.id;});
+  if(curPw!==u.pw&&!(defUser&&curPw===defUser.pw)){msgEl.style.color='#dc2626';msgEl.textContent='현재 비밀번호가 올바르지 않습니다.';return;}
   if(!newPw){msgEl.style.color='#dc2626';msgEl.textContent='새 비밀번호를 입력해주세요.';return;}
   if(newPw!==newPw2){msgEl.style.color='#dc2626';msgEl.textContent='새 비밀번호가 일치하지 않습니다.';return;}
   if(newPw.length<4){msgEl.style.color='#dc2626';msgEl.textContent='비밀번호는 4자 이상이어야 합니다.';return;}
