@@ -521,12 +521,12 @@ tr:hover td{background:#fafafa;}
           <div class="sub-card" style="border-top:3px solid #F59E0B;">
             <div class="sub-card-title">VOC 상품 비용 합계</div>
             <div style="font-size:26px;font-weight:700;color:#D97706;" id="kpi-vocamt">-</div>
-            <div style="font-size:12px;color:#aaa;margin-top:3px;">원 (이번 달 누계)</div>
+            <div style="font-size:12px;color:#aaa;margin-top:3px;" id="kpi-vocamt-lbl">원 (이번 달 누계)</div>
           </div>
           <div class="sub-card" style="border-top:3px solid #F59E0B;">
             <div class="sub-card-title">VOC 운임</div>
             <div style="font-size:26px;font-weight:700;color:#D97706;" id="kpi-csamt">-</div>
-            <div style="font-size:12px;color:#aaa;margin-top:3px;">원 (이번 달 누계)</div>
+            <div style="font-size:12px;color:#aaa;margin-top:3px;" id="kpi-csamt-lbl">원 (이번 달 누계)</div>
           </div>
           <div class="sub-card" style="min-height:0;border-top:3px solid #EF4444;">
             <div class="sub-card-title">장기 미처리건 <span style="font-size:10px;color:#bbb;font-weight:400;">(인입일 기준 7영업일↑)</span></div>
@@ -2076,14 +2076,14 @@ function renderHomeDashboard(){
   let chartClaims;
   if(hasRange){
     const from=fromVal||'1900-01-01',to=toVal||t;
-    setTxt('h-today',countUniq(claims,'date',from,to)+'건');
+    setTxt('h-today',countUniq(claims,'indate',from,to)+'건');
     setTxt('h-done',countUniq(claims.filter(r=>{const v=normDate(r.donedate);return v>=from&&v<=to;}),'date','1900','9999')+'건');
-    setTxt('h-week',countUniq(claims,'date',from,to)+'건');
-    setTxt('h-month',countUniq(claims,'date',from,to)+'건');
+    setTxt('h-week',countUniq(claims,'indate',from,to)+'건');
+    setTxt('h-month',countUniq(claims,'indate',from,to)+'건');
     const label=(fromVal||'시작')+'  ~  '+(toVal||'오늘');
     if(badge){badge.style.display='';badge.textContent='📅 '+label+' 기간 조회 중';}
-    chartClaims=claims.filter(r=>{const v=normDate(r.date);return v>=from&&v<=to;});
-    setTxt('side-today-claim',countUniq(claims,'date',from,to)+'건');
+    chartClaims=claims.filter(r=>{const v=normDate(r.indate);return v>=from&&v<=to;});
+    setTxt('side-today-claim',countUniq(claims,'indate',from,to)+'건');
     const _rangeRetOrders=new Set(returns.filter(r=>{const v=normDate(r.date);return v>=from&&v<=to;}).filter(r=>{const ono=(r.orderno||'').trim();return ono&&ono!=='-';}).map(r=>(r.orderno||'').trim()));
     setTxt('side-today-return',_rangeRetOrders.size+'건');
     const todayLbl=document.querySelector('#h-today')?.closest('.status-item')?.querySelector('.status-item-label');
@@ -2129,7 +2129,10 @@ function renderHomeDashboard(){
   renderWeeklyTrendChart(claims);
   _renderLongClaims(claims);
   renderSideReturnList(returns.slice(0,5));
-  const monthClaims=claims.filter(r=>{const v=normDate(r.date);return v>=ms&&v<=me;});
+  // 기간 조회 중이면 해당 범위, 아니면 이번 달 — 모두 인입일 기준
+  const _kpiFrom=hasRange?(fromVal||'1900-01-01'):ms;
+  const _kpiTo=hasRange?(toVal||t):me;
+  const monthClaims=claims.filter(r=>{const v=normDate(r.indate)||normDate(r.date)||'';return v>=_kpiFrom&&v<=_kpiTo;});
   // 리드타임: 이번 달에 처리 완료(donedate)된 건 기준
   const n=v=>parseFloat(String(v||'0').replace(/,/g,''))||0;
   const completedMonth=claims.filter(r=>{const d=normDate(r.donedate);return r.donedate&&r.indate&&d>=ms&&d<=me;});
@@ -2145,6 +2148,10 @@ function renderHomeDashboard(){
   setTxt('kpi-leadtime',avgLt==='−'?'-':avgLt);
   setTxt('kpi-vocamt',sumVocCostP>0?sumVocCostP.toLocaleString():'-');
   setTxt('kpi-csamt',sumVocCostRS>0?sumVocCostRS.toLocaleString():'-');
+  // 기간 조회 중이면 레이블 변경
+  const _kpiLbl=hasRange?`원 (${_kpiFrom.slice(5).replace('-','/')}~${_kpiTo.slice(5).replace('-','/')} 합계)`:'원 (이번 달 누계)';
+  setTxt('kpi-vocamt-lbl',_kpiLbl);
+  setTxt('kpi-csamt-lbl',_kpiLbl);
   // SLA/리드타임 테이블은 무거우므로 홈 탭 활성 시에만 + 디바운스
   clearTimeout(window._heavyTimer);
   window._heavyTimer=setTimeout(()=>{
