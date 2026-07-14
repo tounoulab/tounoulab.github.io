@@ -332,6 +332,7 @@ tr:hover td{background:#fafafa;}
   .sub-grid{grid-template-columns:1fr!important;}
   .status-item{flex:1 1 100%;}
   .grid3{grid-template-columns:1fr;}
+  .vl-chart-grid{grid-template-columns:1fr!important;}
   .stats-grid{grid-template-columns:1fr;}
   .kpi-row{grid-template-columns:1fr!important;}
   .chart-period-grid{grid-template-columns:1fr!important;}
@@ -1203,10 +1204,18 @@ tr:hover td{background:#fafafa;}
 <!-- ===== PAGE: VOC 로그 ===== -->
 <div id="page-voclog" class="page">
 <div style="padding:24px;width:100%;max-width:1100px;margin:0 auto;box-sizing:border-box;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
     <span style="font-size:18px;font-weight:700;">VOC 로그</span>
-    <span style="font-size:12px;color:#aaa;">클레임 성격 = VOC · 중복 주문번호 1건 집계</span>
+    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+      <label style="font-size:11px;color:#aaa;">기간</label>
+      <input type="date" id="vl-filter-from" style="font-size:11px;padding:3px 6px;border:1px solid #ddd;border-radius:6px;color:#333;background:#fff;cursor:pointer;height:26px;width:130px;" onkeydown="if(event.key==='Enter')applyVlFilter()"/>
+      <span style="font-size:11px;color:#aaa;">~</span>
+      <input type="date" id="vl-filter-to" style="font-size:11px;padding:3px 6px;border:1px solid #ddd;border-radius:6px;color:#333;background:#fff;cursor:pointer;height:26px;width:130px;" onkeydown="if(event.key==='Enter')applyVlFilter()"/>
+      <button onclick="applyVlFilter()" style="font-size:11px;padding:3px 10px;border:none;border-radius:6px;background:#1a1a1a;color:#fff;cursor:pointer;height:26px;font-weight:600;font-family:inherit;">검색</button>
+      <button onclick="clearVlFilter()" style="font-size:11px;padding:3px 8px;border:1px solid #ddd;border-radius:6px;background:#f5f5f3;color:#666;cursor:pointer;height:26px;font-family:inherit;">초기화</button>
+    </div>
   </div>
+  <div id="vl-filter-badge" style="display:none;margin-bottom:12px;font-size:12px;color:#1a73e8;font-weight:500;"></div>
   <!-- KPI 카드 -->
   <div class="stats-grid">
     <div class="stat-card" style="border-top:4px solid #60A5FA;"><div class="stat-label">금일 VOC</div><div class="stat-value" id="vl-today">0</div><div class="stat-hint" id="vl-today-hint"></div><div class="stat-compare same" id="vl-today-cmp">-</div></div>
@@ -1218,10 +1227,14 @@ tr:hover td{background:#fafafa;}
     <div class="card-title" id="vl-7day-title">최근 7일 VOC 추이</div>
     <div style="height:160px;"><canvas id="chart-vl-weekly"></canvas></div>
   </div>
-  <!-- VOC 이슈 TOP5 / 처리유형 / 귀책 -->
-  <div class="card"><div class="card-title" id="vl-issue-title">이번 달 이슈 TOP 5 (VOC)</div><div id="chart-vl-issue"></div></div>
-  <div class="card"><div class="card-title" id="vl-type-title">이번 주 처리 유형별 현황 (VOC)</div><div id="chart-vl-type"></div></div>
-  <div class="card"><div class="card-title" id="vl-liability-title">이번 주 귀책별 현황 (VOC)</div><div id="chart-vl-liability"></div></div>
+  <!-- VOC 이슈 TOP5 / 처리유형 / 귀책 (가로 3열) -->
+  <div class="vl-chart-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;">
+    <div class="card" style="margin-bottom:0;"><div class="card-title" id="vl-issue-title">이번 달 이슈 TOP 5 (VOC)</div><div id="chart-vl-issue"></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="card-title" id="vl-type-title">이번 주 처리 유형별 현황 (VOC)</div><div id="chart-vl-type"></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="card-title" id="vl-liability-title">이번 주 귀책별 현황 (VOC)</div><div id="chart-vl-liability"></div></div>
+  </div>
+  <!-- 이슈별 비용 현황 -->
+  <div class="card"><div class="card-title" id="vl-cost-title">이슈별 비용 현황 (VOC)</div><div id="vl-cost-table"></div></div>
 </div>
 </div><!-- /page-voclog -->
 
@@ -3910,12 +3923,25 @@ function renderBar(id,data,field,limit=20,wrapLabel=false){
   el.innerHTML=sorted.map(([l,n],i)=>`<div class="voc-row"><div class="voc-label${wrapLabel?' voc-label-wrap':''}" title="${l}">${l}</div><div class="voc-bar-wrap"><div class="voc-bar" style="width:${(n/max*100).toFixed(0)}%;background:${PAL[i%PAL.length]};"></div></div><div class="voc-count" style="font-size:15px;font-weight:600;color:#222;">${n}<span style="font-size:10px;font-weight:400;color:#aaa;">건</span></div></div>`).join('');
 }
 // ===== VOC 로그 =====
+function applyVlFilter(){renderVocLog();}
+function clearVlFilter(){
+  const f=document.getElementById('vl-filter-from'),t=document.getElementById('vl-filter-to');
+  if(f)f.value='';if(t)t.value='';
+  renderVocLog();
+}
 function renderVocLog(){
   const c=loadClaims(),t=todayStr(),yd=offsetDay(-1);
   const[ws,we]=weekRange(),[lws,lwe]=weekRange(-1),[ms,me]=monthRange(),[lms,lme]=monthRange(-1);
   const dedup=arr=>{const seen=new Set(),res=[];arr.forEach(r=>{const k=r.orderno||String(r.id);if(!seen.has(k)){seen.add(k);res.push(r);}});return res;};
-  const nd=r=>normDate(r.date)||r.date||'';
+  const nd=r=>normDate(r.indate)||normDate(r.date)||r.date||'';
   const vocAll=c.filter(r=>r.nature==='VOC');
+  // 기간 필터
+  const fInp=document.getElementById('vl-filter-from'),tInp=document.getElementById('vl-filter-to');
+  const fromVal=(fInp&&fInp.value)||'',toVal=(tInp&&tInp.value)||'';
+  const hasRange=!!(fromVal||toVal);
+  const fFrom=fromVal||'1900-01-01',fTo=toVal||t;
+  const badge=document.getElementById('vl-filter-badge');
+  if(badge){if(hasRange){badge.style.display='';badge.textContent='📅 '+fFrom.slice(5).replace('-','/')+'~'+fTo.slice(5).replace('-','/')+' 기간 조회 중';}else{badge.style.display='none';}}
   function countVoc(from,to){return dedup(vocAll.filter(r=>nd(r)>=from&&nd(r)<=to)).length;}
   function cmp(curr,prev){const d=curr-prev;if(d>0)return{text:'전 대비 +'+d+'건',cls:'up'};if(d<0)return{text:'전 대비 '+d+'건',cls:'down'};return{text:'전 대비 동일',cls:'same'};}
   function ss(prefix,val,cm,hint){
@@ -3923,16 +3949,25 @@ function renderVocLog(){
     const cEl=document.getElementById(prefix+'-cmp');if(cEl){cEl.textContent=cm.text;cEl.className='stat-compare '+cm.cls;}
     const hEl=document.getElementById(prefix+'-hint');if(hEl)hEl.textContent=hint||'';
   }
-  const today=countVoc(t,t),yday=countVoc(yd,yd);
-  const week=countVoc(ws,t),lweek=countVoc(lws,lwe);
-  const month=countVoc(ms,t),lmonth=countVoc(lms,lme);
-  ss('vl-today',today,cmp(today,yday),t);
-  ss('vl-week',week,cmp(week,lweek),ws.slice(5).replace('-','/')+'~'+t.slice(5).replace('-','/'));
-  ss('vl-month',month,cmp(month,lmonth),ms.slice(5).replace('-','/')+'~'+t.slice(5).replace('-','/'));
-  // 최근 7일 VOC 추이 (Chart.js 라인 차트)
+  if(hasRange){
+    const rangeCount=countVoc(fFrom,fTo);
+    const rangeLabel=fFrom.slice(5).replace('-','/')+'~'+fTo.slice(5).replace('-','/');
+    const ssR=(prefix,val)=>{const vEl=document.getElementById(prefix);if(vEl)vEl.textContent=val+'건';const cEl=document.getElementById(prefix+'-cmp');if(cEl){cEl.textContent='-';cEl.className='stat-compare same';}const hEl=document.getElementById(prefix+'-hint');if(hEl)hEl.textContent=rangeLabel;};
+    ssR('vl-today',rangeCount);ssR('vl-week',rangeCount);ssR('vl-month',rangeCount);
+  }else{
+    const today=countVoc(t,t),yday=countVoc(yd,yd);
+    const week=countVoc(ws,t),lweek=countVoc(lws,lwe);
+    const month=countVoc(ms,t),lmonth=countVoc(lms,lme);
+    ss('vl-today',today,cmp(today,yday),t);
+    ss('vl-week',week,cmp(week,lweek),ws.slice(5).replace('-','/')+'~'+t.slice(5).replace('-','/'));
+    ss('vl-month',month,cmp(month,lmonth),ms.slice(5).replace('-','/')+'~'+t.slice(5).replace('-','/'));
+  }
+  // 최근 7일 VOC 추이 (항상 고정)
   _renderVl7dayChart(vocAll,t);
   // VOC 차트 (이슈 TOP5 / 처리유형 / 귀책)
-  renderVocLogCharts(vocAll,ws,ms,t);
+  renderVocLogCharts(vocAll,ws,ms,t,hasRange,fFrom,fTo);
+  // 이슈별 비용
+  _renderVlCostByIssue(vocAll,hasRange?fFrom:ms,hasRange?fTo:t,hasRange);
   // 리포트 로드
   _loadVlReport();
 }
@@ -3965,20 +4000,93 @@ function _renderVl7dayChart(vocAll,t){
   const titleEl=document.getElementById('vl-7day-title');
   if(titleEl){const d6=days[0].slice(5).replace('-','/'),d0=days[6].slice(5).replace('-','/');titleEl.textContent='최근 7일 VOC 추이 ('+d6+'~'+d0+')';}
 }
-function renderVocLogCharts(vocAll,ws,ms,t){
+function renderVocLogCharts(vocAll,ws,ms,t,hasRange,fFrom,fTo){
   const dedup=arr=>{const seen=new Set(),res=[];arr.forEach(r=>{const k=r.orderno||String(r.id);if(!seen.has(k)){seen.add(k);res.push(r);}});return res;};
-  const nd=r=>normDate(r.date)||r.date||'';
-  const wk=dedup(vocAll.filter(r=>nd(r)>=ws&&nd(r)<=t));
-  const mo=dedup(vocAll.filter(r=>nd(r)>=ms&&nd(r)<=t));
-  renderBar('chart-vl-issue',mo,'issue',5,true);
-  renderBar('chart-vl-type',wk,'type');
-  renderBar('chart-vl-liability',wk,'liability');
-  const wRange=ws.slice(5).replace('-','/')+'~'+t.slice(5).replace('-','/');
-  const mRange=ms.slice(5).replace('-','/')+'~'+t.slice(5).replace('-','/');
+  const nd=r=>normDate(r.indate)||normDate(r.date)||r.date||'';
   const upd=(id,txt)=>{const el=document.getElementById(id);if(el)el.textContent=txt;};
-  upd('vl-issue-title','이번 달 이슈 TOP 5 (VOC, '+mRange+')');
-  upd('vl-type-title','이번 주 처리 유형별 현황 (VOC, '+wRange+')');
-  upd('vl-liability-title','이번 주 귀책별 현황 (VOC, '+wRange+')');
+  if(hasRange){
+    const filtered=dedup(vocAll.filter(r=>nd(r)>=fFrom&&nd(r)<=fTo));
+    renderBar('chart-vl-issue',filtered,'issue',5,true);
+    renderBar('chart-vl-type',filtered,'type');
+    renderBar('chart-vl-liability',filtered,'liability');
+    const rng=fFrom.slice(5).replace('-','/')+'~'+fTo.slice(5).replace('-','/');
+    upd('vl-issue-title','이슈 TOP 5 (VOC, '+rng+')');
+    upd('vl-type-title','처리 유형별 현황 (VOC, '+rng+')');
+    upd('vl-liability-title','귀책별 현황 (VOC, '+rng+')');
+  }else{
+    const wk=dedup(vocAll.filter(r=>nd(r)>=ws&&nd(r)<=t));
+    const mo=dedup(vocAll.filter(r=>nd(r)>=ms&&nd(r)<=t));
+    renderBar('chart-vl-issue',mo,'issue',5,true);
+    renderBar('chart-vl-type',wk,'type');
+    renderBar('chart-vl-liability',wk,'liability');
+    const wRange=ws.slice(5).replace('-','/')+'~'+t.slice(5).replace('-','/');
+    const mRange=ms.slice(5).replace('-','/')+'~'+t.slice(5).replace('-','/');
+    upd('vl-issue-title','이번 달 이슈 TOP 5 (VOC, '+mRange+')');
+    upd('vl-type-title','이번 주 처리 유형별 현황 (VOC, '+wRange+')');
+    upd('vl-liability-title','이번 주 귀책별 현황 (VOC, '+wRange+')');
+  }
+}
+function _renderVlCostByIssue(vocAll,from,to,hasRange){
+  const wrap=document.getElementById('vl-cost-table');if(!wrap)return;
+  const titleEl=document.getElementById('vl-cost-title');
+  const rng=from.slice(5).replace('-','/')+'~'+to.slice(5).replace('-','/');
+  if(titleEl)titleEl.textContent='이슈별 비용 현황 (VOC, '+rng+')';
+  const n=v=>parseFloat(String(v||'').replace(/,/g,''))||0;
+  const nd=r=>normDate(r.indate)||normDate(r.date)||r.date||'';
+  // 해당 기간 VOC 전체 (dedup 없이 — 비용 합산용)
+  const rows=vocAll.filter(r=>nd(r)>=from&&nd(r)<=to);
+  if(!rows.length){wrap.innerHTML='<div style="color:#bbb;font-size:13px;padding:8px 0;">해당 기간 VOC 데이터가 없습니다.</div>';return;}
+  // 이슈별 집계
+  const issueMap={};
+  rows.forEach(r=>{
+    const iss=r.issue||'(미분류)';
+    if(!issueMap[iss])issueMap[iss]={orders:new Set(),costP:0,costRS:new Map()};
+    const g=issueMap[iss];
+    const oid=r.orderno||String(r.id);
+    g.orders.add(oid);
+    g.costP+=n(r.costP);
+    if(!g.costRS.has(oid))g.costRS.set(oid,n(r.costR)+n(r.costS));
+  });
+  // 전체 합산용
+  const totalOrders=new Set(),totalCostRS=new Map();
+  let totalCostP=0;
+  rows.forEach(r=>{const oid=r.orderno||String(r.id);totalOrders.add(oid);totalCostP+=n(r.costP);if(!totalCostRS.has(oid))totalCostRS.set(oid,n(r.costR)+n(r.costS));});
+  const fmt=v=>v>0?v.toLocaleString()+' 원':'-';
+  // 정렬: 건수 내림차순
+  const entries=Object.entries(issueMap).sort((a,b)=>b[1].orders.size-a[1].orders.size);
+  let html=`<table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead><tr style="border-bottom:2px solid #e8e8e6;">
+      <th style="text-align:center;padding:6px 10px;font-weight:600;color:#555;">이슈</th>
+      <th style="text-align:center;padding:6px 10px;font-weight:600;color:#555;">건수</th>
+      <th style="text-align:center;padding:6px 10px;font-weight:600;color:#555;">상품 비용</th>
+      <th style="text-align:center;padding:6px 10px;font-weight:600;color:#555;">운임 비용</th>
+      <th style="text-align:center;padding:6px 10px;font-weight:600;color:#D97706;">합계</th>
+    </tr></thead><tbody>`;
+  entries.forEach(([iss,g])=>{
+    const cnt=g.orders.size;
+    const cP=g.costP;
+    const cRS=[...g.costRS.values()].reduce((s,v)=>s+v,0);
+    const tot=cP+cRS;
+    html+=`<tr style="border-bottom:1px solid #f0f0ee;">
+      <td style="padding:6px 10px;text-align:center;color:#1a1a1a;">${iss}</td>
+      <td style="padding:6px 10px;text-align:center;color:#555;">${cnt}건</td>
+      <td style="padding:6px 10px;text-align:center;color:#555;">${fmt(cP)}</td>
+      <td style="padding:6px 10px;text-align:center;color:#555;">${fmt(cRS)}</td>
+      <td style="padding:6px 10px;text-align:center;font-weight:600;color:${tot>0?'#D97706':'#bbb'};">${fmt(tot)}</td>
+    </tr>`;
+  });
+  // 합계 행
+  const tCnt=totalOrders.size;
+  const tCRS=[...totalCostRS.values()].reduce((s,v)=>s+v,0);
+  const tTot=totalCostP+tCRS;
+  html+=`<tr style="border-top:2px solid #e8e8e6;background:#fafaf8;">
+    <td style="padding:7px 10px;text-align:center;font-weight:700;color:#1a1a1a;">합계</td>
+    <td style="padding:7px 10px;text-align:center;font-weight:700;">${tCnt}건</td>
+    <td style="padding:7px 10px;text-align:center;font-weight:700;">${fmt(totalCostP)}</td>
+    <td style="padding:7px 10px;text-align:center;font-weight:700;">${fmt(tCRS)}</td>
+    <td style="padding:7px 10px;text-align:center;font-weight:700;color:#D97706;">${fmt(tTot)}</td>
+  </tr></tbody></table>`;
+  wrap.innerHTML=html;
 }
 // ===== 클레임 리포트 모달 =====
 let _vlReportType='weekly';
