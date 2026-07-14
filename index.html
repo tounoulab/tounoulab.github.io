@@ -8014,15 +8014,8 @@ _loadUsersFromFirestore(function(){
 
 // ===== 출고 일정 계산기 =====
 (function(){
-  const SC_HOLIDAYS = new Set([
-    '2025-01-01','2025-01-28','2025-01-29','2025-01-30','2025-03-01',
-    '2025-05-05','2025-05-06','2025-06-06','2025-08-15',
-    '2025-10-03','2025-10-06','2025-10-07','2025-10-08','2025-10-09','2025-12-25',
-    '2026-01-01','2026-01-28','2026-01-29','2026-01-30','2026-03-01',
-    '2026-05-05','2026-06-03','2026-06-06','2026-08-15','2026-10-03','2026-10-09','2026-12-25',
-  ]);
-
-  function scIsWorkday(s){const d=new Date(s),w=d.getDay();return w!==0&&w!==6&&!SC_HOLIDAYS.has(s);}
+  // SC_HOLIDAYS 제거 — 전역 KR_HOLIDAYS(공휴일 통합 목록) 직접 사용
+  function scIsWorkday(s){const d=new Date(s),w=d.getDay();return w!==0&&w!==6&&!KR_HOLIDAYS.has(s);}
   function scAddWorkdays(s,n){const d=new Date(s);let c=0;while(true){const ds=d.toISOString().split('T')[0];if(scIsWorkday(ds)){c++;if(c===n)return ds;}d.setDate(d.getDate()+1);}}
   function scNextWorkday(s){const d=new Date(s);d.setDate(d.getDate()+1);while(true){const ds=d.toISOString().split('T')[0];if(scIsWorkday(ds))return ds;d.setDate(d.getDate()+1);}}
   function scFmt(s){if(!s)return'—';const d=new Date(s),days=['일','월','화','수','목','금','토'];return`${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})`;}
