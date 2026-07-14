@@ -3211,8 +3211,11 @@ function _buildClaimRow(r,i){
       }
       const validList=_prevDonedate?oList.filter(e=>(e.date||'')>_prevDonedate):oList;
       if(!validList.length){cells+=`<td class="tdc" style="color:#bbb;${_colW('_inspect')}">-</td>`;return;}
-      const prodNorm=(r.product||'').trim().toLowerCase();
-      const cached=validList.find(x=>x.product===prodNorm)||validList[0]||null;
+      const _np=s=>(s||'').trim().toLowerCase().replace(/\s*\[\s*/g,' ').replace(/\s*\]\s*/g,'').replace(/\s+/g,' ').trim();
+      const prodNorm=_np(r.product);
+      const cached=validList.find(x=>x.product===prodNorm)
+        ||validList.find(x=>prodNorm.includes(x.product)||x.product.includes(prodNorm))
+        ||(validList.length===1?validList[0]:null);
       if(!cached){cells+=`<td class="tdc" style="color:#bbb;${_colW('_inspect')}">-</td>`;return;}
       const openedRaw=cached.opened||'';
       const inspRaw=cached.inspect||'';
@@ -3293,7 +3296,8 @@ function _doRenderClaimTable(){
   _vsClaims=claims;
   // 반품 → 검수 결과 맵 (orderno 기준 배열, 상품명별 + 입고일 포함)
   _returnInspectCache={};
-  try{loadReturns().forEach(r=>{if(r.orderno&&(r.inspect||r.opened||r.returnImgUrls)){const key=(r.orderno||'').trim();if(!_returnInspectCache[key])_returnInspectCache[key]=[];const prod=(r.product||'').trim().toLowerCase();const nd=normDate(r.date)||'';const ex=_returnInspectCache[key].find(x=>x.product===prod);if(ex){if(r.inspect)ex.inspect=r.inspect;if(r.opened)ex.opened=r.opened;if(Array.isArray(r.returnImgUrls)&&r.returnImgUrls.length)ex.returnImgUrls.push(...r.returnImgUrls);if(nd&&nd>ex.date)ex.date=nd;}else{_returnInspectCache[key].push({product:prod,inspect:r.inspect||'',opened:r.opened||'',returnImgUrls:Array.isArray(r.returnImgUrls)?r.returnImgUrls.slice():[],date:nd});}}});}catch(e){}
+  const _normProd=s=>(s||'').trim().toLowerCase().replace(/\s*\[\s*/g,' ').replace(/\s*\]\s*/g,'').replace(/\s+/g,' ').trim();
+  try{loadReturns().forEach(r=>{if(r.orderno&&(r.inspect||r.opened||r.returnImgUrls)){const key=(r.orderno||'').trim();if(!_returnInspectCache[key])_returnInspectCache[key]=[];const prod=_normProd(r.product);const nd=normDate(r.date)||'';const ex=_returnInspectCache[key].find(x=>x.product===prod);if(ex){if(r.inspect)ex.inspect=r.inspect;if(r.opened)ex.opened=r.opened;if(Array.isArray(r.returnImgUrls)&&r.returnImgUrls.length)ex.returnImgUrls.push(...r.returnImgUrls);if(nd&&nd>ex.date)ex.date=nd;}else{_returnInspectCache[key].push({product:prod,inspect:r.inspect||'',opened:r.opened||'',returnImgUrls:Array.isArray(r.returnImgUrls)?r.returnImgUrls.slice():[],date:nd});}}});}catch(e){}
   // 주문번호별 처리완료일 배열 — 재인입 클레임 검수결과 필터링용
   _claimDonedateMap={};
   try{allClaims.forEach(c=>{if(c.orderno&&c.donedate){const k=(c.orderno||'').trim();if(!_claimDonedateMap[k])_claimDonedateMap[k]=[];const nd=normDate(c.donedate)||'';if(nd)_claimDonedateMap[k].push(nd);}});Object.values(_claimDonedateMap).forEach(arr=>arr.sort());}catch(e){}
