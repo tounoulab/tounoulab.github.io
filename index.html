@@ -2475,6 +2475,7 @@ function addClaim(){
     _syncToGSheet({...fields,id:_editClaimId});
   }else{
     let baseId=Date.now();
+    const batchRecs=[];
     productItems.forEach((pi,i)=>{
       const id=baseId+i;
       const rec={id,donedate:'',...shared,
@@ -2487,8 +2488,10 @@ function addClaim(){
         costP:pi.querySelector('.pi-costP').value,
       };
       _fsSet('claims',id,rec).catch(e=>console.error(e));
-      _syncToGSheet(rec);
+      batchRecs.push(rec);
     });
+    // 여러 상품을 한 번에 배치로 전송 (동시 쓰기 충돌 방지)
+    _syncToGSheet(batchRecs.length===1?batchRecs[0]:batchRecs);
   }
   clearClaimForm();closeClaimModal();
 }
