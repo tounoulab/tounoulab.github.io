@@ -457,6 +457,17 @@ tr:hover td{background:#fafafa;}
       <button onclick="saveSettings()" style="flex:1;padding:11px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">저장</button>
       <button onclick="closeSettings()" style="flex:1;padding:11px;background:#f2f3f5;color:#555;border:1.5px solid #e0e0de;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">닫기</button>
     </div>
+    <hr style="margin:20px 0;border:none;border-top:1px solid #e0e0de;">
+    <h3 style="margin:0 0 12px;">🔗 구글 시트 연동</h3>
+    <div class="settings-field">
+      <label>Apps Script 웹앱 URL</label>
+      <input type="text" id="s-gs-url" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:12px;">
+    </div>
+    <div id="settings-gs-msg" style="color:#16a34a;font-size:12px;margin-top:4px;"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button onclick="saveGsUrl()" style="flex:1;padding:9px;background:#1a73e8;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">URL 저장</button>
+      <button onclick="clearGsUrl()" style="flex:1;padding:9px;background:#f2f3f5;color:#dc2626;border:1.5px solid #e0e0de;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">연동 해제</button>
+    </div>
   </div>
 </div>
 
@@ -2326,6 +2337,7 @@ function updateDoneDate(id,value){
   claims[idx].donedate=value;
   if(value)claims[idx].status='처리 완료';
   saveClaims(claims);
+  _syncToGSheet(claims[idx]);
   renderClaimTable();renderHomeDashboard();
 }
 function openClaimModal(){
@@ -2377,6 +2389,12 @@ function openEditModal(id){
   document.getElementById('claim-modal').style.display='block';document.body.style.overflow='hidden';
 }
 function closeClaimModal(){document.getElementById('claim-modal').style.display='none';document.body.style.overflow='';_editClaimId=null;}
+// ===== 구글 시트 동기화 =====
+function _syncToGSheet(data){
+  const url=localStorage.getItem('_gsUrl');
+  if(!url)return;
+  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).catch(()=>{});
+}
 function addClaim(){
   const date=document.getElementById('c-date').value;
   if(!date){alert('작성일을 입력해 주세요.');return;}
@@ -2412,6 +2430,7 @@ function addClaim(){
       costP:pi?pi.querySelector('.pi-costP').value:'',
     };
     _fsUpdate('claims',_editClaimId,fields).catch(e=>console.error(e));
+    _syncToGSheet({...fields,id:_editClaimId});
   }else{
     let baseId=Date.now();
     productItems.forEach((pi,i)=>{
@@ -2426,6 +2445,7 @@ function addClaim(){
         costP:pi.querySelector('.pi-costP').value,
       };
       _fsSet('claims',id,rec).catch(e=>console.error(e));
+      _syncToGSheet(rec);
     });
   }
   clearClaimForm();closeClaimModal();
@@ -7893,7 +7913,27 @@ function openSettings(){
   var u=_currentUser();
   var infoEl=document.getElementById('settings-user-info');
   if(infoEl)infoEl.textContent=u?('👤 '+u.name+'  (아이디: '+u.id+')'):'';
+  // 구글 시트 URL 복원
+  var gsEl=document.getElementById('s-gs-url');
+  if(gsEl)gsEl.value=localStorage.getItem('_gsUrl')||'';
+  var gsMsgEl=document.getElementById('settings-gs-msg');
+  if(gsMsgEl)gsMsgEl.textContent=localStorage.getItem('_gsUrl')?'✅ 연동 URL이 저장되어 있습니다.':'';
   document.getElementById('settings-modal').classList.add('open');
+}
+function saveGsUrl(){
+  var url=(document.getElementById('s-gs-url').value||'').trim();
+  var msgEl=document.getElementById('settings-gs-msg');
+  if(url&&!url.startsWith('https://script.google.com/')){
+    msgEl.style.color='#dc2626';msgEl.textContent='올바른 Apps Script URL을 입력해주세요.';return;
+  }
+  if(url)localStorage.setItem('_gsUrl',url);else localStorage.removeItem('_gsUrl');
+  msgEl.style.color='#16a34a';msgEl.textContent=url?'✅ URL이 저장되었습니다.':'연동이 해제되었습니다.';
+}
+function clearGsUrl(){
+  localStorage.removeItem('_gsUrl');
+  var gsEl=document.getElementById('s-gs-url');if(gsEl)gsEl.value='';
+  var msgEl=document.getElementById('settings-gs-msg');
+  if(msgEl){msgEl.style.color='#555';msgEl.textContent='연동이 해제되었습니다.';}
 }
 function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
 
