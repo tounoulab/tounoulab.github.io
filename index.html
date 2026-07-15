@@ -2398,27 +2398,42 @@ function _syncToGSheet(data){
   if(!url)return;
   fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).catch(()=>{});
 }
+function _showGsToast(msg,color){
+  let el=document.getElementById('_gs-toast');
+  if(!el){
+    el=document.createElement('div');
+    el.id='_gs-toast';
+    el.style.cssText='position:fixed;top:56px;right:16px;z-index:99999;background:#1a1a1a;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,0.25);transition:opacity 0.3s;pointer-events:none;';
+    document.body.appendChild(el);
+  }
+  el.style.color=color||'#fff';
+  el.style.opacity='1';
+  el.textContent=msg;
+}
+function _hideGsToast(delay){
+  setTimeout(()=>{const el=document.getElementById('_gs-toast');if(el)el.style.opacity='0';},delay||0);
+}
 async function syncAllClaimsToGSheet(){
   const url=localStorage.getItem('_gsUrl');
   const msgEl=document.getElementById('settings-gs-msg');
   if(!url){if(msgEl){msgEl.style.color='#dc2626';msgEl.textContent='먼저 URL을 저장해주세요.';}return;}
   const claims=loadClaims();
   if(!claims.length){if(msgEl){msgEl.style.color='#dc2626';msgEl.textContent='동기화할 데이터가 없습니다.';}return;}
-  if(msgEl){msgEl.style.color='#1a73e8';msgEl.textContent=`동기화 중... (0/${claims.length})`;}
+  // 모달 닫고 백그라운드로 실행
+  closeSettings();
   let done=0,errs=0;
+  const total=claims.length;
+  _showGsToast(`📤 동기화 중... (0/${total})`);
   for(const rec of claims){
     try{
       await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)});
     }catch(e){errs++;}
     done++;
-    if(msgEl)msgEl.textContent=`동기화 중... (${done}/${claims.length})`;
-    // 과부하 방지: 10건마다 0.5초 대기
+    _showGsToast(`📤 동기화 중... (${done}/${total})`);
     if(done%10===0)await new Promise(r=>setTimeout(r,500));
   }
-  if(msgEl){
-    msgEl.style.color=errs?'#dc2626':'#16a34a';
-    msgEl.textContent=errs?`완료 (오류 ${errs}건 발생)`:`✅ ${done}건 동기화 완료`;
-  }
+  _showGsToast(errs?`⚠️ 완료 (오류 ${errs}건)`:`✅ ${done}건 동기화 완료`,'#a8f0c6');
+  _hideGsToast(3000);
 }
 function addClaim(){
   const date=document.getElementById('c-date').value;
