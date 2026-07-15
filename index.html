@@ -468,6 +468,9 @@ tr:hover td{background:#fafafa;}
       <button onclick="saveGsUrl()" style="flex:1;padding:9px;background:#1a73e8;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">URL 저장</button>
       <button onclick="clearGsUrl()" style="flex:1;padding:9px;background:#f2f3f5;color:#dc2626;border:1.5px solid #e0e0de;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">연동 해제</button>
     </div>
+    <div style="margin-top:10px;">
+      <button onclick="syncAllClaimsToGSheet()" style="width:100%;padding:9px;background:#34a853;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">📤 기존 데이터 전체 동기화</button>
+    </div>
   </div>
 </div>
 
@@ -2394,6 +2397,28 @@ function _syncToGSheet(data){
   const url=localStorage.getItem('_gsUrl');
   if(!url)return;
   fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).catch(()=>{});
+}
+async function syncAllClaimsToGSheet(){
+  const url=localStorage.getItem('_gsUrl');
+  const msgEl=document.getElementById('settings-gs-msg');
+  if(!url){if(msgEl){msgEl.style.color='#dc2626';msgEl.textContent='먼저 URL을 저장해주세요.';}return;}
+  const claims=loadClaims();
+  if(!claims.length){if(msgEl){msgEl.style.color='#dc2626';msgEl.textContent='동기화할 데이터가 없습니다.';}return;}
+  if(msgEl){msgEl.style.color='#1a73e8';msgEl.textContent=`동기화 중... (0/${claims.length})`;}
+  let done=0,errs=0;
+  for(const rec of claims){
+    try{
+      await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)});
+    }catch(e){errs++;}
+    done++;
+    if(msgEl)msgEl.textContent=`동기화 중... (${done}/${claims.length})`;
+    // 과부하 방지: 10건마다 0.5초 대기
+    if(done%10===0)await new Promise(r=>setTimeout(r,500));
+  }
+  if(msgEl){
+    msgEl.style.color=errs?'#dc2626':'#16a34a';
+    msgEl.textContent=errs?`완료 (오류 ${errs}건 발생)`:`✅ ${done}건 동기화 완료`;
+  }
 }
 function addClaim(){
   const date=document.getElementById('c-date').value;
