@@ -457,6 +457,7 @@ tr:hover td{background:#fafafa;}
       <button onclick="saveSettings()" style="flex:1;padding:11px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">저장</button>
       <button onclick="closeSettings()" style="flex:1;padding:11px;background:#f2f3f5;color:#555;border:1.5px solid #e0e0de;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">닫기</button>
     </div>
+    <div id="settings-gs-section" style="display:none;">
     <hr style="margin:20px 0;border:none;border-top:1px solid #e0e0de;">
     <h3 style="margin:0 0 12px;">🔗 구글 시트 연동</h3>
     <div class="settings-field">
@@ -470,6 +471,7 @@ tr:hover td{background:#fafafa;}
     </div>
     <div style="margin-top:10px;">
       <button onclick="syncAllClaimsToGSheet()" style="width:100%;padding:9px;background:#34a853;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">📤 기존 데이터 전체 동기화</button>
+    </div>
     </div>
   </div>
 </div>
@@ -2419,20 +2421,20 @@ async function syncAllClaimsToGSheet(){
   if(!url){if(msgEl){msgEl.style.color='#dc2626';msgEl.textContent='먼저 URL을 저장해주세요.';}return;}
   const claims=loadClaims();
   if(!claims.length){if(msgEl){msgEl.style.color='#dc2626';msgEl.textContent='동기화할 데이터가 없습니다.';}return;}
-  // 모달 닫고 백그라운드로 실행
   closeSettings();
-  let done=0,errs=0;
+  const BATCH=100;
   const total=claims.length;
+  let done=0,errs=0;
   _showGsToast(`📤 동기화 중... (0/${total})`);
-  for(const rec of claims){
+  for(let i=0;i<claims.length;i+=BATCH){
+    const batch=claims.slice(i,i+BATCH);
     try{
-      await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)});
+      await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(batch)});
     }catch(e){errs++;}
-    done++;
+    done=Math.min(i+BATCH,total);
     _showGsToast(`📤 동기화 중... (${done}/${total})`);
-    if(done%10===0)await new Promise(r=>setTimeout(r,500));
   }
-  _showGsToast(errs?`⚠️ 완료 (오류 ${errs}건)`:`✅ ${done}건 동기화 완료`,'#a8f0c6');
+  _showGsToast(errs?`⚠️ 완료 (오류 ${errs}건)`:`✅ ${total}건 동기화 완료`,'#a8f0c6');
   _hideGsToast(3000);
 }
 function addClaim(){
@@ -7953,7 +7955,9 @@ function openSettings(){
   var u=_currentUser();
   var infoEl=document.getElementById('settings-user-info');
   if(infoEl)infoEl.textContent=u?('👤 '+u.name+'  (아이디: '+u.id+')'):'';
-  // 구글 시트 URL 복원
+  // 구글 시트 연동 섹션 — chohee 전용
+  var gsSec=document.getElementById('settings-gs-section');
+  if(gsSec)gsSec.style.display=(_currentUserId()==='chohee')?'block':'none';
   var gsEl=document.getElementById('s-gs-url');
   if(gsEl)gsEl.value=localStorage.getItem('_gsUrl')||'';
   var gsMsgEl=document.getElementById('settings-gs-msg');
