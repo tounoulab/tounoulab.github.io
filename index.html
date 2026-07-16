@@ -2267,17 +2267,18 @@ function renderLeadtimeTable(claims){
   const allTypes=['(전체 평균)',...types];
   const cs='padding:6px 10px;border:1px solid #f0f0ee;text-align:center;font-size:12px;';
   const ls=cs+'font-weight:500;background:#f8f8f6;text-align:center;white-space:nowrap;position:sticky;left:0;z-index:1;min-width:130px;';
-  const avgFor=arr=>{
+  const avgFor=(arr,decimals=1)=>{
     const bds=arr.filter(r=>r.donedate&&r.indate).map(r=>calcBusinessDays(r.indate,r.donedate)).filter(v=>v!==null);
-    return bds.length?(bds.reduce((a,b)=>a+b,0)/bds.length).toFixed(1):'-';
+    return bds.length?(bds.reduce((a,b)=>a+b,0)/bds.length).toFixed(decimals):'-';
   };
   tbody.innerHTML=allTypes.map(tp=>{
-    const rowC=tp==='(전체 평균)'?claims:claims.filter(r=>r.type===tp);
+    const isTotal=tp==='(전체 평균)';
+    const rowC=isTotal?claims:claims.filter(r=>r.type===tp);
     const cells=months.map(m=>{
       const ms=year+'-'+String(m).padStart(2,'0')+'-01';
       const meD=new Date(year,m,0);const me=year+'-'+String(m).padStart(2,'0')+'-'+String(meD.getDate()).padStart(2,'0');
       const mc=rowC.filter(r=>{const v=normDate(r.indate);return v&&v>=ms&&v<=me&&r.donedate;});
-      return`<td style="${cs}${tp==='(전체 평균)'?'font-weight:600;background:#fafaf8;':''}">${avgFor(mc)}</td>`;
+      return`<td style="${cs}${isTotal?'font-weight:600;background:#fafaf8;':''}">${avgFor(mc,isTotal?2:1)}</td>`;
     }).join('');
     return`<tr><td style="${ls}${tp==='(전체 평균)'?'background:#f0f0ee;font-weight:700;':''}">${tp}</td>${cells}</tr>`;
   }).join('');
