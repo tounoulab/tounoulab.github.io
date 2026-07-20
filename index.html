@@ -1381,6 +1381,7 @@ tr:hover td{background:#fafafa;}
       <button class="btn-secondary" style="height:32px;" onclick="document.getElementById('r-xlsx-import-input').click()">xlsx 가져오기</button>
       <button class="btn-secondary" style="height:32px;" onclick="exportReturnsXlsx()">xlsx 내보내기</button>
       <button class="btn-secondary" style="height:32px;" onclick="_retExpandAll()">모두 펼치기</button>
+      <button id="btn-ret-diagnose" class="btn-secondary" style="height:32px;color:#dc2626;border-color:#fecaca;display:none;" onclick="_retDiagnose()">📊 데이터 진단</button>
     </div>
   </div>
   <div class="card" style="padding:0;overflow:hidden;">
@@ -3713,6 +3714,74 @@ function _retExpandAll(){
     if(arrow)arrow.textContent='▼';
     _retExpandedDates.add(sec.id);
   });
+}
+function _retDiagnose(){
+  const all=loadReturns();
+  let html='';
+  if(!all.length){
+    html='<p style="color:#dc2626;font-size:18px;font-weight:700;">⚠️ Firestore에 반품 데이터 0건</p><p>데이터가 없거나 로딩 중입니다.<br>페이지를 새로고침 후 다시 시도해 주세요.</p>';
+  } else {
+    // 건수 = 반송장번호 기준 unique (없으면 원송장+날짜, 그것도 없으면 문서ID)
+    const byMonth={};
+    all.forEach(r=>{
+      const m=_dateToYm(r.date)||'날짜없음';
+      const retno=(r.retno||'').trim();
+      const orig=(r.orig||'').trim();
+      const key=retno?retno:(orig?(orig+'|'+(r.date||'')):String(r.id));
+      if(!byMonth[m])byMonth[m]=new Set();
+      byMonth[m].add(key);
+    });
+    const sorted=Object.entries(byMonth).map(([m,v])=>[m,v.size]).sort((a,b)=>b[0].localeCompare(a[0]));
+    const ids=all.map(r=>Number(r.id)).sort((a,b)=>a-b);
+    const minDate=new Date(ids[0]).toLocaleString('ko-KR');
+    const maxDate=new Date(ids[ids.length-1]).toLocaleString('ko-KR');
+    const batches=[];let bStart=ids[0],bPrev=ids[0],bCount=1;
+    for(let i=1;i<ids.length;i++){
+      if(ids[i]-ids[i-1]<=10){bCount++;bPrev=ids[i];}
+      else{if(bCount>=5)batches.push({start:bStart,end:bPrev,count:bCount,date:new Date(bStart).toLocaleString('ko-KR')});bStart=ids[i];bPrev=ids[i];bCount=1;}
+    }
+    if(bCount>=5)batches.push({start:bStart,end:bPrev,count:bCount,date:new Date(bStart).toLocaleString('ko-KR')});
+    html=`<p style="font-size:18px;font-weight:700;">총 ${all.length}건</p>`;
+    html+=`<div style="margin:12px 0;">`;
+    sorted.forEach(([m,c])=>{html+=`<div style="display:flex;justify-content:space-between;padding:5px 8px;border-bottom:1px solid #f0f0ee;"><span>${m}</span><span style="font-weight:700;">${c}건</span></div>`;});
+    html+=`</div>`;
+    html+=`<p style="font-size:12px;color:#666;">최초 등록: ${minDate}<br>최근 등록: ${maxDate}</p>`;
+    if(batches.length){
+      html+=`<p style="font-weight:700;margin-top:12px;">xlsx 가져오기 추정 배치:</p>`;
+      batches.forEach((b,i)=>{
+        // 배치 내 월 분포
+        const bRecs=all.filter(r=>{const id=Number(r.id);return id>=b.start&&id<=b.end;});
+        const mMap={};
+        bRecs.forEach(r=>{const m=_dateToYm(r.date)||'날짜없음';mMap[m]=(mMap[m]||0)+1;});
+        const mStr=Object.entries(mMap).sort((a,b2)=>a[0].localeCompare(b2[0])).map(([m,c])=>`${m}(${c}건)`).join(', ');
+        html+=`<div style="background:#fef9c3;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;margin:6px 0;font-size:13px;">
+          <b>배치${i+1}</b>: ${b.count}건 · ${b.date}<br>
+          <span style="color:#666;font-size:12px;">포함 월: ${mStr}</span><br>
+          <button onclick="_retDeleteBatch(${b.start},${b.end})" style="margin-top:6px;padding:4px 12px;background:#dc2626;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;">이 배치 삭제</button>
+        </div>`;
+      });
+    }
+  }
+  let modal=document.getElementById('_ret-diagnose-modal');
+  if(!modal){modal=document.createElement('div');modal.id='_ret-diagnose-modal';modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';document.body.appendChild(modal);}
+  modal.innerHTML=`<div style="background:#fff;border-radius:12px;padding:28px;min-width:360px;max-width:500px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.2);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h2 style="margin:0;font-size:16px;">📊 반품 데이터 진단</h2><button onclick="document.getElementById('_ret-diagnose-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button></div>${html}</div>`;
+  modal.style.display='flex';
+}
+async function _retDeleteBatch(startId,endId){
+  if(!confirm(`ID ${startId}~${endId} 범위의 xlsx 가져오기 데이터를 삭제하시겠습니까?\n(이 작업은 되돌릴 수 없습니다)`))return;
+  document.getElementById('_ret-diagnose-modal').style.display='none';
+  const all=loadReturns();
+  const toDelete=all.filter(r=>{const id=Number(r.id);return id>=startId&&id<=endId;});
+  const total=toDelete.length;
+  _showGsToast(`🗑️ 삭제 중... 0/${total}`);
+  let done=0;
+  for(let i=0;i<toDelete.length;i+=100){
+    const chunk=toDelete.slice(i,i+100);
+    await Promise.all(chunk.map(r=>_fsDelete('returns',String(r.id))));
+    done=Math.min(i+100,total);
+    _showGsToast(`🗑️ 삭제 중... ${done}/${total}`);
+  }
+  _showGsToast(`✅ ${total}건 삭제 완료`);
 }
 function _toggleReturnDateSection(secId){
   const sec=document.getElementById(secId);
@@ -6393,28 +6462,63 @@ function importReturnsXlsx(input){
         if(m)return`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
         return s;
       };
-      const base=Date.now();
-      const newRecords=rows.filter(row=>row.some(Boolean)).map((row,i)=>({
-        id:base+i,
-        date:normDate(row[col('입고일')]),
-        orig:row[col('원송장 번호')]||'',
-        retno:row[col('반송장 번호')]||'',
-        name:row[col('고객명')]||'',
-        product:row[col('상품명')]||'',
-        option:row[col('옵션')]||'',
-        qty:row[col('수량')]||'',
-        opened:row[col('개봉 여부')]||'',
-        inspect:row[col('검수 결과')]||'',
-        warehouseStatus:row[col('입고 여부')]||'',
-        warehouseReason:row[col('미입고 사유')]||'',
-        orderno:row[col('주문번호')]||'',
-        note:row[col('비고')]||'',
-      }));
+      // 반송장+원송장+날짜+상품명 기반 결정적 ID → 같은 데이터 재가져오기 시 덮어쓰기
+      const _stableId=(s)=>{
+        let h=5381;
+        for(let i=0;i<s.length;i++){h=((h<<5)+h)+s.charCodeAt(i);h=h&h;}
+        return(Math.abs(h)%900000000)+100000000; // 9자리 숫자, timestamp와 구분
+      };
+      // 병합 셀 처리: 입고일·원송장·반송장·고객명·주문번호는 앞 행 값 이어받기
+      let _lastDate='',_lastOrig='',_lastRetno='',_lastName='',_lastOrdno='';
+      const filteredRows=rows.filter(row=>row.some(Boolean));
+      const newRecords=filteredRows.map((row,i)=>{
+        const dRaw=normDate(row[col('입고일')]);
+        const oRaw=String(row[col('원송장 번호')]||'').trim();
+        const rRaw=String(row[col('반송장 번호')]||'').trim();
+        const nRaw=String(row[col('고객명')]||'').trim();
+        const orRaw=String(row[col('주문번호')]||'').trim();
+        // 값이 있으면 업데이트, 없으면 이전 값 유지 (병합 셀 대응)
+        if(dRaw)_lastDate=dRaw;
+        if(oRaw)_lastOrig=oRaw;
+        if(rRaw)_lastRetno=rRaw;
+        if(nRaw)_lastName=nRaw;
+        if(orRaw)_lastOrdno=orRaw;
+        const product=String(row[col('상품명')]||'').trim();
+        // 고정 ID: 반송장(없으면 원송장)+날짜+상품명으로 결정 → 재가져오기 시 덮어쓰기
+        const idKey=(_lastRetno||_lastOrig||_lastName)+_lastDate+product+i;
+        return{
+          id:_stableId(idKey),
+          date:_lastDate,
+          orig:_lastOrig,
+          retno:_lastRetno,
+          name:_lastName,
+          product,
+          option:String(row[col('옵션')]||'').trim(),
+          qty:row[col('수량')]||'',
+          opened:String(row[col('개봉 여부')]||'').trim(),
+          inspect:String(row[col('검수 결과')]||'').trim(),
+          warehouseStatus:String(row[col('입고 여부')]||'').trim(),
+          warehouseReason:String(row[col('미입고 사유')]||'').trim(),
+          orderno:_lastOrdno,
+          note:String(row[col('비고')]||'').trim(),
+        };
+      });
       if(!newRecords.length){alert('가져올 데이터가 없습니다.');return;}
       if(!confirm(`${newRecords.length}건을 가져오시겠습니까? 기존 데이터에 추가됩니다.`))return;
-      Promise.all(newRecords.map(rec=>_fsSet('returns',String(rec.id),rec)))
-        .then(()=>alert(newRecords.length+'건 가져오기 완료'))
-        .catch(err=>alert('저장 오류: '+err));
+      const total=newRecords.length;
+      let done=0;
+      const BATCH=50;
+      (async()=>{
+        try{
+          for(let i=0;i<total;i+=BATCH){
+            const chunk=newRecords.slice(i,i+BATCH);
+            await Promise.all(chunk.map(rec=>_fsSet('returns',String(rec.id),rec)));
+            done=Math.min(i+BATCH,total);
+            _showGsToast(`📥 추가 중... ${done}/${total}`);
+          }
+          _showGsToast(`✅ ${total}건 가져오기 완료!`);
+        }catch(err){_showGsToast('❌ 저장 오류: '+err);}
+      })();
     }catch(err){alert('파일 읽기 오류: '+err);}
     input.value='';
   };
@@ -7953,6 +8057,8 @@ function _updateGnbUser(){
   if(vocWriteBtn)vocWriteBtn.style.display=(u&&u.id==='chohee')?'':'none';
   var accountsBtn=document.getElementById('btn-accounts');
   if(accountsBtn)accountsBtn.style.display=(u&&u.id==='chohee')?'':'none';
+  var diagBtn=document.getElementById('btn-ret-diagnose');
+  if(diagBtn)diagBtn.style.display=(u&&u.id==='chohee')?'':'none';
 }
 
 function submitLogin(){
