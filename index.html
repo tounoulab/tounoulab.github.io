@@ -2399,7 +2399,12 @@ function closeClaimModal(){document.getElementById('claim-modal').style.display=
 function _syncToGSheet(data){
   const url=localStorage.getItem('_gsUrl');
   if(!url)return;
-  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).catch(()=>{});
+  const addLead=r=>{
+    const ld=calcBusinessDays(r.indate,r.donedate);
+    return {...r,leadtime:ld!==null?ld:''};
+  };
+  const payload=Array.isArray(data)?data.map(addLead):addLead(data);
+  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(()=>{});
 }
 function _showGsToast(msg,color){
   let el=document.getElementById('_gs-toast');
@@ -3611,15 +3616,28 @@ function _retSearchFilter(q){
   _retSearchQuery=(q||'').trim().toLowerCase();
   renderReturnTable();
 }
+// 다양한 날짜 형식 → YYYY-MM 추출 (2026.7.15 / 2026. 7. 15. / 2026-07-15 모두 처리)
+function _dateToYm(dateVal){
+  if(!dateVal&&dateVal!==0)return'';
+  if(typeof dateVal==='number'){
+    const d=new Date(Math.round((dateVal-25569)*86400*1000));
+    return d.toISOString().slice(0,7);
+  }
+  const s=String(dateVal).trim();
+  if(/^\d{4}-\d{2}/.test(s))return s.slice(0,7);
+  const m=s.match(/(\d{4})[.\s\/]+(\d{1,2})/);
+  if(m)return`${m[1]}-${m[2].padStart(2,'0')}`;
+  return'';
+}
 function _buildReturnMonthTabs(returns){
   const tabsEl=document.getElementById('return-month-tabs');
   if(!tabsEl)return;
-  const months=[...new Set(returns.map(r=>(r.date||'').slice(0,7)).filter(m=>m&&m.length===7))].sort((a,b)=>b.localeCompare(a));
+  const months=[...new Set(returns.map(r=>_dateToYm(r.date)).filter(Boolean))].sort((a,b)=>b.localeCompare(a));
   if(!months.length){tabsEl.innerHTML='';return;}
   if(!months.includes(_returnActiveMonth))_returnActiveMonth=months[0];
   tabsEl.innerHTML=months.map(m=>{
     const [y,mo]=m.split('-');
-    return`<button class="cmt-tab${_returnActiveMonth===m?' active':''}" onclick="_setReturnMonthTab('${m}')" style="font-size:16px;font-weight:700;padding:8px 22px;">${y}년 ${mo}월</button>`;
+    return`<button class="cmt-tab${_returnActiveMonth===m?' active':''}" onclick="_setReturnMonthTab('${m}')" style="font-size:16px;font-weight:700;padding:8px 22px;">${y}년 ${parseInt(mo,10)}월</button>`;
   }).join('');
 }
 function _setReturnMonthTab(month){_returnActiveMonth=month;renderReturnTable();}
@@ -3717,7 +3735,7 @@ function renderReturnTable(){
   // 날짜 우선 오름차순, 같은 날짜 안에서만 _rowOrder로 정렬 → 날짜 섹션 중복 방지
   allReturns.sort((a,b)=>{const da=a.date||'',db=b.date||'';if(da<db)return -1;if(da>db)return 1;return a._ro-b._ro;});
   _buildReturnMonthTabs(allReturns);
-  let returns=_returnActiveMonth?allReturns.filter(r=>(r.date||'').slice(0,7)===_returnActiveMonth):allReturns;
+  let returns=_returnActiveMonth?allReturns.filter(r=>_dateToYm(r.date)===_returnActiveMonth):allReturns;
   // 검색 필터 — 고객명·원송장·반송장·주문번호·상품명·옵션·비고 일치 항목만 표시
   if(_retSearchQuery){
     const q=_retSearchQuery;
@@ -6350,10 +6368,24 @@ function importReturnsXlsx(input){
       if(data.length<2){alert('데이터가 없습니다.');return;}
       const [header,...rows]=data;
       const col=h=>header.indexOf(h);
+      // 날짜 정규화: 엑셀 시리얼, YYYY.MM.DD, YYYY/MM/DD → YYYY-MM-DD
+      const normDate=val=>{
+        if(!val&&val!==0)return'';
+        if(typeof val==='number'){
+          // 엑셀 시리얼 날짜
+          const d=new Date(Math.round((val-25569)*86400*1000));
+          return d.toISOString().slice(0,10);
+        }
+        const s=String(val).trim();
+        if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+        const m=s.match(/(\d{4})[.\-\/\s]+(\d{1,2})[.\-\/\s]+(\d{1,2})/);
+        if(m)return`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+        return s;
+      };
       const base=Date.now();
       const newRecords=rows.filter(row=>row.some(Boolean)).map((row,i)=>({
         id:base+i,
-        date:row[col('입고일')]||'',
+        date:normDate(row[col('입고일')]),
         orig:row[col('원송장 번호')]||'',
         retno:row[col('반송장 번호')]||'',
         name:row[col('고객명')]||'',
