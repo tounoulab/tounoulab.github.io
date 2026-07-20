@@ -3634,8 +3634,9 @@ function _buildReturnMonthTabs(returns){
   if(!tabsEl)return;
   const months=[...new Set(returns.map(r=>_dateToYm(r.date)).filter(Boolean))].sort((a,b)=>b.localeCompare(a));
   if(!months.length){tabsEl.innerHTML='';return;}
-  if(!months.includes(_returnActiveMonth))_returnActiveMonth=months[0];
-  tabsEl.innerHTML=months.map(m=>{
+  if(_returnActiveMonth!=='__all__'&&!months.includes(_returnActiveMonth))_returnActiveMonth=months[0];
+  const allBtn=`<button class="cmt-tab${_returnActiveMonth==='__all__'?' active':''}" onclick="_setReturnMonthTab('__all__')" style="font-size:16px;font-weight:700;padding:8px 22px;">전체</button>`;
+  tabsEl.innerHTML=allBtn+months.map(m=>{
     const [y,mo]=m.split('-');
     return`<button class="cmt-tab${_returnActiveMonth===m?' active':''}" onclick="_setReturnMonthTab('${m}')" style="font-size:16px;font-weight:700;padding:8px 22px;">${y}년 ${parseInt(mo,10)}월</button>`;
   }).join('');
@@ -3735,7 +3736,7 @@ function renderReturnTable(){
   // 날짜 우선 오름차순, 같은 날짜 안에서만 _rowOrder로 정렬 → 날짜 섹션 중복 방지
   allReturns.sort((a,b)=>{const da=a.date||'',db=b.date||'';if(da<db)return -1;if(da>db)return 1;return a._ro-b._ro;});
   _buildReturnMonthTabs(allReturns);
-  let returns=_returnActiveMonth?allReturns.filter(r=>_dateToYm(r.date)===_returnActiveMonth):allReturns;
+  let returns=(_returnActiveMonth&&_returnActiveMonth!=='__all__')?allReturns.filter(r=>_dateToYm(r.date)===_returnActiveMonth):allReturns;
   // 검색 필터 — 고객명·원송장·반송장·주문번호·상품명·옵션·비고 일치 항목만 표시
   if(_retSearchQuery){
     const q=_retSearchQuery;
