@@ -3610,7 +3610,7 @@ function renderReturnStats(){
   ss('sr-month',countIn(r,'date',ms,me),cmp(countIn(r,'date',ms,me),countIn(r,'date',lms,lme)),fmt(ms)+'~'+fmt(t));
 }
 let _returnActiveMonth='';
-let _retExpandedDates=new Set();
+let _retCollapsedDates=new Set();
 let _retSearchQuery='';
 function _retSearchFilter(q){
   _retSearchQuery=(q||'').trim().toLowerCase();
@@ -3711,8 +3711,8 @@ function _toggleReturnDateSection(secId){
   const hidden=sec.style.display==='none';
   sec.style.display=hidden?'':'none';
   if(arrow)arrow.textContent=hidden?'▼':'▶';
-  if(hidden) _retExpandedDates.add(secId);
-  else _retExpandedDates.delete(secId);
+  if(hidden) _retCollapsedDates.delete(secId);
+  else _retCollapsedDates.add(secId);
 }
 function _retWarehouseDisplay(ws,wr){
   // 이전 형식 호환: ws='N', wr='고객 반송' → 'N(고객 반송)'
@@ -3782,8 +3782,8 @@ function renderReturnTable(){
       if(lastDate){const d=new Date(lastDate);lbl=lastDate+' ('+DOW[d.getDay()]+')';}
       const st=dateStats[lastDate]||{orders:new Set(),qty:0};
       const secId='ret-sec-'+lastDate.replace(/-/g,'');
-      sectionsHtml+=`<div onclick="_toggleReturnDateSection('${secId}')" style="background:#f2f3f5;padding:10px 16px;font-size:13px;font-weight:500;color:#555;border-top:2px solid #d8d8d6;border-bottom:1px solid #ddd;cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px;"><span id="${secId}-arrow" style="font-size:12px;color:#aaa;">▶</span><span style="font-size:17px;font-weight:800;color:#1a1a1a;">📅 ${lbl}</span><span style="font-size:13px;font-weight:500;color:#666;">${st.orders.size}건 / 상품 수량 ${st.qty}개</span></div>`;
-      sectionsHtml+=`<div id="${secId}" style="display:none;">`+THEAD;
+      sectionsHtml+=`<div onclick="_toggleReturnDateSection('${secId}')" style="background:#f2f3f5;padding:10px 16px;font-size:13px;font-weight:500;color:#555;border-top:2px solid #d8d8d6;border-bottom:1px solid #ddd;cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px;"><span id="${secId}-arrow" style="font-size:12px;color:#aaa;">▼</span><span style="font-size:17px;font-weight:800;color:#1a1a1a;">📅 ${lbl}</span><span style="font-size:13px;font-weight:500;color:#666;">${st.orders.size}건 / 상품 수량 ${st.qty}개</span></div>`;
+      sectionsHtml+=`<div id="${secId}" style="">`+THEAD;
     }
     const cx=f.cxChecked||'';
     // 그룹 내 첫 번째 비어있지 않은 원송장·주문번호 사용
@@ -3839,12 +3839,12 @@ function renderReturnTable(){
       if(arrow)arrow.textContent='▼';
     });
   } else {
-    // 펼침 상태 복원 (기본: 모두 접힘, 사용자가 연 것만 펼침)
-    _retExpandedDates.forEach(secId=>{
+    // 접힘 상태 복원 (기본: 모두 펼침, 사용자가 접은 것만 숨김)
+    _retCollapsedDates.forEach(secId=>{
       const sec=document.getElementById(secId);
-      if(sec)sec.style.display='';
+      if(sec)sec.style.display='none';
       const arrow=document.getElementById(secId+'-arrow');
-      if(arrow)arrow.textContent='▼';
+      if(arrow)arrow.textContent='▶';
     });
   }
   _attachReturnDragEvents();
